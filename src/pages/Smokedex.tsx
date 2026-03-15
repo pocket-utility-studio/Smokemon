@@ -718,7 +718,7 @@ export default function Smokedex() {
           fontSize: 13,
           color: GBC_GREEN,
         }}>
-          SMOKEDEX
+          SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span>DEX
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -1113,7 +1113,7 @@ export default function Smokedex() {
                 : 'none',
             }}
           >
-            {confirmed ? 'REGISTERED!' : '\u25ba ADD TO SMOKEDEX'}
+            {confirmed ? 'REGISTERED!' : '\u25ba ADD TO SMOKÉDEX'}
           </button>
         </>
       )}

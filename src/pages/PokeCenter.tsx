@@ -9,7 +9,6 @@ import Typewriter from '../components/Typewriter'
 
 function BuildingEntry({ onDone }: { onDone: () => void }) {
   const stableDone = useCallback(onDone, [])
-  const [started, setStarted] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const { setGifMode } = useGifMode()
 
@@ -19,34 +18,14 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
   }, [setGifMode])
 
   useEffect(() => {
-    if (!started) return
-    const tDone = setTimeout(() => stableDone(), 14000)
-    const tAudio = setTimeout(() => {
-      audioRef.current?.play().catch(() => {})
-    }, 3000)
-    return () => {
-      clearTimeout(tDone)
-      clearTimeout(tAudio)
-    }
-  }, [started, stableDone])
-
-  const handleTap = useCallback(() => {
-    if (!started) {
-      // Unlock audio during the user gesture, then pause immediately
-      const a = audioRef.current
-      if (a) {
-        a.play().then(() => a.pause()).catch(() => {})
-        a.currentTime = 0
-      }
-      setStarted(true)
-    } else {
-      stableDone()
-    }
-  }, [started, stableDone])
+    audioRef.current?.play().catch(() => {})
+    const t = setTimeout(stableDone, 14000)
+    return () => clearTimeout(t)
+  }, [stableDone])
 
   return (
     <div
-      onClick={handleTap}
+      onClick={stableDone}
       style={{
         position: 'absolute', inset: 0, zIndex: 9999,
         background: '#050a04',
@@ -67,20 +46,6 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
           display: 'block',
         }}
       />
-      {!started && (
-        <div style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0, right: 0,
-          textAlign: 'center',
-          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-          fontSize: 11,
-          color: '#84cc16',
-          animation: 'gbc-blink 0.8s step-end infinite',
-        }}>
-          TAP TO ENTER
-        </div>
-      )}
     </div>
   )
 }
@@ -406,7 +371,7 @@ export default function PokeCenter() {
           fontSize: 13,
           color: GBC_GREEN,
         }}>
-          POKE CENTER
+          POK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span> CENTER
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -449,7 +414,7 @@ export default function PokeCenter() {
           fontSize: 8,
           color: GBC_TEXT,
         }}>
-          <Typewriter text="WELCOME TO THE POKE CENTER!" speed={60} sound={false} />
+          <Typewriter text="WELCOME TO THE POKÉ CENTER!" speed={60} sound={false} />
         </span>
       </div>
 

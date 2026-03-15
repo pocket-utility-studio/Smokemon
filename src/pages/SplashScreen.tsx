@@ -172,7 +172,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
           letterSpacing: 3,
           textAlign: 'center',
         }}>
-          SMOKEDEX
+          SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span>DEX
         </span>
         <span
           className="gbc-blink"
