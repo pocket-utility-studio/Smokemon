@@ -400,10 +400,132 @@ const DEX_CATEGORIES: DexCategory[] = [
   { label: 'PINENE',    color: '#40c880',  filter: (s) => /pinene/i.test(s.terpenes || '') || (/focused/i.test(s.Effects) && /energetic/i.test(s.Effects)) },
 ]
 
+// ── Strain detail view ────────────────────────────────────────────────────────
+
+function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => void }) {
+  const col = strain.Type === 'sativa' ? GBC_GREEN : strain.Type === 'indica' ? GBC_VIOLET : GBC_AMBER
+  const LABEL: React.CSSProperties = { fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, display: 'block', marginBottom: 4 }
+  const VALUE: React.CSSProperties = { fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.6 }
+
+  const effects = strain.Effects ? strain.Effects.split(',').map((e) => e.trim()).filter(Boolean) : []
+  const flavors = strain.Flavor ? strain.Flavor.split(',').map((f) => f.trim()).filter(Boolean) : []
+  const terpenes = strain.terpenes ? strain.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean) : []
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Back + name header */}
+      <div style={{ ...pokeBox, padding: '10px 12px' }}>
+        <button
+          onClick={onBack}
+          style={{ background: 'none', border: 'none', color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, cursor: 'pointer', padding: 0, marginBottom: 8, display: 'block' }}
+        >
+          ◄ BACK
+        </button>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 13, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
+            {displayName(strain)}
+          </span>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '4px 8px', flexShrink: 0 }}>
+            {strain.Type.toUpperCase()}
+          </span>
+        </div>
+        {strain.Rating != null && (
+          <div style={{ marginTop: 6, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>
+            {'★'.repeat(Math.round(strain.Rating))}{'☆'.repeat(5 - Math.round(strain.Rating))} {strain.Rating}/5
+          </div>
+        )}
+      </div>
+
+      {/* THC / CBD */}
+      {(strain.thc != null || strain.cbd != null) && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>CANNABINOIDS</span>
+          <div style={{ display: 'flex', gap: 24 }}>
+            {strain.thc != null && (
+              <div>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>THC</span>
+                <div style={{ fontFamily: 'monospace', fontSize: 20, color: GBC_TEXT }}>{strain.thc}%</div>
+              </div>
+            )}
+            {strain.cbd != null && (
+              <div>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_VIOLET }}>CBD</span>
+                <div style={{ fontFamily: 'monospace', fontSize: 20, color: GBC_TEXT }}>{strain.cbd}%</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Effects */}
+      {effects.length > 0 && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>EFFECTS</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {effects.map((e) => (
+              <span key={e} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '4px 8px', border: `1px solid ${col}`, color: col }}>
+                {e.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Flavors */}
+      {flavors.length > 0 && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>FLAVORS</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {flavors.map((f) => (
+              <span key={f} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '4px 8px', border: '1px solid #3a5010', color: GBC_MUTED }}>
+                {f.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Terpenes */}
+      {terpenes.length > 0 && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>TERPENES</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {terpenes.map((t) => (
+              <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '4px 8px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                {t.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Medical */}
+      {strain.medical && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>MEDICAL USES</span>
+          <span style={VALUE}>{strain.medical}</span>
+        </div>
+      )}
+
+      {/* Description */}
+      {strain.Description && (
+        <div style={{ ...pokeBox, padding: '10px 12px' }}>
+          <span style={LABEL}>DESCRIPTION</span>
+          <span style={{ ...VALUE, fontSize: 13, opacity: 0.85 }}>{strain.Description}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Dex list ──────────────────────────────────────────────────────────────────
+
 function StrainDex({ db }: { db: StrainRecord[] }) {
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
   const [category, setCategory] = useState<DexCategory>(DEX_CATEGORIES[0])
+  const [selected, setSelected] = useState<StrainRecord | null>(null)
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -419,6 +541,10 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
     }
     return pool.slice(0, 60)
   }, [db, query, category])
+
+  if (selected) {
+    return <StrainDetail strain={selected} onBack={() => setSelected(null)} />
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -446,10 +572,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
 
       {/* Category chips */}
       <div style={{
-        display: 'flex',
-        gap: 6,
-        overflowX: 'auto',
-        paddingBottom: 4,
+        display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4,
         WebkitOverflowScrolling: 'touch' as const,
       }}>
         {DEX_CATEGORIES.map((cat) => {
@@ -460,15 +583,11 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
               onClick={() => setCategory(cat)}
               style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 9,
-                padding: '8px 12px',
+                fontSize: 9, padding: '8px 12px',
                 border: `2px solid ${active ? cat.color : GBC_DARKEST}`,
                 background: active ? `rgba(${cat.color === GBC_GREEN ? '132,204,22' : '80,80,80'},0.15)` : 'transparent',
                 color: active ? cat.color : GBC_MUTED,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                minHeight: 44,
+                cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, minHeight: 44,
                 WebkitTapHighlightColor: 'transparent' as unknown as string,
               }}
             >
@@ -489,7 +608,15 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         {results.map((s) => {
           const col = s.Type === 'sativa' ? GBC_GREEN : s.Type === 'indica' ? GBC_VIOLET : GBC_AMBER
           return (
-            <div key={s.Strain} style={{ ...pokeBox, padding: '12px' }}>
+            <button
+              key={s.Strain}
+              onClick={() => setSelected(s)}
+              style={{
+                ...pokeBox, padding: '12px', cursor: 'pointer',
+                background: GBC_BOX, border: '3px solid #84cc16',
+                width: '100%', textAlign: 'left',
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 12, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
                   {displayName(s)}
@@ -500,19 +627,12 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
               </div>
               {(s.thc != null || s.cbd != null) && (
                 <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
-                  {s.thc != null ? `THC ${s.thc}%` : ''}
-                  {s.thc != null && s.cbd != null ? '  ·  ' : ''}
-                  {s.cbd != null ? `CBD ${s.cbd}%` : ''}
-                </div>
-              )}
-              {s.medical && (
-                <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5, marginBottom: 6 }}>
-                  RX: {s.medical}
+                  {s.thc != null ? `THC ${s.thc}%` : ''}{s.thc != null && s.cbd != null ? '  ·  ' : ''}{s.cbd != null ? `CBD ${s.cbd}%` : ''}
                 </div>
               )}
               {s.terpenes && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
-                  {s.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
+                  {s.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 3).map((t) => (
                     <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
                       {t.toUpperCase()}
                     </span>
@@ -520,9 +640,12 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
                 </div>
               )}
               <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.6, lineHeight: 1.5 }}>
-                {s.Effects.split(',').map((e) => e.trim()).slice(0, 5).join(' · ')}
+                {s.Effects.split(',').map((e) => e.trim()).slice(0, 4).join(' · ')}
               </div>
-            </div>
+              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginTop: 6, textAlign: 'right' }}>
+                TAP FOR FULL INFO ►
+              </div>
+            </button>
           )
         })}
       </div>
