@@ -296,7 +296,7 @@ type PhaseState = 'idle' | 'loading' | 'result'
 export default function PokeCenter() {
   const { strains } = useStash()
   const { db } = useStrainDb()
-  const [entered, setEntered] = useState(false)
+  const [entered, setEntered] = useState(() => sessionStorage.getItem('pc-entered') === '1')
   const [selected, setSelected] = useState<Symptom[]>([])
   const [phase, setPhase] = useState<PhaseState>('idle')
   const [resultIndex, setResultIndex] = useState(0)
@@ -344,7 +344,7 @@ export default function PokeCenter() {
 
   return (
     <>
-      {!entered && <BuildingEntry onDone={() => setEntered(true)} />}
+      {!entered && <BuildingEntry onDone={() => { sessionStorage.setItem('pc-entered', '1'); setEntered(true) }} />}
     <div style={{
       minHeight: '100%',
       padding: '10px',
