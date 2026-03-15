@@ -30,7 +30,7 @@ const spriteColor: Record<string, string> = {
 
 const cartridges = [
   { to: '/smokedex',    label: 'SMOKÉDEX',     description: 'YOUR PERSONAL STRAIN JOURNAL',    tag: '[DEX]',    tagColor: '#84cc16' },
-  { to: '/poke-center', label: 'POKÉ CENTER',  description: 'SYMPTOM-BASED RECOMMENDER',       tag: '[RX]',     tagColor: '#a78bfa' },
+  { to: '/poke-center', label: 'SMOKÉ CENTER', description: 'SYMPTOM-BASED RECOMMENDER',       tag: '[RX]',     tagColor: '#a78bfa' },
   { to: '/strain-match',label: 'STRAIN MATCH', description: 'AI POWERED STRAIN FINDER',        tag: '[AI]',     tagColor: '#84cc16' },
   { to: '/castform',    label: 'CASTFORM DIAL',description: 'VAPE TEMPERATURE GUIDE',          tag: '[VAPE]',   tagColor: '#f0e040' },
   { to: '/avb',         label: 'AVB STATUS',   description: 'ALREADY VAPED BUD + TIMERS',      tag: '[AVB]',    tagColor: '#f59e0b' },

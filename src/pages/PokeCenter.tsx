@@ -115,8 +115,8 @@ const pokeBox = {
   background: GBC_BOX,
 }
 
-type Symptom = 'PAIN' | 'INSOMNIA' | 'ANXIETY' | 'NAUSEA' | 'FATIGUE' | 'STRESS' | 'APPETITE' | 'FOCUS'
-const ALL_SYMPTOMS: Symptom[] = ['PAIN', 'INSOMNIA', 'ANXIETY', 'NAUSEA', 'FATIGUE', 'STRESS', 'APPETITE', 'FOCUS']
+type Symptom = 'PAIN' | 'INSOMNIA' | 'ANXIETY' | 'NAUSEA' | 'FATIGUE' | 'STRESS' | 'APPETITE' | 'FOCUS' | 'TICS' | 'SEIZURES'
+const ALL_SYMPTOMS: Symptom[] = ['PAIN', 'INSOMNIA', 'ANXIETY', 'NAUSEA', 'FATIGUE', 'STRESS', 'APPETITE', 'FOCUS', 'TICS', 'SEIZURES']
 
 function typeColor(type?: StrainEntry['type']): string {
   if (type === 'sativa') return GBC_GREEN
@@ -215,6 +215,10 @@ function scoreStrain(strain: StrainEntry, symptoms: Symptom[]): number {
   }
   if (cbd > 1) {
     if (symptoms.includes('ANXIETY') || symptoms.includes('NAUSEA')) score += 2
+    if (symptoms.includes('SEIZURES') || symptoms.includes('TICS')) score += 3
+  }
+  if (t === 'indica' || t === 'hybrid') {
+    if (symptoms.includes('TICS') || symptoms.includes('SEIZURES')) score += 2
   }
 
   return score
@@ -234,6 +238,9 @@ function buildWhyText(strain: StrainEntry, symptoms: Symptom[]): string {
   }
   if (cbd > 1 && (symptoms.includes('ANXIETY') || symptoms.includes('NAUSEA'))) {
     parts.push(`CBD (${cbd}%) helps ease anxiety and nausea.`)
+  }
+  if (cbd > 1 && (symptoms.includes('SEIZURES') || symptoms.includes('TICS'))) {
+    parts.push(`CBD (${cbd}%) may help reduce seizures and tics.`)
   }
 
   return parts.join(' ')
@@ -419,7 +426,7 @@ export default function PokeCenter() {
           fontSize: 13,
           color: GBC_GREEN,
         }}>
-          POK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span> CENTER
+          SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span> CENTER
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -462,7 +469,7 @@ export default function PokeCenter() {
           fontSize: 8,
           color: GBC_TEXT,
         }}>
-          <Typewriter text="WELCOME TO THE POKÉ CENTER!" speed={60} sound={false} />
+          <Typewriter text="WELCOME TO THE SMOKÉ CENTER!" speed={60} sound={false} />
         </span>
       </div>
 
