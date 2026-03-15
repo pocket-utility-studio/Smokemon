@@ -676,15 +676,24 @@ export default function Smokedex() {
         }}>
           SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span>DEX
         </span>
-        <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-          fontSize: 8,
-          color: GBC_MUTED,
-          border: `1px solid ${GBC_MUTED}`,
-          padding: '2px 6px',
-        }}>
-          [DEX]
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+          <span style={{
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+            fontSize: 8,
+            color: GBC_MUTED,
+            border: `1px solid ${GBC_MUTED}`,
+            padding: '2px 6px',
+          }}>
+            [DEX]
+          </span>
+          <span style={{
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+            fontSize: 7,
+            color: GBC_MUTED,
+          }}>
+            {db.length.toLocaleString()} STRAINS
+          </span>
+        </div>
       </div>
 
       {/* Tabs */}
