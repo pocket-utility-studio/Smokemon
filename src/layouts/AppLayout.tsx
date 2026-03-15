@@ -138,10 +138,10 @@ export default function AppLayout() {
       <div style={{
         flex: 1,
         minHeight: 0,
-        margin: '4px 12px 0',
+        margin: '4px 4px 0',
         background: BEZEL,
         borderRadius: '8px 8px 6px 6px',
-        padding: '8px 10px 10px',
+        padding: '8px 4px 10px',
         boxShadow: [
           'inset 0 2px 8px rgba(0,0,0,0.9)',
           '0 4px 12px rgba(0,0,0,0.4)',
