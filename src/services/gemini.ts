@@ -40,7 +40,7 @@ export async function askProfessorToke(
 
   const client = getClient()
   const model = client.getGenerativeModel(
-    { model: 'gemini-1.5-flash-8b', systemInstruction: PROFESSOR_TOKE_SYSTEM },
+    { model: 'gemini-1.5-flash-8b' },
     { apiVersion: 'v1' },
   )
 
@@ -54,7 +54,7 @@ export async function askProfessorToke(
     })
     .join('\n')
 
-  const prompt = `My party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
+  const prompt = `${PROFESSOR_TOKE_SYSTEM}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
