@@ -95,7 +95,7 @@ export default function DashboardHome() {
       display: 'flex',
       flexDirection: 'column',
       gap: 8,
-      padding: '10px',
+      padding: '6px 4px',
       background: '#050e04',
       boxSizing: 'border-box',
     }}>
@@ -103,7 +103,7 @@ export default function DashboardHome() {
       {/* ── Header ── */}
       <div style={{
         ...pokeBox,
-        padding: '12px 16px',
+        padding: '10px 12px',
         flexShrink: 0,
         display: 'flex',
         justifyContent: 'space-between',
@@ -131,7 +131,7 @@ export default function DashboardHome() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                padding: isActive ? '14px 16px' : '12px 16px',
+                padding: isActive ? '14px 10px' : '12px 10px',
                 background: isActive ? 'rgba(132,204,22,0.10)' : 'transparent',
                 border: 'none',
                 boxSizing: 'border-box',
@@ -183,7 +183,7 @@ export default function DashboardHome() {
 
       {/* ── Footer hint ── */}
       <div style={{
-        ...pokeBox, padding: '10px 16px', flexShrink: 0,
+        ...pokeBox, padding: '10px 12px', flexShrink: 0,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <span style={{ fontFamily: FONT, fontSize: 10, color: '#84cc16' }}>[A] OPEN</span>
