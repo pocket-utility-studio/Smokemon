@@ -23,7 +23,7 @@ export default function App() {
     <TimeOfDayProvider>
       <StashProvider>
         <VibeProvider>
-          <BrowserRouter>
+          <BrowserRouter basename="/Smokemon">
             <NavigationProvider>
             <GifModeProvider>
             <Routes>
