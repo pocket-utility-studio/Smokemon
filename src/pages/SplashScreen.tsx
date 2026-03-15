@@ -41,7 +41,7 @@ function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
           tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
           ctx.drawImage(tmp, left, top)
 
-          const delay = (frame.delay || 10) * 10
+          const delay = Math.min((frame.delay || 2) * 20, 100)
           timer = window.setTimeout(() => drawFrame(i + 1), delay)
         }
 
