@@ -1,632 +1,313 @@
-import { useState } from 'react'
-import { useStrainDb, displayName } from '../hooks/useStrainDb'
-import type { StrainRecord } from '../hooks/useStrainDb'
+import { useState, useEffect, useRef } from 'react'
+import { useStash } from '../context/StashContext'
+import { askProfessorToke } from '../services/gemini'
 
-const situationTags = [
-  { label: 'SLEEP' },
-  { label: 'FOCUS' },
-  { label: 'ENERGY' },
-  { label: 'SOCIAL' },
-  { label: 'CREATIVE' },
-  { label: 'RELAXATION' },
-  { label: 'OUTDOORS' },
-  { label: 'SPIRITUAL' },
-]
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-const TAG_EFFECTS: Record<string, string[]> = {
-  SLEEP:      ['sleepy', 'relaxed', 'drowsy'],
-  FOCUS:      ['focused', 'uplifted', 'energetic', 'clear-headed'],
-  ENERGY:     ['energetic', 'uplifted', 'happy', 'tingly'],
-  SOCIAL:     ['talkative', 'happy', 'euphoric', 'giggly'],
-  CREATIVE:   ['creative', 'uplifted', 'energetic'],
-  RELAXATION: ['relaxed', 'calm', 'euphoric', 'happy'],
-  OUTDOORS:   ['energetic', 'happy', 'uplifted', 'tingly'],
-  SPIRITUAL:  ['euphoric', 'uplifted', 'happy', 'creative'],
-}
-
-const KEYWORD_EFFECTS: [RegExp, string[]][] = [
-  [/sleep|insomnia|tired|rest/i, ['sleepy', 'relaxed']],
-  [/focus|work|study|concentrate/i, ['focused', 'uplifted']],
-  [/creat|art|paint|music|write/i, ['creative', 'uplifted']],
-  [/social|party|friend|talk/i, ['talkative', 'happy', 'euphoric']],
-  [/relax|stress|calm|chill/i, ['relaxed', 'euphoric']],
-  [/energy|active|exercise|motivat/i, ['energetic', 'uplifted']],
-  [/pain|ache|hurt/i, ['relaxed', 'sleepy']],
-  [/happy|mood|laugh|fun/i, ['happy', 'euphoric', 'giggly']],
-  [/anxi|nerv|worry/i, ['relaxed', 'calm', 'euphoric']],
-  [/depress/i, ['happy', 'uplifted', 'euphoric']],
-]
-
-// Terpene → effects mapping (science-based)
-const TERPENE_EFFECTS: Record<string, string[]> = {
-  myrcene:       ['relaxed', 'sleepy', 'pain relief'],
-  limonene:      ['uplifted', 'happy', 'energetic'],
-  caryophyllene: ['relaxed', 'focused', 'pain relief'],
-  linalool:      ['sleepy', 'relaxed', 'calm'],
-  pinene:        ['focused', 'energetic', 'alert'],
-  terpinolene:   ['creative', 'uplifted', 'energetic'],
-  humulene:      ['relaxed', 'focused'],
-  ocimene:       ['uplifted', 'energetic'],
-  bisabolol:     ['calm', 'relaxed'],
-  valencene:     ['uplifted', 'energetic'],
-}
-
-function parseTerpeneList(terpenes: string): string[] {
-  return terpenes
-    .split(/[,;]+/)
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean)
-}
-
-function scoreStrain(strain: StrainRecord, desiredEffects: string[]): number {
-  if (desiredEffects.length === 0) return 0
-
-  // --- Effects tag score (weight 0.4) ---
-  const strainEffects = strain.Effects.toLowerCase().split(',').map((e) => e.trim())
-  const effectMatches = desiredEffects.filter((e) => strainEffects.includes(e)).length
-  const effectScore = effectMatches / Math.max(desiredEffects.length, 1)
-
-  // --- Terpene score (weight 0.4) ---
-  let terpeneScore = 0
-  if (strain.terpenes) {
-    const terpeneList = parseTerpeneList(strain.terpenes)
-    let terpeneMatches = 0
-    let totalTerpeneEffects = 0
-    for (const terp of terpeneList.slice(0, 5)) {
-      const terpEffects = TERPENE_EFFECTS[terp] ?? []
-      const m = terpEffects.filter((e) => desiredEffects.includes(e)).length
-      terpeneMatches += m
-      totalTerpeneEffects += terpEffects.length
-    }
-    if (totalTerpeneEffects > 0) {
-      terpeneScore = terpeneMatches / Math.max(desiredEffects.length, 1)
-    }
-  }
-
-  // --- THC/CBD ratio bonus (weight 0.2) ---
-  let ratioBonus = 0
-  if (strain.thc != null) {
-    const wantsSleep = desiredEffects.some((e) => ['sleepy', 'relaxed', 'calm', 'pain relief'].includes(e))
-    const wantsEnergy = desiredEffects.some((e) => ['energetic', 'uplifted', 'focused', 'alert'].includes(e))
-    const thc = strain.thc
-    const cbd = strain.cbd ?? 0
-    const ratio = cbd > 0 ? thc / cbd : thc / 0.1
-
-    if (wantsSleep && thc > 18) ratioBonus = 0.6
-    else if (wantsSleep && cbd > 5) ratioBonus = 0.8
-    else if (wantsEnergy && thc > 20 && thc < 28) ratioBonus = 0.7
-    else if (wantsEnergy && ratio > 20) ratioBonus = 0.5
-    else ratioBonus = 0.3
-  }
-
-  const combined = effectScore * 0.4 + terpeneScore * 0.4 + ratioBonus * 0.2
-  const ratingBonus = (strain.Rating / 5) * 0.15
-
-  return Math.round(Math.min((combined * 0.85 + ratingBonus) * 100, 99))
-}
-
-interface ResultStrain {
-  name: string
-  type: string
-  typeColor: string
-  effects: string[]
-  flavors: string[]
-  description: string
-  rating: number
-  match: number
-  terpenes: string[]
-  thc?: number
-  cbd?: number
-  medical?: string
-}
-
-const GBC_GREEN = '#84cc16'
-const GBC_MUTED = '#4a7a10'
+const GBC_GREEN   = '#84cc16'
+const GBC_MUTED   = '#4a7a10'
 const GBC_DARKEST = '#2a4a08'
-const GBC_TEXT = '#c8e890'
+const GBC_TEXT    = '#c8e890'
+const GBC_BG      = '#050a04'
+const GBC_BOX     = '#0a1408'
+const GBC_VIOLET  = '#a78bfa'
+const GBC_AMBER   = '#f59e0b'
+const FONT        = "'PokemonGb', 'Press Start 2P', monospace"
 const TOTAL_BOXES = 10
 
 const pokeBox = {
   border: '3px solid #84cc16',
   boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
-  background: '#0a1408',
+  background: GBC_BOX,
 }
 
-function PixelBar({ filled, total = TOTAL_BOXES }: { filled: number; total?: number }) {
-  return (
-    <div style={{ display: 'flex', gap: '2px' }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: 10,
-            height: 14,
-            background: i < filled ? GBC_GREEN : '#1a3004',
-            border: `1px solid ${i < filled ? GBC_MUTED : '#1a2e08'}`,
-          }}
-        />
-      ))}
-    </div>
-  )
+const EFFECT_TAGS = [
+  'SLEEP', 'FOCUS', 'ENERGY', 'SOCIAL',
+  'CREATIVE', 'RELAXATION', 'PAIN RELIEF', 'ANXIETY',
+]
+
+// ── Typewriter hook ───────────────────────────────────────────────────────────
+
+function useTypewriter(text: string, speed = 16): { displayed: string; done: boolean } {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (!text) { setDisplayed(''); setDone(false); return }
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    const id = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) { clearInterval(id); setDone(true) }
+    }, speed)
+    return () => clearInterval(id)
+  }, [text, speed])
+
+  return { displayed, done }
 }
 
-function LoadingPixelBar() {
-  const [frame] = useState(() => Math.floor(Date.now() / 200) % TOTAL_BOXES)
+// ── Pixel loading bar ─────────────────────────────────────────────────────────
+
+function LoadingBar() {
+  const [frame, setFrame] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setFrame((f) => (f + 1) % TOTAL_BOXES), 120)
+    return () => clearInterval(id)
+  }, [])
   return (
-    <div style={{ display: 'flex', gap: '2px' }}>
+    <div style={{ display: 'flex', gap: 2 }}>
       {Array.from({ length: TOTAL_BOXES }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: 9,
-            height: 14,
-            background: i === frame ? GBC_GREEN : GBC_DARKEST,
-            border: `1px solid ${i === frame ? GBC_MUTED : '#1a2e08'}`,
-          }}
-        />
+        <div key={i} style={{
+          width: 10, height: 14,
+          background: i === frame ? GBC_GREEN : GBC_DARKEST,
+          border: `1px solid ${i === frame ? GBC_MUTED : '#1a2e08'}`,
+        }} />
       ))}
     </div>
   )
 }
+
+// ── Professor Toke dialogue box ───────────────────────────────────────────────
+
+function TokeDialogue({ text }: { text: string }) {
+  const { displayed, done } = useTypewriter(text)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [displayed])
+
+  return (
+    <div style={{ ...pokeBox, padding: '14px' }}>
+      {/* Speaker label */}
+      <div style={{
+        fontFamily: FONT, fontSize: 9, color: GBC_GREEN,
+        borderBottom: `1px solid ${GBC_DARKEST}`, paddingBottom: 8, marginBottom: 10,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <span style={{ fontSize: 14 }}>🌿</span>
+        PROF. TOKE
+      </div>
+
+      {/* Dialogue text */}
+      <p style={{
+        fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT,
+        lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap',
+        minHeight: 80,
+      }}>
+        {displayed}
+        {!done && <span className="gbc-blink" style={{ color: GBC_GREEN }}>█</span>}
+      </p>
+      <div ref={bottomRef} />
+    </div>
+  )
+}
+
+// ── Party card ────────────────────────────────────────────────────────────────
+
+function PartyCard({ name, type, thc, inStock }: {
+  name: string; type?: string; thc?: number; inStock: boolean
+}) {
+  const col = type === 'sativa' ? GBC_GREEN : type === 'indica' ? GBC_VIOLET : GBC_AMBER
+  return (
+    <div style={{
+      ...pokeBox,
+      padding: '8px 10px',
+      opacity: inStock ? 1 : 0.4,
+      flex: '1 1 calc(50% - 4px)',
+      minWidth: 0,
+    }}>
+      <div style={{ fontFamily: FONT, fontSize: 9, color: col, marginBottom: 4, wordBreak: 'break-word', lineHeight: 1.5 }}>
+        {name.toUpperCase()}
+      </div>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        {type && (
+          <span style={{ fontFamily: FONT, fontSize: 7, color: col, border: `1px solid ${col}`, padding: '1px 4px' }}>
+            {type.toUpperCase()}
+          </span>
+        )}
+        {thc != null && (
+          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>THC {thc}%</span>
+        )}
+        {!inStock && (
+          <span style={{ fontFamily: FONT, fontSize: 7, color: '#e84040' }}>OUT</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function StrainMatchmaker() {
-  const { db } = useStrainDb()
-  const [situation, setSituation] = useState('')
+  const { strains } = useStash()
+  const [desiredEffect, setDesiredEffect] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<ResultStrain[] | null>(null)
-  const [textareaFocused, setTextareaFocused] = useState(false)
+  const [response, setResponse] = useState('')
+  const [error, setError] = useState('')
+  const [focused, setFocused] = useState(false)
 
-  const toggleTag = (label: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(label) ? prev.filter((t) => t !== label) : [...prev, label]
-    )
-  }
+  const party = strains.filter((s) => s.inStock)
+  const fullQuery = [desiredEffect.trim(), ...selectedTags].filter(Boolean).join(', ')
+  const canAsk = fullQuery.length > 0 && party.length > 0
 
-  const canSearch = situation.trim().length > 0 || selectedTags.length > 0
+  const toggleTag = (tag: string) =>
+    setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])
 
-  const handleSearch = () => {
-    if (!canSearch) return
+  const handleAsk = async () => {
+    if (!canAsk || loading) return
     setLoading(true)
-    setResults(null)
-
-    const desired = new Set<string>()
-    selectedTags.forEach((tag) => TAG_EFFECTS[tag]?.forEach((e) => desired.add(e)))
-    KEYWORD_EFFECTS.forEach(([re, effects]) => {
-      if (re.test(situation)) effects.forEach((e) => desired.add(e))
-    })
-
-    if (desired.size === 0) {
-      ['happy', 'relaxed', 'euphoric'].forEach((e) => desired.add(e))
-    }
-
-    const desiredArr = Array.from(desired)
-
-    setTimeout(() => {
-      const scored = db
-        .map((s) => ({ strain: s, score: scoreStrain(s, desiredArr) }))
-        .filter((x) => x.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5)
-
-      setResults(
-        scored.map((x) => {
-          const terpeneList = x.strain.terpenes
-            ? parseTerpeneList(x.strain.terpenes).slice(0, 3)
-            : []
-          return {
-            name: displayName(x.strain),
-            type: x.strain.Type,
-            typeColor:
-              x.strain.Type === 'sativa'
-                ? '#84cc16'
-                : x.strain.Type === 'indica'
-                ? '#a78bfa'
-                : '#f59e0b',
-            effects: x.strain.Effects.split(',').map((e) => e.trim()).slice(0, 4),
-            flavors: x.strain.Flavor.split(',').map((f) => f.trim()).slice(0, 3),
-            description:
-              x.strain.Description.slice(0, 200) +
-              (x.strain.Description.length > 200 ? '...' : ''),
-            rating: x.strain.Rating,
-            match: x.score,
-            terpenes: terpeneList,
-            thc: x.strain.thc,
-            cbd: x.strain.cbd,
-            medical: x.strain.medical,
-          }
-        })
-      )
+    setResponse('')
+    setError('')
+    try {
+      const result = await askProfessorToke(fullQuery, party)
+      setResponse(result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
       setLoading(false)
-    }, 1200)
+    }
   }
 
   return (
     <div style={{
-      minHeight: '100%',
-      padding: '10px',
-      background: '#050a04',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 10,
-      boxSizing: 'border-box',
+      minHeight: '100%', padding: '10px', background: GBC_BG,
+      display: 'flex', flexDirection: 'column', gap: 10, boxSizing: 'border-box',
     }}>
 
-      {/* Title box */}
+      {/* ── Header ── */}
       <div style={{
-        ...pokeBox,
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
+        ...pokeBox, padding: '8px 12px', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-          fontSize: 13,
-          color: GBC_GREEN,
-        }}>
+        <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>
           STRAIN MATCH
         </span>
-        <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-          fontSize: 8,
-          color: GBC_MUTED,
-          border: `1px solid ${GBC_MUTED}`,
-          padding: '2px 6px',
-        }}>
+        <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, border: `1px solid ${GBC_MUTED}`, padding: '2px 6px' }}>
           [AI]
         </span>
       </div>
 
-      {/* Input poke-box */}
-      <div style={{
-        ...pokeBox,
-        padding: '12px',
-        flexShrink: 0,
-      }}>
-        {/* Textarea */}
-        <div style={{ marginBottom: 0 }}>
-          <label style={{
-            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-            fontSize: 9,
-            color: GBC_MUTED,
-            display: 'block',
-            marginBottom: 8,
-          }}>
-            DESCRIBE YOUR SITUATION:
-          </label>
-          <textarea
-            value={situation}
-            onChange={(e) => setSituation(e.target.value)}
-            placeholder="e.g. I want to paint for a few hours..."
-            rows={3}
-            style={{
-              width: '100%',
-              background: '#050a04',
-              border: `2px solid ${textareaFocused ? '#4a8a10' : '#2a4a08'}`,
-              color: GBC_TEXT,
-              fontSize: 13,
-              fontFamily: 'monospace',
-              padding: '10px',
-              resize: 'none',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-            onFocus={() => setTextareaFocused(true)}
-            onBlur={() => setTextareaFocused(false)}
-          />
+      {/* ── Your party ── */}
+      <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
+        <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
+          YOUR PARTY ({party.length} IN STOCK)
         </div>
+        {strains.length === 0 ? (
+          <p style={{ fontFamily: FONT, fontSize: 9, color: GBC_DARKEST, lineHeight: 1.8 }}>
+            NO STRAINS IN STASH.{'\n'}ADD SOME IN SMOKÉDEX FIRST.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {strains.map((s) => (
+              <PartyCard key={s.id} name={s.name} type={s.type} thc={s.thc} inStock={s.inStock} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Ask Professor Toke ── */}
+      <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
+        <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
+          WHAT DO YOU WANT TO FEEL?
+        </div>
+
+        {/* Free-text input */}
+        <textarea
+          rows={2}
+          value={desiredEffect}
+          onChange={(e) => setDesiredEffect(e.target.value)}
+          placeholder="e.g. I want to relax and sleep..."
+          style={{
+            width: '100%', background: GBC_BG,
+            border: `2px solid ${focused ? '#4a8a10' : GBC_DARKEST}`,
+            color: GBC_TEXT, fontSize: 13, fontFamily: 'monospace',
+            padding: '10px', resize: 'none', outline: 'none', boxSizing: 'border-box',
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
 
         {/* Quick tags */}
-        <div style={{ marginTop: 10 }}>
-          <p style={{
-            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-            fontSize: 9,
-            color: GBC_MUTED,
-            marginBottom: 8,
-          }}>
-            QUICK TAGS:
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {situationTags.map(({ label }) => {
-              const active = selectedTags.includes(label)
-              return (
-                <button
-                  key={label}
-                  onClick={() => toggleTag(label)}
-                  style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 9,
-                    padding: '5px 10px',
-                    border: `2px solid ${active ? GBC_GREEN : '#2a4a08'}`,
-                    background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
-                    color: active ? GBC_GREEN : GBC_MUTED,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+          {EFFECT_TAGS.map((tag) => {
+            const active = selectedTags.includes(tag)
+            return (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                style={{
+                  fontFamily: FONT, fontSize: 9, padding: '5px 10px',
+                  border: `2px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
+                  background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
+                  color: active ? GBC_GREEN : GBC_MUTED, cursor: 'pointer',
+                }}
+              >
+                {tag}
+              </button>
+            )
+          })}
         </div>
 
-        {/* Find match button */}
+        {/* CTA button */}
         <button
-          onClick={handleSearch}
-          disabled={!canSearch || loading}
+          onClick={handleAsk}
+          disabled={!canAsk || loading}
           style={{
-            marginTop: 12,
-            width: '100%',
-            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-            fontSize: 12,
-            padding: 12,
-            background: canSearch && !loading ? GBC_GREEN : 'transparent',
-            color: canSearch && !loading ? '#050a04' : GBC_MUTED,
-            border: `3px solid ${canSearch && !loading ? GBC_GREEN : '#2a4a08'}`,
-            boxShadow: canSearch && !loading
-              ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010'
-              : 'none',
-            cursor: canSearch && !loading ? 'pointer' : 'not-allowed',
+            marginTop: 12, width: '100%', fontFamily: FONT, fontSize: 11,
+            padding: '12px 0',
+            background: canAsk && !loading ? GBC_GREEN : 'transparent',
+            color: canAsk && !loading ? '#050a04' : GBC_MUTED,
+            border: `3px solid ${canAsk && !loading ? GBC_GREEN : GBC_DARKEST}`,
+            boxShadow: canAsk && !loading ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010' : 'none',
+            cursor: canAsk && !loading ? 'pointer' : 'not-allowed',
           }}
         >
-          {loading ? 'SEARCHING...' : '► FIND MATCH'}
+          {loading ? 'ANALYZING...' : '► ASK PROFESSOR TOKE'}
         </button>
       </div>
 
-      {/* Results area */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* ── Loading state ── */}
+      {loading && (
+        <div style={{
+          ...pokeBox, padding: '24px 12px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+        }}>
+          <span className="gbc-blink" style={{ fontFamily: FONT, fontSize: 11, color: GBC_GREEN, textAlign: 'center', lineHeight: 2 }}>
+            PROF. TOKE IS ANALYZING{'\n'}YOUR PARTY...
+          </span>
+          <LoadingBar />
+        </div>
+      )}
 
-        {/* Loading state */}
-        {loading && (
-          <div style={{
-            ...pokeBox,
-            padding: '24px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 16,
-            minHeight: 120,
-          }}>
-            <span
-              className="gbc-blink"
-              style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 14,
-                color: GBC_GREEN,
-              }}
-            >
-              SEARCHING...
-            </span>
-            <LoadingPixelBar />
-          </div>
-        )}
+      {/* ── Error ── */}
+      {error && (
+        <div style={{ ...pokeBox, padding: '14px', border: '3px solid #e84040', boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #601010' }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: '#e84040' }}>ERROR</span>
+          <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#ff8080', marginTop: 8, lineHeight: 1.6 }}>{error}</p>
+        </div>
+      )}
 
-        {/* Empty state */}
-        {!results && !loading && (
-          <div style={{
-            ...pokeBox,
-            padding: '32px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 12,
-            minHeight: 120,
-          }}>
-            <p style={{
-              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 12,
-              color: '#2a4a08',
-            }}>
-              AWAITING INPUT
-            </p>
-            <p style={{
-              fontFamily: 'monospace',
-              fontSize: 11,
-              color: '#1a3004',
-            }}>
-              Results will appear here
-            </p>
-          </div>
-        )}
+      {/* ── Professor Toke response ── */}
+      {response && <TokeDialogue text={response} />}
 
-        {/* Results */}
-        {results && results.map((s, i) => {
-          const filledBoxes = Math.round((s.match / 100) * TOTAL_BOXES)
-          return (
-            <div
-              key={s.name}
-              style={{
-                ...pokeBox,
-                padding: '12px',
-              }}
-            >
-              {/* Header row */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: 8,
-                borderBottom: '1px solid #1a3004',
-                paddingBottom: 8,
-                marginBottom: 8,
-              }}>
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 13,
-                  color: GBC_GREEN,
-                }}>
-                  #{String(i + 1).padStart(2, '0')} {s.name.toUpperCase()}
-                </span>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 20,
-                    color: GBC_GREEN,
-                    lineHeight: 1,
-                    display: 'block',
-                  }}>
-                    {s.match}%
-                  </span>
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 8,
-                    color: GBC_MUTED,
-                    display: 'block',
-                    marginTop: 2,
-                  }}>
-                    MATCH
-                  </span>
-                </div>
-              </div>
-
-              {/* Type badge + THC/CBD stat line */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 9,
-                  border: `2px solid ${s.typeColor}`,
-                  color: s.typeColor,
-                  padding: '2px 6px',
-                }}>
-                  {s.type.toUpperCase()}
-                </span>
-                {(s.thc != null || s.cbd != null) && (
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 8,
-                    color: GBC_MUTED,
-                  }}>
-                    {s.thc != null ? `THC: ${s.thc}%` : ''}
-                    {s.thc != null && s.cbd != null ? ' · ' : ''}
-                    {s.cbd != null ? `CBD: ${s.cbd}%` : ''}
-                  </span>
-                )}
-              </div>
-
-              {/* HP pixel bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 9,
-                  color: GBC_MUTED,
-                  flexShrink: 0,
-                }}>
-                  HP
-                </span>
-                <PixelBar filled={filledBoxes} />
-              </div>
-
-              {/* Terpene tags */}
-              {s.terpenes.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 8,
-                    color: GBC_MUTED,
-                  }}>
-                    TERPS:
-                  </span>
-                  {s.terpenes.map((t) => (
-                    <span
-                      key={t}
-                      style={{
-                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                        fontSize: 8,
-                        padding: '2px 5px',
-                        border: '1px solid #1e4a08',
-                        color: '#5a9a18',
-                        background: '#0a1408',
-                      }}
-                    >
-                      {t.toUpperCase()}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Description */}
-              <p style={{
-                fontFamily: 'monospace',
-                fontSize: 12,
-                color: GBC_TEXT,
-                opacity: 0.75,
-                lineHeight: 1.6,
-                marginTop: 8,
-                marginBottom: 8,
-              }}>
-                {s.description}
-              </p>
-
-              {/* Effects tags */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-                {s.effects.map((e) => (
-                  <span
-                    key={e}
-                    style={{
-                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                      fontSize: 9,
-                      padding: '2px 6px',
-                      border: `1px solid ${GBC_DARKEST}`,
-                      color: GBC_TEXT,
-                    }}
-                  >
-                    {e.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-
-              {/* Medical uses */}
-              {s.medical && (
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 8,
-                    color: GBC_MUTED,
-                    flexShrink: 0,
-                  }}>
-                    RX:
-                  </span>
-                  <span style={{
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                    color: GBC_MUTED,
-                  }}>
-                    {s.medical}
-                  </span>
-                </div>
-              )}
-
-              {/* Flavours */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 8,
-                  color: GBC_MUTED,
-                  marginRight: 4,
-                }}>
-                  FLAVOURS:
-                </span>
-                {s.flavors.map((f) => (
-                  <span
-                    key={f}
-                    style={{
-                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                      fontSize: 9,
-                      color: GBC_MUTED,
-                    }}
-                  >
-                    #{f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* ── Empty / awaiting state ── */}
+      {!loading && !response && !error && (
+        <div style={{
+          ...pokeBox, padding: '32px 12px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+        }}>
+          <p style={{ fontFamily: FONT, fontSize: 11, color: GBC_DARKEST, textAlign: 'center', lineHeight: 2 }}>
+            PROF. TOKE IS WAITING...
+          </p>
+          <p style={{ fontFamily: 'monospace', fontSize: 11, color: '#1a3004', textAlign: 'center' }}>
+            Select your desired effect and ask for advice
+          </p>
+        </div>
+      )}
 
     </div>
   )
