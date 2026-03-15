@@ -33,14 +33,26 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
         const tmp = document.createElement('canvas')
         const tmpCtx = tmp.getContext('2d')!
 
-        // Scale frame delays so the full gif takes exactly 7 seconds
+        // Scale frame delays so the full gif takes exactly 7 seconds,
+        // then correct each frame against a fixed start time so setTimeout
+        // drift never accumulates across frames.
         const TARGET_MS = 7000
         const nativeTotalMs = frames.reduce((sum, f) => sum + (f.delay || 2) * 10, 0)
         const scale = TARGET_MS / nativeTotalMs
 
+        // Pre-compute each frame's absolute timestamp from t=0
+        let cursor = 0
+        const frameAt = frames.map(f => {
+          const t = cursor
+          cursor += Math.round((f.delay || 2) * 10 * scale)
+          return t
+        })
+
+        const startedAt = performance.now()
+
         const drawFrame = (i: number) => {
           if (cancelled) return
-          if (i >= frames.length) { stableDone(); return }
+          if (i >= frames.length) { stableDone(); return } // safety guard
           if (i === 0) stableFirst()
           const frame = frames[i]
           if (i > 0 && frames[i - 1].disposalType === 2) ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -48,7 +60,14 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
           tmp.width = fw; tmp.height = fh
           tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
           ctx.drawImage(tmp, left, top)
-          timer = window.setTimeout(() => drawFrame(i + 1), Math.round((frame.delay || 2) * 10 * scale))
+          if (i + 1 < frames.length) {
+            // Schedule next frame relative to absolute start — corrects any drift
+            const nextAt = startedAt + frameAt[i + 1]
+            const delay = Math.max(0, nextAt - performance.now())
+            timer = window.setTimeout(() => drawFrame(i + 1), delay)
+          } else {
+            stableDone()
+          }
         }
 
         drawFrame(0)
