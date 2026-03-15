@@ -118,7 +118,7 @@ function GBCLogo() {
 export default function AppLayout() {
   const { font } = useVibe()
   const { gifMode } = useGifMode()
-  const [started, setStarted] = useState(false)
+  const [started, setStarted] = useState(() => sessionStorage.getItem('app-started') === '1')
   const [volume, setVolumeState] = useState(0.8)
   const { wipePhase } = useTransitionNav()
 
@@ -252,7 +252,7 @@ export default function AppLayout() {
                 {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
               </div>
             ) : (
-              <SplashScreen onStart={() => setStarted(true)} />
+              <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
             )}
           </div>
         </div>
