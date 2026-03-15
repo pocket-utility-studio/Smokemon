@@ -39,72 +39,28 @@ function typeColor(type?: StrainEntry['type']): string {
   return GBC_MUTED
 }
 
-function TypeSprite({ type }: { type?: StrainEntry['type'] }) {
-  const color = typeColor(type)
-  const size = 40
+const BALL_SPRITES: Record<string, string> = {
+  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
+  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+  indica: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
+}
 
-  // Sativa = triangle, indica = circle (square with heavy radius — but no rounded corners, so diamond), hybrid = square
-  if (type === 'sativa') {
-    return (
-      <div style={{
-        width: size,
-        height: size,
-        border: `2px solid ${color}`,
-        background: GBC_BG,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: 0,
-          height: 0,
-          borderLeft: '10px solid transparent',
-          borderRight: '10px solid transparent',
-          borderBottom: `18px solid ${color}`,
-        }} />
-      </div>
-    )
-  }
-  if (type === 'indica') {
-    return (
-      <div style={{
-        width: size,
-        height: size,
-        border: `2px solid ${color}`,
-        background: GBC_BG,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: 20,
-          height: 20,
-          background: color,
-          transform: 'rotate(45deg)',
-        }} />
-      </div>
-    )
-  }
-  // hybrid = square
+function TypeSprite({ type, size = 24 }: { type?: StrainEntry['type']; size?: number }) {
+  const src = type ? BALL_SPRITES[type] : BALL_SPRITES['hybrid']
   return (
-    <div style={{
-      width: size,
-      height: size,
-      border: `2px solid ${color}`,
-      background: GBC_BG,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      <div style={{
-        width: 20,
-        height: 20,
-        background: color,
-      }} />
-    </div>
+    <img
+      src={src}
+      alt={type ?? 'unknown'}
+      width={size}
+      height={size}
+      style={{
+        width: size,
+        height: size,
+        imageRendering: 'pixelated',
+        flexShrink: 0,
+        display: 'block',
+      }}
+    />
   )
 }
 
