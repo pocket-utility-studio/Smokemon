@@ -40,7 +40,7 @@ export async function askProfessorToke(
 
   const client = getClient()
   const model = client.getGenerativeModel(
-    { model: 'gemini-1.5-flash-8b' },
+    { model: 'gemini-1.5-flash' },
     { apiVersion: 'v1' },
   )
 

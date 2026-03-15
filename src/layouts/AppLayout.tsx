@@ -225,9 +225,7 @@ export default function AppLayout() {
               display: 'flex', flexDirection: 'column',
             }}>
               {!started ? (
-                <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-                  <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
-                </div>
+                <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
               ) : (
                 <>
                   <div style={{ flex: 1 }}>
@@ -245,20 +243,18 @@ export default function AppLayout() {
         <GBCLogo />
       </div>
 
-      {/* Controls row — D-pad + A/B (only during gif) */}
-      {gifMode && (
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          minHeight: 0,
-        }}>
-          <DPad />
-          <ActionButtons />
-        </div>
-      )}
+      {/* Controls row — always visible */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        minHeight: 0,
+      }}>
+        <DPad />
+        <ActionButtons />
+      </div>
 
       {/* Bottom padding for safe area */}
       <div style={{ flexShrink: 0, paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }} />
