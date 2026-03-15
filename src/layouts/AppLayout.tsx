@@ -9,7 +9,6 @@ import { useTransitionNav } from '../context/NavigationContext'
 import WipeOverlay from '../components/WipeOverlay'
 
 const KIWI = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
-const KIWI_DARK = '#4a8010'
 const BEZEL = '#181818'
 const BEZEL_INNER = '#0e0e0e'
 
