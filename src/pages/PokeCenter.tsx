@@ -1,9 +1,60 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import Typewriter from '../components/Typewriter'
+
+// ── Plays a GIF exactly once on a canvas, then calls onDone ──────────────────
+
+function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const stableDone = useCallback(onDone, [])
+
+  useEffect(() => {
+    let cancelled = false
+    let timer = 0
+
+    fetch(src)
+      .then(r => r.arrayBuffer())
+      .then(buf => {
+        if (cancelled) return
+        const gif = parseGIF(buf)
+        const frames = decompressFrames(gif, true)
+        if (!frames.length) { stableDone(); return }
+
+        const canvas = canvasRef.current
+        if (!canvas) return
+        canvas.width = gif.lsd.width
+        canvas.height = gif.lsd.height
+        const ctx = canvas.getContext('2d')!
+        const tmp = document.createElement('canvas')
+        const tmpCtx = tmp.getContext('2d')!
+
+        const drawFrame = (i: number) => {
+          if (cancelled) return
+          if (i >= frames.length) { stableDone(); return }
+          const frame = frames[i]
+          if (i > 0 && frames[i - 1].disposalType === 2) ctx.clearRect(0, 0, canvas.width, canvas.height)
+          const { top, left, width: fw, height: fh } = frame.dims
+          tmp.width = fw; tmp.height = fh
+          tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
+          ctx.drawImage(tmp, left, top)
+          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 10, 100))
+        }
+
+        drawFrame(0)
+      })
+      .catch(() => stableDone())
+
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [src, stableDone])
+
+  return (
+    <canvas ref={canvasRef} style={{ width: '100%', height: 'auto', imageRendering: 'pixelated', display: 'block' }} />
+  )
+}
 
 // ── Building-entry transition ─────────────────────────────────────────────────
 
@@ -19,9 +70,8 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const tAudio = setTimeout(() => audioRef.current?.play().catch(() => {}), 3000)
-    const tDone = setTimeout(stableDone, 14000)
-    return () => { clearTimeout(tAudio); clearTimeout(tDone) }
-  }, [stableDone])
+    return () => clearTimeout(tAudio)
+  }, [])
 
   return (
     <div
@@ -36,16 +86,7 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
       }}
     >
       <audio ref={audioRef} src={`${import.meta.env.BASE_URL}111-pokemon-recovery.mp3`} />
-      <img
-        src={`${import.meta.env.BASE_URL}pokemon-center.gif`}
-        alt=""
-        style={{
-          width: '100%',
-          height: 'auto',
-          imageRendering: 'pixelated',
-          display: 'block',
-        }}
-      />
+      <GifCanvas src={`${import.meta.env.BASE_URL}pokemon-center.gif`} onDone={stableDone} />
     </div>
   )
 }
