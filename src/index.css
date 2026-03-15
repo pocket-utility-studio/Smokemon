@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'PokemonGb';
+  src: url('/PokemonGb.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme {
   --color-charcoal: #0e1a0b;
   --color-console: #172012;
@@ -8,8 +15,7 @@
   --color-terracotta: #ca8a04;
   --color-kiwi: #9bc83a;
 
-  /* Press Start 2P as the default — JetBrains Mono for the toggle */
-  --font-family-sans: 'Press Start 2P', monospace;
+  --font-family-sans: 'PokemonGb', 'Press Start 2P', monospace;
   --font-family-mono: 'JetBrains Mono', 'Courier New', monospace;
 }
 

@@ -58,14 +58,14 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
           transition: 'opacity 0.6s ease-in',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
         }}>
-          <span style={{ fontSize: 11, color: '#8ab840', fontFamily: "'Press Start 2P'", letterSpacing: 2 }}>
+          <span style={{ fontSize: 11, color: '#8ab840', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 2 }}>
             GAME BOY
           </span>
-          <span style={{ fontSize: 14, color: '#84cc16', fontFamily: "'Press Start 2P'", letterSpacing: 3 }}>
+          <span style={{ fontSize: 14, color: '#84cc16', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 3 }}>
             COLOR
           </span>
           <div style={{ marginTop: 8, width: 60, height: 2, background: '#2a4a08' }} />
-          <span style={{ fontSize: 6, color: '#2a5008', fontFamily: "'Press Start 2P'", letterSpacing: 1, marginTop: 4 }}>
+          <span style={{ fontSize: 6, color: '#2a5008', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 1, marginTop: 4 }}>
             ® NINTENDO
           </span>
         </div>
@@ -117,7 +117,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
         boxSizing: 'border-box',
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 18,
           color: '#84cc16',
           letterSpacing: 2,
@@ -144,10 +144,10 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
               padding: '6px 4px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             }}>
-              <span style={{ fontSize: 7, color: '#84cc16', fontFamily: "'Press Start 2P'", letterSpacing: 0.5 }}>UTIL</span>
-              <span style={{ fontSize: 9, color: '#c8e890', fontFamily: "'Press Start 2P'", letterSpacing: 0.5 }}>HUB</span>
+              <span style={{ fontSize: 7, color: '#84cc16', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>UTIL</span>
+              <span style={{ fontSize: 9, color: '#c8e890', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>HUB</span>
               <div style={{ width: '80%', height: 1, background: '#2a4a08', margin: '2px 0' }} />
-              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: "'Press Start 2P'" }}>v1.0</span>
+              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: "'PokemonGb', 'Press Start 2P'" }}>v1.0</span>
             </div>
             {/* Bottom notch lines */}
             <div style={{ position: 'absolute', bottom: 4, left: 6, right: 6, display: 'flex', gap: 2 }}>
@@ -170,7 +170,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
           textAlign: 'center',
         }}>
           <span style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 9,
             color: '#4a7a10',
             letterSpacing: 1,
@@ -191,7 +191,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
         <span
           className="gbc-blink"
           style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 11,
             color: '#c8e890',
             letterSpacing: 1.5,
@@ -203,7 +203,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
 
       {/* Copyright */}
       <span style={{
-        fontFamily: "'Press Start 2P'",
+        fontFamily: "'PokemonGb', 'Press Start 2P'",
         fontSize: 6,
         color: '#183004',
         letterSpacing: 0.5,

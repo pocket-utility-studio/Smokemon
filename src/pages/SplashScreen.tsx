@@ -166,7 +166,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         pointerEvents: 'none',
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 28,
           color: '#84cc16',
           letterSpacing: 3,
@@ -177,7 +177,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         <span
           className="gbc-blink"
           style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 12,
             color: '#c8e890',
             letterSpacing: 2,

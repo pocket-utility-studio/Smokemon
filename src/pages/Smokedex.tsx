@@ -138,7 +138,7 @@ function StashList({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <TypeSprite type={s.type} />
               <span style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 13,
                 color: col,
                 flex: 1,
@@ -153,7 +153,7 @@ function StashList({
                   background: 'transparent',
                   border: `1px solid ${GBC_DARKEST}`,
                   color: GBC_MUTED,
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   padding: '6px 8px',
                   cursor: 'pointer',
@@ -171,11 +171,11 @@ function StashList({
 
             {/* Row 2: HP bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+              <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
               <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
               </div>
-              <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_TEXT, flexShrink: 0 }}>
+              <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_TEXT, flexShrink: 0 }}>
                 {thc != null ? `${thc}%` : '--'}
               </span>
             </div>
@@ -183,15 +183,15 @@ function StashList({
             {/* Row 3: type badge + stock + CBD */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
               {s.type && (
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${col}`, color: col, padding: '3px 6px' }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${col}`, color: col, padding: '3px 6px' }}>
                   {s.type.toUpperCase()}
                 </span>
               )}
-              <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: s.inStock ? GBC_GREEN : GBC_MUTED }}>
+              <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: s.inStock ? GBC_GREEN : GBC_MUTED }}>
                 {s.inStock ? '● IN STOCK' : '○ OUT'}
               </span>
               {cbd != null && (
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
                   CBD {cbd}%
                 </span>
               )}
@@ -208,7 +208,7 @@ function StashList({
             {dbe?.terpenes && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
                 {dbe.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
-                  <span key={t} style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                  <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
                     {t.toUpperCase()}
                   </span>
                 ))}
@@ -252,7 +252,7 @@ function PartyView({
   if (party.length === 0) {
     return (
       <div style={{ ...pokeBox, padding: '32px 12px', textAlign: 'center' }}>
-        <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: GBC_MUTED }}>
+        <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 11, color: GBC_MUTED }}>
           PARTY EMPTY
         </p>
         <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, marginTop: 10, lineHeight: 1.6 }}>
@@ -272,7 +272,7 @@ function PartyView({
             <TypeSprite type={selected.type} />
             <div style={{ flex: 1 }}>
               <div style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 14,
                 color: typeColor(selected.type),
                 lineHeight: 1.5,
@@ -282,7 +282,7 @@ function PartyView({
               </div>
               {selected.type && (
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   border: `2px solid ${typeColor(selected.type)}`,
                   color: typeColor(selected.type),
@@ -302,11 +302,11 @@ function PartyView({
             const fill = thc != null ? Math.min(thc / 40, 1) : 1
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
                 <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
                 </div>
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
                   {thc != null ? `${thc}%` : '--'}
                 </span>
               </div>
@@ -315,7 +315,7 @@ function PartyView({
 
           {/* CBD / medical / terpenes */}
           {(selected.cbd ?? selDb?.cbd) != null && (
-            <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
+            <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
               CBD {selected.cbd ?? selDb?.cbd}%
             </div>
           )}
@@ -327,7 +327,7 @@ function PartyView({
           {selDb?.terpenes && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
               {selDb.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
-                <span key={t} style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
                   {t.toUpperCase()}
                 </span>
               ))}
@@ -367,7 +367,7 @@ function PartyView({
               <TypeSprite type={s.type} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 11,
                   color: isSelected ? GBC_GREEN : col,
                   marginBottom: 5,
@@ -381,7 +381,7 @@ function PartyView({
                   <div style={{ width: 80, height: 6, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
                   </div>
-                  <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
                     {thc != null ? `${thc}%` : '--'}
                   </span>
                 </div>
@@ -392,7 +392,7 @@ function PartyView({
                   background: 'transparent',
                   border: `1px solid ${GBC_DARKEST}`,
                   color: GBC_MUTED,
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   padding: '8px 10px',
                   cursor: 'pointer',
@@ -412,7 +412,7 @@ function PartyView({
       </div>
 
       {party.length >= 6 && (
-        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_AMBER, textAlign: 'center', padding: '6px 0' }}>
+        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_AMBER, textAlign: 'center', padding: '6px 0' }}>
           PARTY FULL (6/6)
         </div>
       )}
@@ -503,7 +503,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
               key={cat.label}
               onClick={() => setCategory(cat)}
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 9,
                 padding: '8px 12px',
                 border: `2px solid ${active ? cat.color : GBC_DARKEST}`,
@@ -523,7 +523,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
       </div>
 
       {/* Count */}
-      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
+      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
         {results.length}{results.length === 60 ? '+' : ''} STRAINS
         {category.label !== 'ALL' ? ` · ${category.label}` : ''}
       </div>
@@ -535,15 +535,15 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
           return (
             <div key={s.Strain} style={{ ...pokeBox, padding: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 12, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 12, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
                   {displayName(s)}
                 </span>
-                <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>
                   {s.Type.toUpperCase()}
                 </span>
               </div>
               {(s.thc != null || s.cbd != null) && (
-                <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
+                <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
                   {s.thc != null ? `THC ${s.thc}%` : ''}
                   {s.thc != null && s.cbd != null ? '  ·  ' : ''}
                   {s.cbd != null ? `CBD ${s.cbd}%` : ''}
@@ -557,7 +557,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
               {s.terpenes && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
                   {s.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
-                    <span key={t} style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                    <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
                       {t.toUpperCase()}
                     </span>
                   ))}
@@ -683,7 +683,7 @@ export default function Smokedex() {
   })
 
   const tabBtn = (active: boolean) => ({
-    fontFamily: "'Press Start 2P', monospace" as const,
+    fontFamily: "'PokemonGb', 'Press Start 2P', monospace" as const,
     fontSize: 10,
     padding: '8px 14px',
     border: active ? `3px solid ${GBC_GREEN}` : `3px solid ${GBC_DARKEST}`,
@@ -714,14 +714,14 @@ export default function Smokedex() {
         flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 13,
           color: GBC_GREEN,
         }}>
           SMOKEDEX
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_MUTED,
           border: `1px solid ${GBC_MUTED}`,
@@ -741,7 +741,7 @@ export default function Smokedex() {
 
       {/* Summary bar */}
       {tab !== 'dex' && tab !== 'add' && (
-        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>
+        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>
           {party.length}/6 IN PARTY · {strains.length} IN PC
         </div>
       )}
@@ -759,7 +759,7 @@ export default function Smokedex() {
       {tab === 'pc' && (
         strains.length === 0 ? (
           <div style={{ ...pokeBox, padding: '32px 12px', textAlign: 'center' }}>
-            <p style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 11, color: GBC_MUTED }}>NO STRAINS LOGGED</p>
+            <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 11, color: GBC_MUTED }}>NO STRAINS LOGGED</p>
             <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, marginTop: 10 }}>Add your first strain using the ADD tab.</p>
           </div>
         ) : (
@@ -777,7 +777,7 @@ export default function Smokedex() {
           <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
             <p style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 9,
               color: GBC_MUTED,
               margin: 0,
@@ -788,7 +788,7 @@ export default function Smokedex() {
             {/* Strain name */}
             <div>
               <label style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 display: 'block',
@@ -887,7 +887,7 @@ export default function Smokedex() {
             {/* Type selector */}
             <div>
               <label style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 display: 'block',
@@ -904,7 +904,7 @@ export default function Smokedex() {
                       key={t}
                       onClick={() => setForm({ ...form, type: active ? undefined : t })}
                       style={{
-                        fontFamily: "'Press Start 2P', monospace",
+                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                         fontSize: 8,
                         padding: '6px 10px',
                         border: `2px solid ${active ? col : GBC_DARKEST}`,
@@ -925,7 +925,7 @@ export default function Smokedex() {
             <div style={{ display: 'flex', gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <label style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,
                   color: GBC_MUTED,
                   display: 'block',
@@ -948,7 +948,7 @@ export default function Smokedex() {
               </div>
               <div style={{ flex: 1 }}>
                 <label style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,
                   color: GBC_MUTED,
                   display: 'block',
@@ -974,7 +974,7 @@ export default function Smokedex() {
             {/* Amount */}
             <div>
               <label style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 display: 'block',
@@ -996,7 +996,7 @@ export default function Smokedex() {
             {/* Notes */}
             <div>
               <label style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 display: 'block',
@@ -1029,7 +1029,7 @@ export default function Smokedex() {
             gap: 10,
           }}>
             <p style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 9,
               color: GBC_GREEN,
               margin: 0,
@@ -1060,7 +1060,7 @@ export default function Smokedex() {
             <label
               htmlFor="ocr-file-input"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 10,
                 padding: '10px 14px',
                 border: `3px solid ${GBC_DARKEST}`,
@@ -1080,7 +1080,7 @@ export default function Smokedex() {
                 <span
                   className="gbc-blink"
                   style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 10,
                     color: GBC_GREEN,
                   }}
@@ -1096,7 +1096,7 @@ export default function Smokedex() {
             onClick={handleSubmit}
             disabled={!form.name.trim() || confirmed}
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 11,
               padding: '12px',
               width: '100%',

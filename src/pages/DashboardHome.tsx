@@ -66,10 +66,10 @@ export default function DashboardHome() {
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: '#84cc16', letterSpacing: 1 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: '#84cc16', letterSpacing: 1 }}>
           SMOKEMON
         </span>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10' }}>
           {cartridges.length} CARTS
         </span>
       </div>
@@ -103,19 +103,19 @@ export default function DashboardHome() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 11, color: '#84cc16',
                   opacity: isActive ? 1 : 0,
                   flexShrink: 0, width: 12,
                 }}>►</span>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 11,
                   color: isActive ? '#c8e890' : '#4a7a10',
                   flex: 1,
                 }}>{c.label}</span>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 7,
                   color: c.tagColor,
                   border: `1px solid ${c.tagColor}`,
@@ -124,7 +124,7 @@ export default function DashboardHome() {
                 }}>{c.tag}</span>
               </div>
               <div style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: isActive ? '#4a7a10' : '#1a3a04',
                 marginTop: 5, paddingLeft: 20,
@@ -138,8 +138,8 @@ export default function DashboardHome() {
         ...pokeBox, padding: '6px 12px', flexShrink: 0,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 9, color: '#84cc16' }}>[A] OPEN</span>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10' }}>▲▼ SCROLL</span>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: '#84cc16' }}>[A] OPEN</span>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10' }}>▲▼ SCROLL</span>
       </div>
     </div>
   )

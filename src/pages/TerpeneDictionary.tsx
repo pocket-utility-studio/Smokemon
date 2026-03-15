@@ -196,14 +196,14 @@ export default function TerpeneDictionary() {
         flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 13,
           color: GBC_GREEN,
         }}>
           TERPENE DICT
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_MUTED,
           border: `1px solid ${GBC_MUTED}`,
@@ -220,7 +220,7 @@ export default function TerpeneDictionary() {
             key={t}
             onClick={() => setTab(t)}
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 11,
               padding: '8px 14px',
               border: tab === t ? '3px solid #84cc16' : '3px solid #2a4a08',
@@ -258,14 +258,14 @@ export default function TerpeneDictionary() {
                 paddingBottom: 8,
               }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 14,
                   color: t.color,
                 }}>
                   {t.name.toUpperCase()}
                 </span>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,
                   padding: '2px 6px',
                   border: `2px solid ${t.color}`,
@@ -277,7 +277,7 @@ export default function TerpeneDictionary() {
 
               {/* Found in */}
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 9,
                 color: GBC_MUTED,
                 marginBottom: 8,
@@ -300,7 +300,7 @@ export default function TerpeneDictionary() {
               {/* Aroma tags */}
               <div style={{ marginBottom: 8 }}>
                 <p style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   color: GBC_MUTED,
                   marginBottom: 5,
@@ -312,7 +312,7 @@ export default function TerpeneDictionary() {
                     <span
                       key={a}
                       style={{
-                        fontFamily: "'Press Start 2P', monospace",
+                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                         fontSize: 9,
                         padding: '2px 6px',
                         border: `2px solid ${t.color}`,
@@ -328,7 +328,7 @@ export default function TerpeneDictionary() {
               {/* Effects tags */}
               <div>
                 <p style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   color: GBC_MUTED,
                   marginBottom: 5,
@@ -340,7 +340,7 @@ export default function TerpeneDictionary() {
                     <span
                       key={e}
                       style={{
-                        fontFamily: "'Press Start 2P', monospace",
+                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                         fontSize: 9,
                         padding: '2px 6px',
                         border: `2px solid ${GBC_DARKEST}`,
@@ -373,14 +373,14 @@ export default function TerpeneDictionary() {
               gap: 16,
             }}>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 16,
                 color: GBC_GREEN,
               }}>
                 TERPENE QUIZ
               </p>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 11,
                 color: GBC_MUTED,
               }}>
@@ -390,7 +390,7 @@ export default function TerpeneDictionary() {
                 onClick={startQuiz}
                 style={{
                   width: '100%',
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 12,
                   padding: '12px',
                   background: GBC_GREEN,
@@ -420,14 +420,14 @@ export default function TerpeneDictionary() {
                   marginBottom: 8,
                 }}>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 10,
                     color: GBC_GREEN,
                   }}>
                     Q.{currentIndex + 1} / {questions.length}
                   </span>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 10,
                     color: GBC_MUTED,
                   }}>
@@ -443,7 +443,7 @@ export default function TerpeneDictionary() {
                 padding: '12px',
               }}>
                 <p style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 12,
                   color: GBC_TEXT,
                   lineHeight: 1.8,
@@ -503,7 +503,7 @@ export default function TerpeneDictionary() {
                           background: bg,
                           color,
                           cursor: selected ? 'default' : 'pointer',
-                          fontFamily: "'Press Start 2P', monospace",
+                          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                           fontSize: 10,
                           display: 'flex',
                           alignItems: 'center',
@@ -522,7 +522,7 @@ export default function TerpeneDictionary() {
                     onClick={next}
                     style={{
                       width: '100%',
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 11,
                       padding: '10px',
                       background: GBC_GREEN,
@@ -551,14 +551,14 @@ export default function TerpeneDictionary() {
               gap: 16,
             }}>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 14,
                 color: GBC_GREEN,
               }}>
                 QUIZ COMPLETE
               </p>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 28,
                 color: GBC_GREEN,
                 lineHeight: 1,
@@ -566,7 +566,7 @@ export default function TerpeneDictionary() {
                 {score} / {questions.length}
               </p>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 12,
                 color: score >= questions.length - 1
                   ? GBC_GREEN
@@ -580,7 +580,7 @@ export default function TerpeneDictionary() {
                 onClick={startQuiz}
                 style={{
                   width: '100%',
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 12,
                   padding: '12px',
                   background: GBC_GREEN,

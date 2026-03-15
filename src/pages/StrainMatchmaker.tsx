@@ -262,14 +262,14 @@ export default function StrainMatchmaker() {
         flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 13,
           color: GBC_GREEN,
         }}>
           STRAIN MATCH
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_MUTED,
           border: `1px solid ${GBC_MUTED}`,
@@ -288,7 +288,7 @@ export default function StrainMatchmaker() {
         {/* Textarea */}
         <div style={{ marginBottom: 0 }}>
           <label style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 9,
             color: GBC_MUTED,
             display: 'block',
@@ -321,7 +321,7 @@ export default function StrainMatchmaker() {
         {/* Quick tags */}
         <div style={{ marginTop: 10 }}>
           <p style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 9,
             color: GBC_MUTED,
             marginBottom: 8,
@@ -336,7 +336,7 @@ export default function StrainMatchmaker() {
                   key={label}
                   onClick={() => toggleTag(label)}
                   style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 9,
                     padding: '5px 10px',
                     border: `2px solid ${active ? GBC_GREEN : '#2a4a08'}`,
@@ -359,7 +359,7 @@ export default function StrainMatchmaker() {
           style={{
             marginTop: 12,
             width: '100%',
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 12,
             padding: 12,
             background: canSearch && !loading ? GBC_GREEN : 'transparent',
@@ -393,7 +393,7 @@ export default function StrainMatchmaker() {
             <span
               className="gbc-blink"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 14,
                 color: GBC_GREEN,
               }}
@@ -417,7 +417,7 @@ export default function StrainMatchmaker() {
             minHeight: 120,
           }}>
             <p style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 12,
               color: '#2a4a08',
             }}>
@@ -455,7 +455,7 @@ export default function StrainMatchmaker() {
                 marginBottom: 8,
               }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 13,
                   color: GBC_GREEN,
                 }}>
@@ -463,7 +463,7 @@ export default function StrainMatchmaker() {
                 </span>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 20,
                     color: GBC_GREEN,
                     lineHeight: 1,
@@ -472,7 +472,7 @@ export default function StrainMatchmaker() {
                     {s.match}%
                   </span>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 8,
                     color: GBC_MUTED,
                     display: 'block',
@@ -486,7 +486,7 @@ export default function StrainMatchmaker() {
               {/* Type badge + THC/CBD stat line */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   border: `2px solid ${s.typeColor}`,
                   color: s.typeColor,
@@ -496,7 +496,7 @@ export default function StrainMatchmaker() {
                 </span>
                 {(s.thc != null || s.cbd != null) && (
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 8,
                     color: GBC_MUTED,
                   }}>
@@ -510,7 +510,7 @@ export default function StrainMatchmaker() {
               {/* HP pixel bar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   color: GBC_MUTED,
                   flexShrink: 0,
@@ -524,7 +524,7 @@ export default function StrainMatchmaker() {
               {s.terpenes.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 8,
                     color: GBC_MUTED,
                   }}>
@@ -534,7 +534,7 @@ export default function StrainMatchmaker() {
                     <span
                       key={t}
                       style={{
-                        fontFamily: "'Press Start 2P', monospace",
+                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                         fontSize: 8,
                         padding: '2px 5px',
                         border: '1px solid #1e4a08',
@@ -567,7 +567,7 @@ export default function StrainMatchmaker() {
                   <span
                     key={e}
                     style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 9,
                       padding: '2px 6px',
                       border: `1px solid ${GBC_DARKEST}`,
@@ -583,7 +583,7 @@ export default function StrainMatchmaker() {
               {s.medical && (
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 8,
                     color: GBC_MUTED,
                     flexShrink: 0,
@@ -603,7 +603,7 @@ export default function StrainMatchmaker() {
               {/* Flavours */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,
                   color: GBC_MUTED,
                   marginRight: 4,
@@ -614,7 +614,7 @@ export default function StrainMatchmaker() {
                   <span
                     key={f}
                     style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 9,
                       color: GBC_MUTED,
                     }}

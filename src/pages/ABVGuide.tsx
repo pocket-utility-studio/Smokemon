@@ -150,14 +150,14 @@ export default function ABVGuide() {
         flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 13,
           color: GBC_GREEN,
         }}>
           AVB GUIDE
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_MUTED,
           border: `1px solid ${GBC_MUTED}`,
@@ -241,7 +241,7 @@ export default function ABVGuide() {
                 {/* Name + meta */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 12,
                     color: GBC_TEXT,
                     marginBottom: 5,
@@ -253,7 +253,7 @@ export default function ABVGuide() {
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 8,
                       padding: '2px 5px',
                       border: `2px solid ${diffColor}`,
@@ -262,7 +262,7 @@ export default function ABVGuide() {
                       {m.difficulty.toUpperCase()}
                     </span>
                     <span style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 8,
                       color: GBC_MUTED,
                     }}>
@@ -273,7 +273,7 @@ export default function ABVGuide() {
 
                 {/* Expand indicator */}
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 12,
                   color: GBC_MUTED,
                   flexShrink: 0,
@@ -300,7 +300,7 @@ export default function ABVGuide() {
                   {/* Materials */}
                   <div>
                     <p style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 8,
                       color: GBC_MUTED,
                       marginBottom: 8,
@@ -331,7 +331,7 @@ export default function ABVGuide() {
                   {/* Tips */}
                   <div>
                     <p style={{
-                      fontFamily: "'Press Start 2P', monospace",
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                       fontSize: 8,
                       color: GBC_MUTED,
                       marginBottom: 8,

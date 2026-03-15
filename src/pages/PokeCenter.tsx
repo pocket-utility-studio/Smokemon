@@ -73,7 +73,7 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
           bottom: 60,
           left: 0, right: 0,
           textAlign: 'center',
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 11,
           color: '#84cc16',
           animation: 'gbc-blink 0.8s step-end infinite',
@@ -263,7 +263,7 @@ function PartyRoster({
             {/* Name + type badge */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 10,
                 color: highlighted ? GBC_GREEN : GBC_TEXT,
                 marginBottom: 5,
@@ -276,7 +276,7 @@ function PartyRoster({
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 {s.type && (
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 7,
                     border: `1px solid ${color}`,
                     color,
@@ -287,7 +287,7 @@ function PartyRoster({
                   </span>
                 )}
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 7,
                   color: GBC_MUTED,
                 }}>
@@ -295,7 +295,7 @@ function PartyRoster({
                 </span>
                 {s.amount && (
                   <span style={{
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 7,
                     color: GBC_MUTED,
                   }}>
@@ -308,7 +308,7 @@ function PartyRoster({
             {/* Recommended arrow */}
             {highlighted && (
               <span style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 14,
                 color: GBC_GREEN,
                 flexShrink: 0,
@@ -402,14 +402,14 @@ export default function PokeCenter() {
         flexShrink: 0,
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 13,
           color: GBC_GREEN,
         }}>
           POKE CENTER
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_MUTED,
           border: `1px solid ${GBC_MUTED}`,
@@ -445,7 +445,7 @@ export default function PokeCenter() {
           }} />
         </div>
         <span style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 8,
           color: GBC_TEXT,
         }}>
@@ -460,7 +460,7 @@ export default function PokeCenter() {
           padding: '14px',
         }}>
           <p style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 10,
             color: GBC_AMBER,
             marginBottom: 8,
@@ -484,7 +484,7 @@ export default function PokeCenter() {
       {inStock.length > 0 && (
         <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <p style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 9,
             color: GBC_GREEN,
             margin: 0,
@@ -501,7 +501,7 @@ export default function PokeCenter() {
       {/* Symptom selector */}
       <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <p style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 9,
           color: GBC_GREEN,
           margin: 0,
@@ -516,7 +516,7 @@ export default function PokeCenter() {
                 key={s}
                 onClick={() => toggleSymptom(s)}
                 style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 9,
                   padding: '6px 10px',
                   border: `2px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
@@ -537,7 +537,7 @@ export default function PokeCenter() {
         onClick={handleFind}
         disabled={!hasSymptoms || inStock.length === 0 || phase === 'loading'}
         style={{
-          fontFamily: "'Press Start 2P', monospace",
+          fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
           fontSize: 12,
           padding: '12px',
           width: '100%',
@@ -637,7 +637,7 @@ export default function PokeCenter() {
           <span
             className="gbc-blink"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 12,
               color: GBC_GREEN,
             }}
@@ -657,7 +657,7 @@ export default function PokeCenter() {
           gap: 10,
         }}>
           <p style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 9,
             color: GBC_GREEN,
             margin: 0,
@@ -670,7 +670,7 @@ export default function PokeCenter() {
             <TypeSprite type={result.type} />
             <div>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 12,
                 color: typeColor(result.type),
                 margin: 0,
@@ -680,7 +680,7 @@ export default function PokeCenter() {
               </p>
               {result.type && (
                 <span style={{
-                  fontFamily: "'Press Start 2P', monospace",
+                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,
                   border: `2px solid ${typeColor(result.type)}`,
                   color: typeColor(result.type),
@@ -694,7 +694,7 @@ export default function PokeCenter() {
 
           {/* THC / CBD */}
           <div style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 9,
             color: GBC_MUTED,
           }}>
@@ -706,7 +706,7 @@ export default function PokeCenter() {
           {/* Why */}
           <div>
             <p style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 8,
               color: GBC_MUTED,
               marginBottom: 6,
@@ -728,7 +728,7 @@ export default function PokeCenter() {
           {resultDbEntry?.terpenes && (
             <div style={{ borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 8 }}>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 marginBottom: 6,
@@ -751,7 +751,7 @@ export default function PokeCenter() {
           {resultDbEntry?.medical && (
             <div style={{ borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 8 }}>
               <p style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 8,
                 color: GBC_MUTED,
                 marginBottom: 6,
@@ -773,7 +773,7 @@ export default function PokeCenter() {
           {/* Amount */}
           {result.amount && (
             <div style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
               fontSize: 9,
               color: GBC_MUTED,
               borderTop: `1px solid ${GBC_DARKEST}`,
@@ -788,7 +788,7 @@ export default function PokeCenter() {
             <button
               onClick={handleTryAnother}
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                 fontSize: 10,
                 padding: '10px',
                 width: '100%',

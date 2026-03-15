@@ -92,11 +92,11 @@ export default function FactCartridge() {
         paddingBottom: 8,
         marginBottom: 0,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           FACT CARTRIDGE
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -114,7 +114,7 @@ export default function FactCartridge() {
         textAlign: 'center',
       }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 14,
           color: '#84cc16',
           letterSpacing: 2,
@@ -148,10 +148,10 @@ export default function FactCartridge() {
               alignItems: 'center',
               gap: 3,
             }}>
-              <span style={{ fontSize: 6, color: '#84cc16', fontFamily: "'Press Start 2P'", letterSpacing: 0.5 }}>FACT</span>
-              <span style={{ fontSize: 7, color: '#c8e890', fontFamily: "'Press Start 2P'", letterSpacing: 0.5 }}>CART</span>
+              <span style={{ fontSize: 6, color: '#84cc16', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>FACT</span>
+              <span style={{ fontSize: 7, color: '#c8e890', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>CART</span>
               <div style={{ width: '80%', height: 1, background: '#2a4a08' }} />
-              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: "'Press Start 2P'" }}>DAILY</span>
+              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: "'PokemonGb', 'Press Start 2P'" }}>DAILY</span>
             </div>
             {/* Bottom notch lines */}
             <div style={{ position: 'absolute', bottom: 4, left: 5, right: 5, display: 'flex', gap: 2 }}>
@@ -178,7 +178,7 @@ export default function FactCartridge() {
       {/* Main fact poke-box */}
       <div style={{ ...pokeBox, padding: 14, flex: 1 }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 9,
           color: '#84cc16',
           display: 'block',
@@ -189,7 +189,7 @@ export default function FactCartridge() {
         </span>
         {triviaIndex === 0 && dateFact && (
           <span style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 7,
             color: '#4a7a10',
             display: 'block',
@@ -235,7 +235,7 @@ export default function FactCartridge() {
           fontSize: 11,
           padding: '12px 16px',
           width: '100%',
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           cursor: 'pointer',
           borderRadius: 0,
           letterSpacing: 1,

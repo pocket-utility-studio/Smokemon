@@ -57,7 +57,7 @@ function ActionButtons() {
         boxShadow: '0 3px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.05)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
       </div>
     </div>
   )
@@ -194,10 +194,10 @@ export default function AppLayout() {
                 }} />
               ))}
             </div>
-            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: '#333' }}>POWER</span>
+            <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 5, color: '#333' }}>POWER</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 4, color: '#333' }}>VOL</span>
+            <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 4, color: '#333' }}>VOL</span>
             <input
               type="range" min={0} max={100} value={Math.round(volume * 100)}
               onChange={(e) => handleVolume(Number(e.target.value) / 100)}
@@ -318,7 +318,7 @@ export default function AppLayout() {
                   border: '1px solid #080808',
                   boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.7)',
                 }} />
-                <span style={{ fontFamily: "'Press Start 2P'", fontSize: 4, color: KIWI_DARK }}>{label}</span>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 4, color: KIWI_DARK }}>{label}</span>
               </div>
             ))}
           </div>

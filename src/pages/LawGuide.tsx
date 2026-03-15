@@ -62,11 +62,11 @@ export default function LawGuide() {
         paddingBottom: 8,
         marginBottom: 0,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           LAW GUIDE
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -163,7 +163,7 @@ export default function LawGuide() {
           </div>
         </div>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           letterSpacing: 0.5,
@@ -181,7 +181,7 @@ export default function LawGuide() {
           lineHeight: 1.7,
           margin: 0,
         }}>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 10, color: '#84cc16', display: 'block', marginBottom: 8 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 10, color: '#84cc16', display: 'block', marginBottom: 8 }}>
             CANNABIS LAW IN SPAIN
           </span>
           Spain operates in a legal{' '}
@@ -203,7 +203,7 @@ export default function LawGuide() {
             padding: 12,
           }}>
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 9,
               color: section.accent,
               display: 'block',
@@ -237,7 +237,7 @@ export default function LawGuide() {
         }}
       >
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 11,
           color: '#e84040',
           display: 'block',

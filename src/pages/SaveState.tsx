@@ -10,7 +10,7 @@ const pokeBox = {
 }
 
 const btnBase: React.CSSProperties = {
-  fontFamily: "'Press Start 2P'",
+  fontFamily: "'PokemonGb', 'Press Start 2P'",
   fontSize: 10,
   padding: '11px 14px',
   cursor: 'pointer',
@@ -125,11 +125,11 @@ export default function SaveState() {
         paddingBottom: 8,
         marginBottom: 0,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           SAVE STATE
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -142,7 +142,7 @@ export default function SaveState() {
 
       {/* Export section */}
       <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
           EXPORT SAVE DATA
         </span>
         <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
@@ -154,7 +154,7 @@ export default function SaveState() {
           {exportFeedback === 'error' && 'ERROR'}
         </button>
         {exportFeedback === 'saved' && (
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#84cc16', textAlign: 'center' }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#84cc16', textAlign: 'center' }}>
             FILE DOWNLOADED
           </span>
         )}
@@ -162,7 +162,7 @@ export default function SaveState() {
 
       {/* Import section */}
       <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
           IMPORT SAVE DATA
         </span>
         <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
@@ -179,12 +179,12 @@ export default function SaveState() {
           ► LOAD SAVE FILE
         </button>
         {importFeedback === 'loaded' && (
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#84cc16', textAlign: 'center' }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#84cc16', textAlign: 'center' }}>
             LOADED!
           </span>
         )}
         {importFeedback === 'error' && (
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#e84040', textAlign: 'center' }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#e84040', textAlign: 'center' }}>
             ERROR: INVALID FILE
           </span>
         )}
@@ -192,18 +192,18 @@ export default function SaveState() {
 
       {/* About section */}
       <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
           ABOUT
         </span>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 11, color: '#c8e890', letterSpacing: 1 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 11, color: '#c8e890', letterSpacing: 1 }}>
             SMOKEMON
           </span>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#4a7a10' }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#4a7a10' }}>
             v1.0.0
           </span>
         </div>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 7, color: '#4a7a10' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 7, color: '#4a7a10' }}>
           © 2026 SMOKEMON
         </span>
         <div style={{
@@ -241,7 +241,7 @@ export default function SaveState() {
         flexDirection: 'column',
         gap: 10,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#e84040', letterSpacing: 0.5 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#e84040', letterSpacing: 0.5 }}>
           DANGER ZONE
         </span>
 
@@ -259,7 +259,7 @@ export default function SaveState() {
             gap: 10,
           }}>
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 9,
               color: '#e84040',
               textAlign: 'center',
@@ -303,10 +303,10 @@ export default function SaveState() {
           gap: 20,
         }}>
           <span className="gbc-blink" style={{
-            fontFamily: "'Press Start 2P'", fontSize: 14, color: '#84cc16', textAlign: 'center',
+            fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 14, color: '#84cc16', textAlign: 'center',
           }}>SAVING...</span>
           <span style={{
-            fontFamily: "'Press Start 2P'", fontSize: 8, color: '#c8e890', textAlign: 'center',
+            fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#c8e890', textAlign: 'center',
           }}>DON'T TURN OFF THE POWER</span>
           <div style={{ width: '80%', height: 12, border: '3px solid #84cc16', background: '#0a1408', boxSizing: 'border-box' }}>
             <div style={{

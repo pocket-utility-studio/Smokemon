@@ -167,7 +167,7 @@ function CastformLabel({ range }: { range: TempRange }) {
   const { text, color } = labels[range]
   return (
     <span style={{
-      fontFamily: "'Press Start 2P'",
+      fontFamily: "'PokemonGb', 'Press Start 2P'",
       fontSize: 7,
       color,
       letterSpacing: 0.5,
@@ -203,11 +203,11 @@ export default function CastformDial() {
         paddingBottom: 8,
         marginBottom: 0,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           CASTFORM DIAL
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -227,7 +227,7 @@ export default function CastformDial() {
       {/* Temperature display */}
       <div style={{ textAlign: 'center' }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 22,
           color: '#84cc16',
           letterSpacing: 2,
@@ -291,7 +291,7 @@ export default function CastformDial() {
         }}>
           {[160, 170, 180, 190, 200, 210].map((t) => (
             <span key={t} style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 6,
               color: temp >= t ? '#84cc16' : '#2a4a08',
             }}>
@@ -309,7 +309,7 @@ export default function CastformDial() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 9,
             color: profile.accent,
             letterSpacing: 0.5,
@@ -317,7 +317,7 @@ export default function CastformDial() {
             {profile.label}
           </span>
           <span style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 7,
             color: '#4a7a10',
           }}>
@@ -338,7 +338,7 @@ export default function CastformDial() {
       {/* Terpene highlight poke-box */}
       <div style={{ ...pokeBox, padding: 12 }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           display: 'block',

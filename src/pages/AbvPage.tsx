@@ -83,7 +83,7 @@ function PotencyBar({ value }: { value: number }) {
         />
       ))}
       <span style={{
-        fontFamily: "'Press Start 2P'",
+        fontFamily: "'PokemonGb', 'Press Start 2P'",
         fontSize: 8,
         color: '#4a7a10',
         marginLeft: 6,
@@ -118,7 +118,7 @@ function OnsetTimer({ method }: { method: typeof ONSET_METHODS[0] }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: method.accent,
         }}>
@@ -130,7 +130,7 @@ function OnsetTimer({ method }: { method: typeof ONSET_METHODS[0] }) {
             else setRunning(true)
           }}
           style={{
-            fontFamily: "'Press Start 2P'",
+            fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 7,
             padding: '3px 7px',
             border: `1px solid ${method.accent}`,
@@ -145,7 +145,7 @@ function OnsetTimer({ method }: { method: typeof ONSET_METHODS[0] }) {
 
       {running && (
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 11,
           color: '#c8e890',
           letterSpacing: 2,
@@ -191,11 +191,11 @@ export default function AbvPage() {
         borderBottom: '2px solid #2a4a08',
         paddingBottom: 8,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           AVB STATUS
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 10,
           color: c.statusColor,
           border: `2px solid ${c.statusColor}`,
@@ -207,7 +207,7 @@ export default function AbvPage() {
 
       {/* Condition picker */}
       <div style={{ ...pokeBox, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#4a7a10', letterSpacing: 0.5 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#4a7a10', letterSpacing: 0.5 }}>
           SELECT AVB CONDITION
         </span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -219,7 +219,7 @@ export default function AbvPage() {
                 key={key}
                 onClick={() => setCondition(key)}
                 style={{
-                  fontFamily: "'Press Start 2P'",
+                  fontFamily: "'PokemonGb', 'Press Start 2P'",
                   fontSize: 8,
                   padding: '6px 10px',
                   border: `2px solid ${active ? co.accent : '#2a4a08'}`,
@@ -244,7 +244,7 @@ export default function AbvPage() {
         flexDirection: 'column',
         gap: 10,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 11, color: c.accent }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 11, color: c.accent }}>
           {c.label}
         </span>
 
@@ -253,14 +253,14 @@ export default function AbvPage() {
         </p>
 
         <div>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#4a7a10', display: 'block', marginBottom: 6 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#4a7a10', display: 'block', marginBottom: 6 }}>
             POTENCY REMAINING
           </span>
           <PotencyBar value={c.potency} />
         </div>
 
         <div style={{ borderTop: '1px solid #2a4a08', paddingTop: 8 }}>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#84cc16', display: 'block', marginBottom: 6 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#84cc16', display: 'block', marginBottom: 6 }}>
             TIP
           </span>
           <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0, opacity: 0.85 }}>
@@ -271,7 +271,7 @@ export default function AbvPage() {
 
       {/* Onset timers */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 9, color: '#4a7a10', marginBottom: 4 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#4a7a10', marginBottom: 4 }}>
           ONSET TIMERS
         </span>
         {ONSET_METHODS.map((m) => (

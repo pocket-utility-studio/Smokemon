@@ -43,7 +43,7 @@ export default function GBCBottomBar() {
               <span style={{
                 fontSize: 9,
                 color: isActive ? '#84cc16' : '#2a5008',
-                fontFamily: "'Press Start 2P'",
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
                 letterSpacing: 0.5,
               }}>{label}</span>
             </button>

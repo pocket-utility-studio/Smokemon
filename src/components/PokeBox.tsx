@@ -53,7 +53,7 @@ export function PokeBox({
           style={{
             borderBottom: `2px solid ${borderDark}`,
             padding: '6px 10px',
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
             fontSize: 10,
             color: accent,
           }}

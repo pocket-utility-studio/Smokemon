@@ -73,11 +73,11 @@ export default function EscapeRope() {
         paddingBottom: 8,
         marginBottom: 12,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
           ESCAPE ROPE
         </span>
         <span style={{
-          fontFamily: "'Press Start 2P'",
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -107,7 +107,7 @@ export default function EscapeRope() {
             alignItems: 'center',
           }}>
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 16,
               color: '#84cc16',
               textAlign: 'center',
@@ -142,7 +142,7 @@ export default function EscapeRope() {
                 fontSize: 12,
                 padding: 14,
                 width: '100%',
-                fontFamily: "'Press Start 2P'",
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
                 cursor: 'pointer',
                 borderRadius: 0,
                 letterSpacing: 1,
@@ -152,7 +152,7 @@ export default function EscapeRope() {
             </button>
 
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 9,
               color: '#4a7a10',
               textAlign: 'center',
@@ -182,7 +182,7 @@ export default function EscapeRope() {
               border: '2px solid #e84040',
               color: '#e84040',
               background: 'rgba(232,64,64,0.08)',
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 8,
               padding: '4px 8px',
               cursor: 'pointer',
@@ -213,7 +213,7 @@ export default function EscapeRope() {
               }}
             >
               <span style={{
-                fontFamily: "'Press Start 2P'",
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
                 fontSize: 7,
                 color: '#84cc16',
                 textAlign: 'center',
@@ -236,7 +236,7 @@ export default function EscapeRope() {
             alignItems: 'center',
           }}>
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 8,
               color: '#4a7a10',
               letterSpacing: 1,
@@ -272,7 +272,7 @@ export default function EscapeRope() {
             </div>
 
             <span style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 9,
               color: '#4a7a10',
             }}>
@@ -288,7 +288,7 @@ export default function EscapeRope() {
                 fontSize: 11,
                 padding: '12px 20px',
                 width: '100%',
-                fontFamily: "'Press Start 2P'",
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
                 cursor: 'pointer',
                 borderRadius: 0,
                 letterSpacing: 1,
@@ -302,7 +302,7 @@ export default function EscapeRope() {
           <span
             className="gbc-blink"
             style={{
-              fontFamily: "'Press Start 2P'",
+              fontFamily: "'PokemonGb', 'Press Start 2P'",
               fontSize: 8,
               color: '#4a7a10',
               letterSpacing: 0.5,
