@@ -144,15 +144,7 @@ async function main() {
     }
   }
 
-  // Clear any previous enrichment
-  for (const strain of strains) {
-    delete strain.terpenes
-    delete strain.thc
-    delete strain.cbd
-    delete strain.medical
-  }
-
-  // Merge
+  // Additive merge — only fill in missing fields, preserve existing values
   let matchCount = 0
   for (const strain of strains) {
     if (!strain.Strain || typeof strain.Strain !== 'string') continue
@@ -161,29 +153,38 @@ async function main() {
     if (!kushy) continue
     matchCount++
 
-    // Terpenes
-    const terpenes = (kushy['terpenes'] || '').trim()
-    if (terpenes && terpenes.toLowerCase() !== 'null' && terpenes !== '-') {
-      strain.terpenes = terpenes
+    // Terpenes — only set if not already present
+    if (!strain.terpenes) {
+      const terpenes = (kushy['terpenes'] || '').trim()
+      if (terpenes && terpenes.toLowerCase() !== 'null' && terpenes !== '-') {
+        strain.terpenes = terpenes
+      }
     }
 
-    // THC/CBD — stored as mg/g in Kushy CSV, divide by 10 to get %
-    const thcRaw = parseFloat(kushy['thc'] || '')
-    if (!isNaN(thcRaw) && thcRaw > 0) {
-      const thc = Math.round((thcRaw / 10) * 10) / 10
-      if (thc > 0 && thc <= 40) strain.thc = thc
+    // THC — stored as mg/g in Kushy CSV, divide by 10 to get %
+    if (strain.thc == null) {
+      const thcRaw = parseFloat(kushy['thc'] || '')
+      if (!isNaN(thcRaw) && thcRaw > 0) {
+        const thc = Math.round((thcRaw / 10) * 10) / 10
+        if (thc > 0 && thc <= 40) strain.thc = thc
+      }
     }
 
-    const cbdRaw = parseFloat(kushy['cbd'] || '')
-    if (!isNaN(cbdRaw) && cbdRaw > 0) {
-      const cbd = Math.round((cbdRaw / 10) * 10) / 10
-      if (cbd > 0 && cbd <= 30) strain.cbd = cbd
+    // CBD
+    if (strain.cbd == null) {
+      const cbdRaw = parseFloat(kushy['cbd'] || '')
+      if (!isNaN(cbdRaw) && cbdRaw > 0) {
+        const cbd = Math.round((cbdRaw / 10) * 10) / 10
+        if (cbd > 0 && cbd <= 30) strain.cbd = cbd
+      }
     }
 
     // Medical / ailment
-    const medical = (kushy['ailment'] || '').trim()
-    if (medical && medical.toLowerCase() !== 'null' && medical !== '-') {
-      strain.medical = medical
+    if (!strain.medical) {
+      const medical = (kushy['ailment'] || '').trim()
+      if (medical && medical.toLowerCase() !== 'null' && medical !== '-') {
+        strain.medical = medical
+      }
     }
   }
 
