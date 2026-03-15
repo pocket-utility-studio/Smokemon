@@ -12,8 +12,8 @@ import type { StrainEntry } from '../context/StashContext'
 // ── Client ────────────────────────────────────────────────────────────────────
 
 function getClient(): GoogleGenerativeAI {
-  const key = import.meta.env.VITE_GEMINI_API_KEY
-  if (!key) throw new Error('VITE_GEMINI_API_KEY is not set in .env.local')
+  const key = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY
+  if (!key) throw new Error('NO_KEY')
   return new GoogleGenerativeAI(key)
 }
 

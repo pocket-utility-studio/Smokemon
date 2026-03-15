@@ -149,10 +149,23 @@ export default function StrainMatchmaker() {
   const [response, setResponse] = useState('')
   const [error, setError] = useState('')
   const [focused, setFocused] = useState(false)
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') ?? '')
+  const [keyInput, setKeyInput] = useState('')
+  const [showKeyInput, setShowKeyInput] = useState(false)
 
+  const hasKey = apiKey.length > 0
   const party = strains.filter((s) => s.inStock)
   const fullQuery = [desiredEffect.trim(), ...selectedTags].filter(Boolean).join(', ')
-  const canAsk = fullQuery.length > 0 && party.length > 0
+  const canAsk = fullQuery.length > 0 && party.length > 0 && hasKey
+
+  const saveKey = () => {
+    const k = keyInput.trim()
+    if (!k) return
+    localStorage.setItem('gemini_api_key', k)
+    setApiKey(k)
+    setKeyInput('')
+    setShowKeyInput(false)
+  }
 
   const toggleTag = (tag: string) =>
     setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])
@@ -166,7 +179,12 @@ export default function StrainMatchmaker() {
       const result = await askProfessorToke(fullQuery, party)
       setResponse(result)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.')
+      const msg = e instanceof Error ? e.message : 'Something went wrong.'
+      if (msg === 'NO_KEY') {
+        setError('No API key set. Add your Gemini key above.')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -186,10 +204,56 @@ export default function StrainMatchmaker() {
         <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>
           STRAIN MATCH
         </span>
-        <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, border: `1px solid ${GBC_MUTED}`, padding: '2px 6px' }}>
-          [AI]
-        </span>
+        <button
+          onClick={() => setShowKeyInput((v) => !v)}
+          style={{
+            fontFamily: FONT, fontSize: 7, padding: '3px 7px',
+            border: `1px solid ${hasKey ? GBC_MUTED : '#e84040'}`,
+            background: 'transparent',
+            color: hasKey ? GBC_MUTED : '#e84040',
+            cursor: 'pointer',
+          }}
+        >
+          {hasKey ? 'API KEY ✓' : 'SET KEY'}
+        </button>
       </div>
+
+      {/* ── API Key input ── */}
+      {showKeyInput && (
+        <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
+          <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, marginBottom: 8 }}>
+            GEMINI API KEY
+          </div>
+          <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#4a7a10', marginBottom: 8, lineHeight: 1.6 }}>
+            Get a free key at aistudio.google.com → Create API key
+          </div>
+          <input
+            type="password"
+            value={keyInput}
+            onChange={(e) => setKeyInput(e.target.value)}
+            placeholder="Paste your key here..."
+            style={{
+              width: '100%', background: GBC_BG, border: `2px solid ${GBC_DARKEST}`,
+              color: GBC_TEXT, fontSize: 13, fontFamily: 'monospace',
+              padding: '8px', outline: 'none', boxSizing: 'border-box',
+            }}
+          />
+          <button
+            onClick={saveKey}
+            disabled={!keyInput.trim()}
+            style={{
+              marginTop: 8, width: '100%', fontFamily: FONT, fontSize: 10,
+              padding: '10px 0',
+              background: keyInput.trim() ? GBC_GREEN : 'transparent',
+              color: keyInput.trim() ? '#050a04' : GBC_MUTED,
+              border: `2px solid ${keyInput.trim() ? GBC_GREEN : GBC_DARKEST}`,
+              cursor: keyInput.trim() ? 'pointer' : 'not-allowed',
+            }}
+          >
+            SAVE KEY
+          </button>
+        </div>
+      )}
 
       {/* ── Your party ── */}
       <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
