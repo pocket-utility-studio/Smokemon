@@ -33,6 +33,11 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
         const tmp = document.createElement('canvas')
         const tmpCtx = tmp.getContext('2d')!
 
+        // Scale frame delays so the full gif takes exactly 7 seconds
+        const TARGET_MS = 7000
+        const nativeTotalMs = frames.reduce((sum, f) => sum + (f.delay || 2) * 10, 0)
+        const scale = TARGET_MS / nativeTotalMs
+
         const drawFrame = (i: number) => {
           if (cancelled) return
           if (i >= frames.length) { stableDone(); return }
@@ -43,7 +48,7 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
           tmp.width = fw; tmp.height = fh
           tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
           ctx.drawImage(tmp, left, top)
-          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 10, 100))
+          timer = window.setTimeout(() => drawFrame(i + 1), Math.round((frame.delay || 2) * 10 * scale))
         }
 
         drawFrame(0)
