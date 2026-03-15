@@ -8,9 +8,10 @@ import Typewriter from '../components/Typewriter'
 
 // ── Plays a GIF exactly once on a canvas, then calls onDone ──────────────────
 
-function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
+function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => void; onFirstFrame?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stableDone = useCallback(onDone, [])
+  const stableFirst = useCallback(onFirstFrame ?? (() => {}), [])
 
   useEffect(() => {
     let cancelled = false
@@ -35,13 +36,14 @@ function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
         const drawFrame = (i: number) => {
           if (cancelled) return
           if (i >= frames.length) { stableDone(); return }
+          if (i === 0) stableFirst()
           const frame = frames[i]
           if (i > 0 && frames[i - 1].disposalType === 2) ctx.clearRect(0, 0, canvas.width, canvas.height)
           const { top, left, width: fw, height: fh } = frame.dims
           tmp.width = fw; tmp.height = fh
           tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
           ctx.drawImage(tmp, left, top)
-          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 10, 100))
+          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 20, 100))
         }
 
         drawFrame(0)
@@ -49,7 +51,7 @@ function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
       .catch(() => stableDone())
 
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [src, stableDone])
+  }, [src, stableDone, stableFirst])
 
   return (
     <canvas ref={canvasRef} style={{ width: '100%', height: 'auto', imageRendering: 'pixelated', display: 'block' }} />
@@ -68,9 +70,9 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
     return () => setGifMode(false)
   }, [setGifMode])
 
-  useEffect(() => {
-    const tAudio = setTimeout(() => audioRef.current?.play().catch(() => {}), 3000)
-    return () => clearTimeout(tAudio)
+  // Start the audio timer from the moment the first gif frame actually draws
+  const handleFirstFrame = useCallback(() => {
+    setTimeout(() => audioRef.current?.play().catch(() => {}), 3000)
   }, [])
 
   return (
@@ -86,7 +88,7 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
       }}
     >
       <audio ref={audioRef} src={`${import.meta.env.BASE_URL}111-pokemon-recovery.mp3`} />
-      <GifCanvas src={`${import.meta.env.BASE_URL}pokemon-center.gif`} onDone={stableDone} />
+      <GifCanvas src={`${import.meta.env.BASE_URL}pokemon-center.gif`} onDone={stableDone} onFirstFrame={handleFirstFrame} />
     </div>
   )
 }
