@@ -234,12 +234,10 @@ function PartyView({
   party,
   db,
   onDelete,
-  onToggleStock,
 }: {
   party: StrainEntry[]
   db: StrainRecord[]
   onDelete: (id: string) => void
-  onToggleStock: (id: string) => void
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(party[0]?.id ?? null)
 
@@ -496,7 +494,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         gap: 6,
         overflowX: 'auto',
         paddingBottom: 4,
-        WebkitOverflowScrolling: 'touch' as unknown as string,
+        WebkitOverflowScrolling: 'touch' as const,
       }}>
         {DEX_CATEGORIES.map((cat) => {
           const active = cat.label === category.label
@@ -588,7 +586,7 @@ const emptyForm = {
 }
 
 export default function Smokedex() {
-  const { strains, addStrain, updateStrain, deleteStrain } = useStash()
+  const { strains, addStrain, deleteStrain } = useStash()
   const { db } = useStrainDb()
   const [tab, setTab] = useState<'party' | 'pc' | 'dex' | 'add'>('party')
   const [form, setForm] = useState({ ...emptyForm })
@@ -599,7 +597,6 @@ export default function Smokedex() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const inStockCount = strains.filter((s) => s.inStock).length
   const party = strains.filter((s) => s.inStock)
 
   const resizeImage = (file: File, maxPx = 1200): Promise<Blob> =>
@@ -676,7 +673,7 @@ export default function Smokedex() {
     setConfirmed(true)
     setTimeout(() => {
       setConfirmed(false)
-      setTab('stash')
+      setTab('party')
     }, 1500)
   }
 
@@ -755,7 +752,6 @@ export default function Smokedex() {
           party={party}
           db={db}
           onDelete={deleteStrain}
-          onToggleStock={(id) => updateStrain(id, { inStock: !strains.find(s => s.id === id)?.inStock })}
         />
       )}
 
