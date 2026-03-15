@@ -18,9 +18,9 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
   }, [setGifMode])
 
   useEffect(() => {
-    audioRef.current?.play().catch(() => {})
-    const t = setTimeout(stableDone, 14000)
-    return () => clearTimeout(t)
+    const tAudio = setTimeout(() => audioRef.current?.play().catch(() => {}), 4500)
+    const tDone = setTimeout(stableDone, 14000)
+    return () => { clearTimeout(tAudio); clearTimeout(tDone) }
   }, [stableDone])
 
   return (
