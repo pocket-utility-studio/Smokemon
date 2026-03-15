@@ -43,7 +43,7 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
           tmp.width = fw; tmp.height = fh
           tmpCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), fw, fh), 0, 0)
           ctx.drawImage(tmp, left, top)
-          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 20, 100))
+          timer = window.setTimeout(() => drawFrame(i + 1), Math.min((frame.delay || 2) * 10, 100))
         }
 
         drawFrame(0)
