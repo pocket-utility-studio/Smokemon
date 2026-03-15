@@ -95,13 +95,12 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
     <div
       onClick={handleClick}
       style={{
-        position: 'absolute', inset: 0,
+        position: 'relative',
+        flex: 1,
+        width: '100%',
         background: phase === 'startup' ? '#e8e8e0' : '#050a04',
         transition: 'background 0.6s ease',
         cursor: phase === 'title' ? 'pointer' : 'default',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
         overflow: 'hidden',
       }}
     >

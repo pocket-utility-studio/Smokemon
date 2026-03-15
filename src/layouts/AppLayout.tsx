@@ -225,7 +225,9 @@ export default function AppLayout() {
               display: 'flex', flexDirection: 'column',
             }}>
               {!started ? (
-                <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
+                <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+                  <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
+                </div>
               ) : (
                 <>
                   <div style={{ flex: 1 }}>
