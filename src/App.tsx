@@ -3,6 +3,7 @@ import { VibeProvider } from './context/VibeContext'
 import { StashProvider } from './context/StashContext'
 import { TimeOfDayProvider } from './context/TimeOfDayContext'
 import { NavigationProvider } from './context/NavigationContext'
+import { GifModeProvider } from './context/GifModeContext'
 import AppLayout from './layouts/AppLayout'
 import DashboardHome from './pages/DashboardHome'
 import StrainMatchmaker from './pages/StrainMatchmaker'
@@ -24,6 +25,7 @@ export default function App() {
         <VibeProvider>
           <BrowserRouter>
             <NavigationProvider>
+            <GifModeProvider>
             <Routes>
               <Route element={<AppLayout />}>
                 <Route index element={<DashboardHome />} />
@@ -40,6 +42,7 @@ export default function App() {
                 <Route path="avb" element={<AbvPage />} />
               </Route>
             </Routes>
+            </GifModeProvider>
             </NavigationProvider>
           </BrowserRouter>
         </VibeProvider>

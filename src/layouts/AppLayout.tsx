@@ -1,29 +1,95 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
+import { useGifMode } from '../context/GifModeContext'
 import GBCBottomBar from '../components/GBCBottomBar'
 import SplashScreen from '../pages/SplashScreen'
 import { setVolume } from '../utils/sounds'
 import { useTransitionNav } from '../context/NavigationContext'
 import WipeOverlay from '../components/WipeOverlay'
 
-const KIWI = 'linear-gradient(160deg, #c8f050 0%, #96d028 30%, #80be1c 65%, #68a010 100%)'
+const KIWI = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
+const KIWI_DARK = '#4a8010'
+const BEZEL = '#181818'
+const BEZEL_INNER = '#0e0e0e'
 
-function CartridgeSlot() {
+// ── D-Pad ─────────────────────────────────────────────────────────────────────
+function DPad() {
+  const arm: React.CSSProperties = {
+    background: 'linear-gradient(180deg, #222 0%, #111 100%)',
+    border: '1px solid #080808',
+    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06)',
+    position: 'absolute',
+  }
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+    <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
+      {/* Horizontal */}
+      <div style={{ ...arm, top: 24, left: 0, width: 72, height: 24, borderRadius: 3 }} />
+      {/* Vertical */}
+      <div style={{ ...arm, top: 0, left: 24, width: 24, height: 72, borderRadius: 3 }} />
+      {/* Center nub */}
       <div style={{
-        width: 64, height: 10,
-        borderRadius: '0 0 5px 5px',
-        background: 'linear-gradient(180deg, #1a2802 0%, #0e1c02 100%)',
-        boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.8)',
-        border: '1px solid #0a1202',
-        borderTop: 'none',
+        position: 'absolute', top: 24, left: 24, width: 24, height: 24,
+        background: '#1a1a1a', borderRadius: 2,
+        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)',
       }} />
+      {/* Arrows */}
+      {[
+        { style: { top: 28, left: 6, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #444' } },
+        { style: { top: 28, right: 6, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #444' } },
+        { style: { left: 28, top: 6, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '8px solid #444' } },
+        { style: { left: 28, bottom: 6, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #444' } },
+      ].map((a, i) => (
+        <div key={i} style={{ position: 'absolute', ...a.style }} />
+      ))}
     </div>
   )
 }
 
+// ── A/B Buttons ───────────────────────────────────────────────────────────────
+function ActionButtons() {
+  const btn = (label: string, size: number) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        background: 'radial-gradient(circle at 35% 35%, #2a2a2a, #0e0e0e)',
+        border: '1px solid #080808',
+        boxShadow: '0 3px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.05)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontFamily: "'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
+      </div>
+    </div>
+  )
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexShrink: 0 }}>
+      {btn('B', 36)}
+      {btn('A', 44)}
+    </div>
+  )
+}
+
+// ── Speaker Grille ────────────────────────────────────────────────────────────
+function Speaker() {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(5, 1fr)',
+      gap: 4,
+      width: 48,
+    }}>
+      {Array.from({ length: 25 }).map((_, i) => (
+        <div key={i} style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: KIWI_DARK,
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
+        }} />
+      ))}
+    </div>
+  )
+}
+
+// ── GBC Logo ──────────────────────────────────────────────────────────────────
 function GBCLogo() {
   const colorWord = [
     { ch: 'C', c: '#e03030' },
@@ -36,12 +102,12 @@ function GBCLogo() {
     fontFamily: "'Arial Black', Arial, sans-serif",
     fontStyle: 'italic',
     fontWeight: 900,
-    fontSize: 15,
+    fontSize: 13,
     letterSpacing: 0.5,
   }
   return (
-    <div style={{ textAlign: 'center', padding: '5px 0 6px', userSelect: 'none', flexShrink: 0 }}>
-      <span style={{ ...base, color: '#b0b0b8' }}>GAME BOY </span>
+    <div style={{ textAlign: 'center', userSelect: 'none' }}>
+      <span style={{ ...base, color: '#888' }}>GAME BOY </span>
       {colorWord.map(({ ch, c }, i) => (
         <span key={i} style={{ ...base, color: c }}>{ch}</span>
       ))}
@@ -49,22 +115,9 @@ function GBCLogo() {
   )
 }
 
-function SpeakerGrille() {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 5px)', gap: '4px' }}>
-      {Array.from({ length: 24 }).map((_, i) => (
-        <div key={i} style={{
-          width: 5, height: 5, borderRadius: '50%',
-          background: '#3a6010',
-          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)',
-        }} />
-      ))}
-    </div>
-  )
-}
-
 export default function AppLayout() {
   const { font } = useVibe()
+  const { gifMode } = useGifMode()
   const [started, setStarted] = useState(false)
   const [volume, setVolumeState] = useState(0.8)
   const { wipePhase } = useTransitionNav()
@@ -82,53 +135,69 @@ export default function AppLayout() {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      boxShadow: [
-        'inset 0 1px 0 rgba(255,255,255,0.3)',
-        'inset 0 -2px 0 rgba(0,0,0,0.25)',
-        '0 8px 32px rgba(0,0,0,0.6)',
-      ].join(', '),
+      position: 'relative',
     }}>
 
-      {/* Cartridge slot */}
-      <CartridgeSlot />
+      {/* COMM port notch at very top */}
+      <div style={{
+        flexShrink: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        paddingTop: 4,
+      }}>
+        <div style={{
+          width: 48, height: 6,
+          background: 'linear-gradient(180deg, #3a7008 0%, #2a5806 100%)',
+          borderRadius: '0 0 4px 4px',
+          border: '1px solid #1a3804',
+          borderTop: 'none',
+        }} />
+      </div>
 
-      {/* Dark bezel — takes up almost all space */}
+      {/* Black bezel — screen + logo */}
       <div style={{
         flex: 1,
-        margin: '0 8px',
-        background: 'linear-gradient(160deg, #1c1c1c 0%, #101010 100%)',
-        borderRadius: '0 0 14px 14px',
-        padding: '6px 8px 0',
+        minHeight: 0,
+        margin: '4px 12px 0',
+        background: BEZEL,
+        borderRadius: '8px 8px 6px 6px',
+        padding: '8px 10px 10px',
         boxShadow: [
-          'inset 0 6px 24px rgba(0,0,0,0.9)',
-          'inset 0 0 0 1px rgba(255,255,255,0.03)',
+          'inset 0 2px 8px rgba(0,0,0,0.9)',
           '0 4px 12px rgba(0,0,0,0.4)',
         ].join(', '),
         display: 'flex',
         flexDirection: 'column',
+        gap: 6,
         overflow: 'hidden',
-        minHeight: 0,
       }}>
 
         {/* Power LED + VOL row */}
         <div style={{
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 4px', marginBottom: 4, flexShrink: 0,
+          paddingBottom: 2,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{
-              width: 8, height: 8, borderRadius: '50%',
+              width: 7, height: 7, borderRadius: '50%',
               background: '#ff2020',
-              boxShadow: '0 0 5px #ff2020, 0 0 12px rgba(255,32,32,0.5)',
+              boxShadow: '0 0 4px #ff2020, 0 0 10px rgba(255,32,32,0.4)',
             }} />
-            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: '#2a2a2a' }}>POWER</span>
+            <div style={{ display: 'flex', gap: 3 }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{
+                  width: 0, height: 0,
+                  borderTop: '5px solid transparent',
+                  borderBottom: '5px solid transparent',
+                  borderLeft: `6px solid ${i === 1 ? '#555' : '#333'}`,
+                }} />
+              ))}
+            </div>
+            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: '#333' }}>POWER</span>
           </div>
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 4, color: '#222', letterSpacing: 0.4 }}>
-            DOT MATRIX WITH STEREO SOUND
-          </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: '#2a2a2a' }}>VOL</span>
+            <span style={{ fontFamily: "'Press Start 2P'", fontSize: 4, color: '#333' }}>VOL</span>
             <input
               type="range" min={0} max={100} value={Math.round(volume * 100)}
               onChange={(e) => handleVolume(Number(e.target.value) / 100)}
@@ -137,91 +206,125 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* Screen glass */}
+        {/* Screen */}
         <div style={{
           flex: 1,
-          borderRadius: '4px 4px 0 0',
-          overflow: 'hidden',
-          position: 'relative',
-          background: '#0e1a0b',
           minHeight: 0,
-          boxShadow: [
-            'inset 0 0 0 2px rgba(0,0,0,0.9)',
-            'inset 0 4px 20px rgba(0,0,0,0.6)',
-          ].join(', '),
+          background: BEZEL_INNER,
+          borderRadius: 4,
+          padding: 4,
+          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.95)',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
-          <div aria-hidden style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '20%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)',
-            pointerEvents: 'none', zIndex: 100,
-          }} />
-          <div aria-hidden style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 99,
-            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.09) 0px, rgba(0,0,0,0.09) 1px, transparent 1px, transparent 3px)',
-          }} />
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            borderRadius: 2,
+            overflow: 'hidden',
+            position: 'relative',
+            background: '#0e1a0b',
+            boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.8)',
+          }}>
+            {/* Glare */}
+            <div aria-hidden style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: '25%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)',
+              pointerEvents: 'none', zIndex: 100,
+            }} />
+            {/* Scanlines */}
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 99,
+              backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
+            }} />
 
-          {started ? (
-            <div className={`${font} gbc-screen-content`} style={{
-              height: '100%', overflowY: 'auto',
-              color: '#c8e890', fontSize: '16px',
-              display: 'flex', flexDirection: 'column',
-              position: 'relative',
-            }}>
-              <div style={{ flex: 1 }}>
-                <Outlet />
+            {started ? (
+              <div className={`${font} gbc-screen-content`} style={{
+                height: '100%', overflowY: 'auto',
+                color: '#c8e890', fontSize: '16px',
+                display: 'flex', flexDirection: 'column',
+                position: 'relative',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <Outlet />
+                </div>
+                <GBCBottomBar />
+                {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
               </div>
-              <GBCBottomBar />
-              {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
-            </div>
-          ) : (
-            <SplashScreen onStart={() => setStarted(true)} />
-          )}
+            ) : (
+              <SplashScreen onStart={() => setStarted(true)} />
+            )}
+          </div>
         </div>
 
-        {/* GBC logo sits inside the bezel below the screen */}
+        {/* GBC Logo inside bezel */}
         <GBCLogo />
       </div>
 
-      {/* Thin kiwi bottom strip — purely decorative with SELECT/START ovals + speaker */}
+      {/* Nintendo badge */}
       <div style={{
         flexShrink: 0,
-        padding: '8px 20px',
-        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        marginTop: 8,
       }}>
-        {/* Nintendo badge */}
         <div style={{
-          border: '1px solid #4a8010',
-          borderRadius: 10,
-          padding: '2px 10px',
+          border: `1.5px solid ${KIWI_DARK}`,
+          borderRadius: 12,
+          padding: '3px 14px',
         }}>
           <span style={{
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
-            fontSize: 10,
-            color: '#4a8010',
+            fontSize: 11,
+            color: KIWI_DARK,
           }}>Nintendo</span>
         </div>
+      </div>
 
-        {/* SELECT / START ovals */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {['SELECT', 'START'].map((label) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-              <div style={{
-                width: 40, height: 14, borderRadius: 7,
-                background: 'linear-gradient(180deg, #252525 0%, #101010 100%)',
-                border: '1px solid #080808',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)',
-              }} />
-              <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: '#3a6010' }}>{label}</span>
-            </div>
-          ))}
+      {/* Controls row — D-pad + A/B (only during gif) */}
+      {gifMode && (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          minHeight: 0,
+        }}>
+          <DPad />
+          <ActionButtons />
         </div>
+      )}
 
-        {/* Speaker grille */}
-        <SpeakerGrille />
+      {/* Bottom row — SELECT/START + speaker */}
+      <div style={{
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: gifMode ? 'space-between' : 'flex-end',
+        padding: '0 20px',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        marginBottom: 4,
+      }}>
+        {/* SELECT / START — only during gif */}
+        {gifMode && (
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {['SELECT', 'START'].map((label) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div style={{
+                  width: 36, height: 12, borderRadius: 6,
+                  background: 'linear-gradient(180deg, #222 0%, #111 100%)',
+                  border: '1px solid #080808',
+                  boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.7)',
+                }} />
+                <span style={{ fontFamily: "'Press Start 2P'", fontSize: 4, color: KIWI_DARK }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Speaker />
       </div>
     </div>
   )

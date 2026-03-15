@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useGifMode } from '../context/GifModeContext'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
@@ -8,29 +9,78 @@ import Typewriter from '../components/Typewriter'
 
 function BuildingEntry({ onDone }: { onDone: () => void }) {
   const stableDone = useCallback(onDone, [])
+  const [started, setStarted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const { setGifMode } = useGifMode()
 
   useEffect(() => {
-    const t = setTimeout(() => stableDone(), 3000)
-    return () => clearTimeout(t)
-  }, [stableDone])
+    setGifMode(true)
+    return () => setGifMode(false)
+  }, [setGifMode])
+
+  useEffect(() => {
+    if (!started) return
+    const tDone = setTimeout(() => stableDone(), 14000)
+    const tAudio = setTimeout(() => {
+      audioRef.current?.play().catch(() => {})
+    }, 3000)
+    return () => {
+      clearTimeout(tDone)
+      clearTimeout(tAudio)
+    }
+  }, [started, stableDone])
+
+  const handleTap = useCallback(() => {
+    if (!started) {
+      // Unlock audio during the user gesture, then pause immediately
+      const a = audioRef.current
+      if (a) {
+        a.play().then(() => a.pause()).catch(() => {})
+        a.currentTime = 0
+      }
+      setStarted(true)
+    } else {
+      stableDone()
+    }
+  }, [started, stableDone])
 
   return (
     <div
-      onClick={() => stableDone()}
+      onClick={handleTap}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
+        position: 'absolute', inset: 0, zIndex: 9999,
         background: '#050a04',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
         cursor: 'pointer',
       }}
     >
+      <audio ref={audioRef} src="/111-pokemon-recovery.mp3" />
       <img
         src="/pokemon-center.gif"
         alt=""
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        style={{
+          width: '100%',
+          height: 'auto',
+          imageRendering: 'pixelated',
+          display: 'block',
+        }}
       />
+      {!started && (
+        <div style={{
+          position: 'absolute',
+          bottom: 60,
+          left: 0, right: 0,
+          textAlign: 'center',
+          fontFamily: "'Press Start 2P', monospace",
+          fontSize: 11,
+          color: '#84cc16',
+          animation: 'gbc-blink 0.8s step-end infinite',
+        }}>
+          TAP TO ENTER
+        </div>
+      )}
     </div>
   )
 }
@@ -399,7 +449,7 @@ export default function PokeCenter() {
           fontSize: 8,
           color: GBC_TEXT,
         }}>
-          <Typewriter text="WELCOME TO THE POKE CENTER!" speed={60} sound />
+          <Typewriter text="WELCOME TO THE POKE CENTER!" speed={60} sound={false} />
         </span>
       </div>
 
