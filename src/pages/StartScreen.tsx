@@ -122,7 +122,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
           color: '#84cc16',
           letterSpacing: 2,
         }}>
-          SMOKEMON
+          SMOKéMON
         </span>
       </div>
 
@@ -208,7 +208,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
         color: '#183004',
         letterSpacing: 0.5,
       }}>
-        © 2026 SMOKEMON
+        © 2026 SMOKéMON
       </span>
     </div>
   )

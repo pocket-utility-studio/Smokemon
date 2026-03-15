@@ -67,7 +67,7 @@ export default function DashboardHome() {
         alignItems: 'center',
       }}>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: '#84cc16', letterSpacing: 1 }}>
-          SMOKEMON
+          SMOKéMON
         </span>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10' }}>
           {cartridges.length} CARTS
