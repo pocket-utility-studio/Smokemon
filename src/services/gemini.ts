@@ -39,10 +39,10 @@ export async function askProfessorToke(
   if (party.length === 0) throw new Error('Party is empty')
 
   const client = getClient()
-  const model = client.getGenerativeModel({
-    model: 'gemini-1.5-flash-8b',
-    systemInstruction: PROFESSOR_TOKE_SYSTEM,
-  })
+  const model = client.getGenerativeModel(
+    { model: 'gemini-1.5-flash-8b', systemInstruction: PROFESSOR_TOKE_SYSTEM },
+    { apiVersion: 'v1' },
+  )
 
   const partyList = party
     .map((s) => {
