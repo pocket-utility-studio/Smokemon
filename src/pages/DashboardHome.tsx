@@ -42,11 +42,11 @@ const cartridges = [
   { to: '/save',        label: 'SAVE STATE',   description: 'EXPORT / IMPORT YOUR DATA',       tag: '[DATA]',   tagColor: '#4a9a20' },
 ]
 
-// 16×16 sprite placeholder — tinted to the item's tag colour
+// 24×24 sprite placeholder — tinted to the item's tag colour
 function Sprite({ color }: { color: string }) {
   return (
     <div style={{
-      width: 16, height: 16,
+      width: 24, height: 24,
       flexShrink: 0,
       border: `1px solid ${color}`,
       background: `${color}22`,
@@ -54,19 +54,14 @@ function Sprite({ color }: { color: string }) {
       gridTemplateColumns: 'repeat(4, 1fr)',
       gridTemplateRows: 'repeat(4, 1fr)',
       gap: 1,
-      padding: 2,
+      padding: 3,
       boxSizing: 'border-box',
     }}>
-      {/* Simple 2×2 pixel cluster in centre */}
       {Array.from({ length: 16 }).map((_, i) => {
         const row = Math.floor(i / 4)
         const col = i % 4
         const lit = (row === 1 || row === 2) && (col === 1 || col === 2)
-        return (
-          <div key={i} style={{
-            background: lit ? color : 'transparent',
-          }} />
-        )
+        return <div key={i} style={{ background: lit ? color : 'transparent' }} />
       })}
     </div>
   )
@@ -108,22 +103,22 @@ export default function DashboardHome() {
       {/* ── Header ── */}
       <div style={{
         ...pokeBox,
-        padding: '10px 16px',
+        padding: '12px 16px',
         flexShrink: 0,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ fontFamily: FONT, fontSize: 14, color: '#84cc16', letterSpacing: 1 }}>
+        <span style={{ fontFamily: FONT, fontSize: 18, color: '#84cc16', letterSpacing: 1 }}>
           SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>é</span>MON
         </span>
-        <span style={{ fontFamily: FONT, fontSize: 8, color: '#4a9a20' }}>
+        <span style={{ fontFamily: FONT, fontSize: 9, color: '#4a9a20' }}>
           {cartridges.length} CARTS
         </span>
       </div>
 
       {/* ── Menu list ── */}
-      <div style={{ ...pokeBox, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '6px 0' }}>
+      <div style={{ ...pokeBox, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: '4px 0' }}>
         {cartridges.map((c, i) => {
           const isActive = cursor === i
           const sp = spriteColor[c.tag] ?? '#84cc16'
@@ -136,7 +131,7 @@ export default function DashboardHome() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                padding: '12px 16px',
+                padding: isActive ? '14px 16px' : '12px 16px',
                 background: isActive ? 'rgba(132,204,22,0.10)' : 'transparent',
                 border: 'none',
                 boxSizing: 'border-box',
@@ -144,41 +139,43 @@ export default function DashboardHome() {
                 flexShrink: 0,
                 width: '100%',
                 textAlign: 'left',
-                gap: 6,
+                gap: 8,
               }}
             >
               {/* Title row: cursor arrow + sprite + label + tag */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{
-                  fontFamily: FONT, fontSize: 11, color: '#84cc16',
+                  fontFamily: FONT, fontSize: 13, color: '#84cc16',
                   opacity: isActive ? 1 : 0,
-                  flexShrink: 0, width: 12,
+                  flexShrink: 0, width: 14,
                 }}>►</span>
 
                 <Sprite color={sp} />
 
                 <span style={{
-                  fontFamily: FONT, fontSize: 11,
+                  fontFamily: FONT, fontSize: 13,
                   color: isActive ? '#e8ffb0' : '#84cc16',
                   flex: 1,
                 }}>{c.label}</span>
 
                 <span style={{
-                  fontFamily: FONT, fontSize: 7,
+                  fontFamily: FONT, fontSize: 8,
                   color: c.tagColor,
                   border: `1px solid ${c.tagColor}`,
-                  padding: '2px 5px',
+                  padding: '3px 6px',
                   flexShrink: 0,
                 }}>{c.tag}</span>
               </div>
 
-              {/* Description — high-contrast mint so it reads clearly */}
-              <div style={{
-                fontFamily: FONT, fontSize: 7,
-                color: isActive ? '#88ff88' : '#5ab85a',
-                paddingLeft: 36,
-                lineHeight: 1.6,
-              }}>{c.description}</div>
+              {/* Description — only shown for the active item */}
+              {isActive && (
+                <div style={{
+                  fontFamily: FONT, fontSize: 9,
+                  color: '#88ff88',
+                  paddingLeft: 48,
+                  lineHeight: 1.8,
+                }}>{c.description}</div>
+              )}
             </button>
           )
         })}
@@ -186,11 +183,11 @@ export default function DashboardHome() {
 
       {/* ── Footer hint ── */}
       <div style={{
-        ...pokeBox, padding: '8px 16px', flexShrink: 0,
+        ...pokeBox, padding: '10px 16px', flexShrink: 0,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ fontFamily: FONT, fontSize: 9, color: '#84cc16' }}>[A] OPEN</span>
-        <span style={{ fontFamily: FONT, fontSize: 8, color: '#4a9a20' }}>▲▼ SCROLL</span>
+        <span style={{ fontFamily: FONT, fontSize: 10, color: '#84cc16' }}>[A] OPEN</span>
+        <span style={{ fontFamily: FONT, fontSize: 9, color: '#4a9a20' }}>▲▼ SCROLL</span>
       </div>
     </div>
   )
