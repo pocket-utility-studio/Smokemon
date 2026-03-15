@@ -261,27 +261,6 @@ export default function AppLayout() {
         <GBCLogo />
       </div>
 
-      {/* Nintendo badge */}
-      <div style={{
-        flexShrink: 0,
-        display: 'flex',
-        justifyContent: 'center',
-        marginTop: 8,
-      }}>
-        <div style={{
-          border: `1.5px solid ${KIWI_DARK}`,
-          borderRadius: 12,
-          padding: '3px 14px',
-        }}>
-          <span style={{
-            fontFamily: 'Georgia, serif',
-            fontStyle: 'italic',
-            fontSize: 11,
-            color: KIWI_DARK,
-          }}>Nintendo</span>
-        </div>
-      </div>
-
       {/* Controls row — D-pad + A/B (only during gif) */}
       {gifMode && (
         <div style={{
@@ -297,35 +276,8 @@ export default function AppLayout() {
         </div>
       )}
 
-      {/* Bottom row — SELECT/START + speaker */}
-      <div style={{
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: gifMode ? 'space-between' : 'flex-end',
-        padding: '0 20px',
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-        marginBottom: 4,
-      }}>
-        {/* SELECT / START — only during gif */}
-        {gifMode && (
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {['SELECT', 'START'].map((label) => (
-              <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                <div style={{
-                  width: 36, height: 12, borderRadius: 6,
-                  background: 'linear-gradient(180deg, #222 0%, #111 100%)',
-                  border: '1px solid #080808',
-                  boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.7)',
-                }} />
-                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 4, color: KIWI_DARK }}>{label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <Speaker />
-      </div>
+      {/* Bottom padding for safe area */}
+      <div style={{ flexShrink: 0, paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }} />
     </div>
   )
 }
