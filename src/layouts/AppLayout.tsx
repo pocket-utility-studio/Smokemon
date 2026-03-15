@@ -69,25 +69,6 @@ function ActionButtons() {
   )
 }
 
-// ── Speaker Grille ────────────────────────────────────────────────────────────
-function Speaker() {
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(5, 1fr)',
-      gap: 4,
-      width: 48,
-    }}>
-      {Array.from({ length: 25 }).map((_, i) => (
-        <div key={i} style={{
-          width: 5, height: 5, borderRadius: '50%',
-          background: KIWI_DARK,
-          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-        }} />
-      ))}
-    </div>
-  )
-}
 
 // ── GBC Logo ──────────────────────────────────────────────────────────────────
 function GBCLogo() {
