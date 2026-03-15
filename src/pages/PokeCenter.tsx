@@ -56,9 +56,9 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
         cursor: 'pointer',
       }}
     >
-      <audio ref={audioRef} src="/111-pokemon-recovery.mp3" />
+      <audio ref={audioRef} src={`${import.meta.env.BASE_URL}111-pokemon-recovery.mp3`} />
       <img
-        src="/pokemon-center.gif"
+        src={`${import.meta.env.BASE_URL}pokemon-center.gif`}
         alt=""
         style={{
           width: '100%',

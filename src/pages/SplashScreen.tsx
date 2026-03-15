@@ -141,7 +141,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         transition: 'opacity 0.4s ease',
         pointerEvents: 'none',
       }}>
-        <GifCanvas src="/gbc-startup.gif" onDone={handleStartupDone} />
+        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
       </div>
 
       {/* Pokémon Silver intro */}
@@ -153,7 +153,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         pointerEvents: 'none',
       }}>
         {phase === 'silver' && (
-          <GifCanvas src="/pokesilver.gif" onDone={handleSilverDone} />
+          <GifCanvas src={`${import.meta.env.BASE_URL}pokesilver.gif`} onDone={handleSilverDone} />
         )}
       </div>
 

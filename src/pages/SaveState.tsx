@@ -197,14 +197,14 @@ export default function SaveState() {
         </span>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 11, color: '#c8e890', letterSpacing: 1 }}>
-            SMOKéMON
+            SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>é</span>MON
           </span>
           <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#4a7a10' }}>
             v1.0.0
           </span>
         </div>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 7, color: '#4a7a10' }}>
-          © 2026 SMOKéMON
+          © 2026 SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>é</span>MON
         </span>
         <div style={{
           ...pokeBox,

@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: 'PokemonGb';
-  src: url('/PokemonGb.ttf') format('truetype');
+  src: url('./assets/PokemonGb.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

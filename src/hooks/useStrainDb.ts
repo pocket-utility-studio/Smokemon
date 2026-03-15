@@ -27,7 +27,7 @@ export function useStrainDb() {
       return
     }
     let cancelled = false
-    fetch('/strains.json')
+    fetch(`${import.meta.env.BASE_URL}strains.json`)
       .then((res) => res.json())
       .then((data: StrainRecord[]) => {
         if (!cancelled) {

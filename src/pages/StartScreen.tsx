@@ -122,7 +122,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
           color: '#84cc16',
           letterSpacing: 2,
         }}>
-          SMOKéMON
+          SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>é</span>MON
         </span>
       </div>
 
@@ -208,7 +208,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
         color: '#183004',
         letterSpacing: 0.5,
       }}>
-        © 2026 SMOKéMON
+        © 2026 SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>é</span>MON
       </span>
     </div>
   )
