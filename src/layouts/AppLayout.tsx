@@ -218,24 +218,26 @@ export default function AppLayout() {
               backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
             }} />
 
-            {!started ? (
-              <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
-                <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
-              </div>
-            ) : (
-              <div className={`${font} gbc-screen-content`} style={{
-                position: 'absolute', inset: 0, zIndex: 1,
-                overflowY: 'auto',
-                color: '#c8e890', fontSize: '16px',
-                display: 'flex', flexDirection: 'column',
-              }}>
-                <div style={{ flex: 1 }}>
-                  <Outlet />
+            <div className={`${font} gbc-screen-content`} style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              overflowY: started ? 'auto' : 'hidden',
+              color: '#c8e890', fontSize: '16px',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              {!started ? (
+                <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                  <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
                 </div>
-                <GBCBottomBar />
-                {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
-              </div>
-            )}
+              ) : (
+                <>
+                  <div style={{ flex: 1 }}>
+                    <Outlet />
+                  </div>
+                  <GBCBottomBar />
+                  {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
