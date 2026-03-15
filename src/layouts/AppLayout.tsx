@@ -219,10 +219,12 @@ export default function AppLayout() {
             }} />
 
             {!started ? (
-              <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
+              <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+                <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
+              </div>
             ) : (
               <div className={`${font} gbc-screen-content`} style={{
-                position: 'absolute', inset: 0,
+                position: 'absolute', inset: 0, zIndex: 1,
                 overflowY: 'auto',
                 color: '#c8e890', fontSize: '16px',
                 display: 'flex', flexDirection: 'column',
