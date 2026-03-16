@@ -382,7 +382,7 @@ export default function AppLayout() {
                 fontWeight: 700, fontSize: 7, color: '#444', letterSpacing: 1, userSelect: 'none',
               }}>Nintendo</span>
               <span style={{
-                fontFamily: 'monospace', fontSize: 6, color: '#333', userSelect: 'none',
+                fontFamily: 'monospace', fontSize: 10, color: '#555', userSelect: 'none',
               }}>v{__APP_VERSION__}</span>
             </div>
           </div>
