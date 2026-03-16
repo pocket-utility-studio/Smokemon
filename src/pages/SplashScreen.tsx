@@ -67,15 +67,20 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [silverVisible, setSilverVisible] = useState(false)
   const [titleVisible, setTitleVisible] = useState(false)
   const silverDoneRef = useRef(false)
+  const startupDoneRef = useRef(false)
 
-  // Stage 1 → Stage 2: switch to Silver GIF after 7 seconds
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPhase('silver')
-      setSilverVisible(true)
-    }, 7000)
-    return () => clearTimeout(t)
+  // Stage 1 → Stage 2: immediately when boot GIF finishes (8 s max fallback)
+  const handleStartupDone = useCallback(() => {
+    if (startupDoneRef.current) return
+    startupDoneRef.current = true
+    setPhase('silver')
+    setSilverVisible(true)
   }, [])
+
+  useEffect(() => {
+    const t = setTimeout(handleStartupDone, 8000)
+    return () => clearTimeout(t)
+  }, [handleStartupDone])
 
   // Stage 2 → Stage 3: advance when Silver GIF finishes (guarded against double-fire)
   const handleSilverDone = useCallback(() => {
@@ -129,7 +134,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
       }}
     >
       {phase === 'startup' && (
-        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={() => {}} />
+        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
       )}
 
       {phase === 'silver' && (

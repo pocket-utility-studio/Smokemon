@@ -20,7 +20,7 @@ function DPad() {
   const arm: React.CSSProperties = {
     background: 'linear-gradient(180deg, #222 0%, #111 100%)',
     border: '1px solid #080808',
-    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06)',
+    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06), 2px 4px 6px rgba(0,0,0,0.7)',
     position: 'absolute',
   }
   return (
@@ -179,7 +179,7 @@ export default function AppLayout() {
           ? 'min(calc(100dvh - max(env(safe-area-inset-top, 0px), 20px)), calc(100vw * 133 / 78))'
           : 'calc(100dvh - max(env(safe-area-inset-top, 0px), 20px))',
         transition: `height ${T}, width ${T}`,
-        background: KIWI_GRAD,
+        background: 'transparent',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -231,6 +231,7 @@ export default function AppLayout() {
           transition: `margin ${T}`,
           background: BEZEL,
           borderRadius: '12px 12px 6px 6px',
+          overflow: 'hidden',
           position: 'relative',
           boxShadow: [
             'inset 0 2px 12px rgba(0,0,0,0.95)',
@@ -302,17 +303,27 @@ export default function AppLayout() {
                   {/* Content */}
                   <div className={`${font} gbc-screen-content`} style={{
                     position: 'absolute', inset: 0, zIndex: 1,
-                    overflowY: emu ? 'hidden' : 'auto',
                     color: '#c8e890', fontSize: '16px',
                     display: 'flex', flexDirection: 'column',
                   }}>
-                    {emu ? (
+                    {/* App content — always in DOM, fades in on boot */}
+                    <div style={{
+                      flex: 1, overflowY: 'auto',
+                      opacity: emu ? 0 : 1,
+                      transition: `opacity ${T}`,
+                      pointerEvents: emu ? 'none' : 'auto',
+                    }}>
+                      <Outlet />
+                    </div>
+                    {/* Splash — always in DOM, fades out on boot */}
+                    <div style={{
+                      position: 'absolute', inset: 0, zIndex: 2,
+                      opacity: emu ? 1 : 0,
+                      transition: `opacity ${T}`,
+                      pointerEvents: emu ? 'auto' : 'none',
+                    }}>
                       <SplashScreen onStart={handleStart} />
-                    ) : (
-                      <div style={{ flex: 1 }}>
-                        <Outlet />
-                      </div>
-                    )}
+                    </div>
                     {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
                   </div>
                 </div>
@@ -343,7 +354,7 @@ export default function AppLayout() {
         {/* ── Green controls area — collapses to nav bar height in fullscreen ── */}
         <div style={{
           flexShrink: 0,
-          height: emu ? '42%' : '0px',
+          height: emu ? '42%' : '6px',
           transition: `height ${T}`,
           overflow: 'hidden',
           position: 'relative',
