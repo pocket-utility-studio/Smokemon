@@ -79,12 +79,13 @@ type Phase = 'startup' | 'silver' | 'title'
 
 export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [phase, setPhase] = useState<Phase>('startup')
+  const [gifDone, setGifDone] = useState(false)
   const [silverVisible, setSilverVisible] = useState(false)
   const [titleVisible, setTitleVisible] = useState(false)
   const silverDoneRef = useRef(false)
 
-  // GIF finishes — stay in startup until user taps
-  const handleStartupDone = useCallback(() => {}, [])
+  // GIF finishes — show tap prompt, wait for user
+  const handleStartupDone = useCallback(() => setGifDone(true), [])
 
   // 8s fallback in case GIF never loads
   useEffect(() => {
@@ -145,6 +146,20 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
       {phase === 'startup' && (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
+          {gifDone && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+              paddingBottom: 32,
+            }}>
+              <span className="gbc-blink" style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
+                fontSize: 10, color: '#4a7a10', letterSpacing: 2,
+              }}>
+                TAP TO CONTINUE
+              </span>
+            </div>
+          )}
         </div>
       )}
 
