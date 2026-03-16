@@ -168,17 +168,14 @@ export default function AppLayout() {
       alignItems: 'flex-start',   // top-anchored
       justifyContent: 'center',
       overflow: 'hidden',
-      paddingTop: 'max(env(safe-area-inset-top), 15px)',
+      paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)',
       boxSizing: 'border-box',
     }}>
 
       {/* ── GBC device shell ─────────────────────────────────────────────── */}
       <div style={{
         width: 'min(100vw, calc(100dvh * 78 / 133))',
-        height: emu
-          ? 'min(calc(100dvh - max(env(safe-area-inset-top), 15px)), calc(100vw * 133 / 78))'
-          : 'calc(100dvh - max(env(safe-area-inset-top), 15px))',
-        transition: `height ${T}`,
+        height: 'min(calc(100dvh - max(env(safe-area-inset-top, 0px), 20px)), calc(100vw * 133 / 78))',
         background: KIWI_GRAD,
         display: 'flex',
         flexDirection: 'column',
@@ -210,8 +207,7 @@ export default function AppLayout() {
         <div style={{
           flex: 1,
           minHeight: 0,
-          margin: emu ? '0 4%' : '0 1%',
-          transition: `margin ${T}`,
+          margin: '0 4%',
           background: BEZEL,
           borderRadius: '12px 12px 6px 6px',
           position: 'relative',
@@ -356,8 +352,7 @@ export default function AppLayout() {
         {/* ── Green controls area — collapses to nav bar height in fullscreen ── */}
         <div style={{
           flexShrink: 0,
-          height: emu ? '42%' : 'calc(56px + max(12px, env(safe-area-inset-bottom)))',
-          transition: `height ${T}`,
+          height: '42%',
           overflow: 'hidden',
           position: 'relative',
         }}>

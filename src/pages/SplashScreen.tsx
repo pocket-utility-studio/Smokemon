@@ -66,36 +66,56 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [phase, setPhase] = useState<Phase>('startup')
   const [silverVisible, setSilverVisible] = useState(false)
   const [titleVisible, setTitleVisible] = useState(false)
+  const silverDoneRef = useRef(false)
 
-  // Auto-boot after 3 000 ms regardless of GIF phase
+  // Stage 1 → Stage 2: switch to Silver GIF after 7 seconds
   useEffect(() => {
-    const t = setTimeout(onStart, 3000)
+    const t = setTimeout(() => {
+      setPhase('silver')
+      setSilverVisible(true)
+    }, 7000)
     return () => clearTimeout(t)
-  }, [onStart])
-
-  const handleStartupDone = useCallback(() => {
-    setTimeout(() => { setPhase('silver'); setSilverVisible(true) }, 400)
   }, [])
 
+  // Stage 2 → Stage 3: advance when Silver GIF finishes (guarded against double-fire)
   const handleSilverDone = useCallback(() => {
+    if (silverDoneRef.current) return
+    silverDoneRef.current = true
     setSilverVisible(false)
-    setTimeout(() => { setPhase('title'); setTimeout(() => setTitleVisible(true), 300) }, 400)
+    setTimeout(() => {
+      setPhase('title')
+      setTimeout(() => setTitleVisible(true), 300)
+    }, 400)
   }, [])
+
+  // Stage 2 fallback: max 4 seconds on Silver GIF before moving to title
+  useEffect(() => {
+    if (phase !== 'silver') return
+    const t = setTimeout(handleSilverDone, 4000)
+    return () => clearTimeout(t)
+  }, [phase, handleSilverDone])
 
   const handleClick = useCallback(() => {
-    if (phase === 'silver') {
-      setSilverVisible(false)
+    // Skip startup → go straight to title
+    if (phase === 'startup') {
+      silverDoneRef.current = true
       setPhase('title')
       setTimeout(() => setTitleVisible(true), 300)
       return
     }
+    // Skip silver → go straight to title
+    if (phase === 'silver') {
+      handleSilverDone()
+      return
+    }
+    // Title: proceed into the app
     if (phase === 'title') {
       unlockAudio()
       playBoot()
       setTimeout(() => playPressStart(), 350)
       onStart()
     }
-  }, [phase, onStart])
+  }, [phase, onStart, handleSilverDone])
 
   return (
     <div
@@ -109,7 +129,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
       }}
     >
       {phase === 'startup' && (
-        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
+        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={() => {}} />
       )}
 
       {phase === 'silver' && (
