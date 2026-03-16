@@ -45,56 +45,6 @@ body {
   height: 100%;
 }
 
-/* GBC volume slider — vertical, matches the original hardware knob */
-.gbc-vol-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 11px;
-  height: 40px;
-  background: linear-gradient(180deg, #253808 0%, #182802 100%);
-  border: 1px solid #0a1202;
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
-  outline: none;
-  cursor: pointer;
-  border-radius: 0;
-  padding: 0;
-}
-.gbc-vol-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 11px;
-  height: 15px;
-  background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(255,255,255,0.10) 0px, rgba(255,255,255,0.10) 1px,
-      rgba(0,0,0,0.18)       1px, rgba(0,0,0,0.18)       2px,
-      transparent            2px, transparent            3px
-    ),
-    linear-gradient(180deg, #4a7a10 0%, #3a6008 100%);
-  border: 1px solid #2a5008;
-  border-radius: 0;
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-}
-.gbc-vol-slider::-moz-range-thumb {
-  width: 11px;
-  height: 15px;
-  background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(255,255,255,0.10) 0px, rgba(255,255,255,0.10) 1px,
-      rgba(0,0,0,0.18)       1px, rgba(0,0,0,0.18)       2px,
-      transparent            2px, transparent            3px
-    ),
-    linear-gradient(180deg, #4a7a10 0%, #3a6008 100%);
-  border: 1px solid #2a5008;
-  border-radius: 0;
-  cursor: pointer;
-}
-
 /* GBC blink cursor animation */
 @keyframes gbc-blink {
   0%, 49% { opacity: 1; }
