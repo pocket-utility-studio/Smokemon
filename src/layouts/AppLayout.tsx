@@ -310,8 +310,8 @@ export default function AppLayout() {
           justifyContent: 'space-between',
           padding: '0 24px',
         }}>
-          {!started ? <DPad /> : <div />}
-          {!started ? <ActionButtons /> : <div />}
+          <DPad />
+          <ActionButtons />
         </div>
 
         {/* Speaker row — always shown */}
