@@ -39,7 +39,7 @@ const MENU: TopItem[] = [
   { kind: 'leaf', to: '/strain-match',label: 'STRAIN MATCH', description: 'AI POWERED STRAIN FINDER',           tag: '[AI]',   tagColor: '#84cc16' },
   {
     kind: 'group', id: 'vape',
-    label: "PROF. T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
+    label: "PROF T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
     tag: '[LAB]', tagColor: '#f0e040',
     children: [
       { kind: 'leaf', to: '/castform',  label: 'CASTFORM DIAL', description: 'VAPE TEMPERATURE RESEARCH',        tag: '[VAPE]',   tagColor: '#f0e040' },
