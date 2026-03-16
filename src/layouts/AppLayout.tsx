@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
@@ -182,10 +182,13 @@ export default function AppLayout() {
   const { wipePhase } = useTransitionNav()
 
   const emu = layoutMode === 'emulator'
+  // Separate from emu — only true during the initial splash boot sequence
+  const [booting, setBooting] = useState(() => sessionStorage.getItem('hasBooted') !== '1')
 
-  // Called by SplashScreen (manual click OR 3 s auto-timer)
+  // Called by SplashScreen when user taps through to the app
   const handleStart = useCallback(() => {
     sessionStorage.setItem('hasBooted', '1')
+    setBooting(false)
     setLayoutMode('fullscreen')
   }, [setLayoutMode])
 
@@ -321,21 +324,21 @@ export default function AppLayout() {
                     color: '#c8e890', fontSize: '16px',
                     display: 'flex', flexDirection: 'column',
                   }}>
-                    {/* App content — always in DOM, fades in on boot */}
+                    {/* App content — always in DOM, fades in after boot */}
                     <div style={{
                       flex: 1, overflowY: 'auto',
-                      opacity: emu ? 0 : 1,
+                      opacity: booting ? 0 : 1,
                       transition: `opacity ${T}`,
-                      pointerEvents: emu ? 'none' : 'auto',
+                      pointerEvents: booting ? 'none' : 'auto',
                     }}>
                       <Outlet />
                     </div>
-                    {/* Splash — always in DOM, fades out on boot */}
+                    {/* Splash — always in DOM, fades out after boot */}
                     <div style={{
                       position: 'absolute', inset: 0, zIndex: 2,
-                      opacity: emu ? 1 : 0,
+                      opacity: booting ? 1 : 0,
                       transition: `opacity ${T}`,
-                      pointerEvents: emu ? 'auto' : 'none',
+                      pointerEvents: booting ? 'auto' : 'none',
                     }}>
                       <SplashScreen onStart={handleStart} />
                     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
+import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
@@ -88,11 +89,16 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
   const stableDone = useCallback(onDone, [])
   const audioRef = useRef<HTMLAudioElement>(null)
   const { setGifMode } = useGifMode()
+  const { setLayoutMode } = useLayoutMode()
 
   useEffect(() => {
     setGifMode(true)
-    return () => setGifMode(false)
-  }, [setGifMode])
+    setLayoutMode('emulator')
+    return () => {
+      setGifMode(false)
+      setLayoutMode('fullscreen')
+    }
+  }, [setGifMode, setLayoutMode])
 
   // Start the audio timer from the moment the first gif frame actually draws
   const handleFirstFrame = useCallback(() => {
@@ -370,7 +376,7 @@ type PhaseState = 'idle' | 'loading' | 'result'
 export default function PokeCenter() {
   const { strains } = useStash()
   const { db } = useStrainDb()
-  const [entered, setEntered] = useState(() => sessionStorage.getItem('pc-entered') === '1')
+  const [entered, setEntered] = useState(false)
   const [selected, setSelected] = useState<Symptom[]>([])
   const [phase, setPhase] = useState<PhaseState>('idle')
   const [resultIndex, setResultIndex] = useState(0)
@@ -422,7 +428,7 @@ export default function PokeCenter() {
 
   return (
     <>
-      {!entered && <BuildingEntry onDone={() => { sessionStorage.setItem('pc-entered', '1'); setEntered(true) }} />}
+      {!entered && <BuildingEntry onDone={() => setEntered(true)} />}
     <div style={{
       minHeight: '100%',
       padding: '10px',
