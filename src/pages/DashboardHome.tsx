@@ -40,7 +40,7 @@ const MENU: TopItem[] = [
   {
     kind: 'group', id: 'vape',
     label: "PROF T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
-    tag: '[LAB]', tagColor: '#f0e040',
+    tag: '[VAPE]', tagColor: '#f0e040',
     children: [
       { kind: 'leaf', to: '/castform',  label: 'CASTFORM DIAL', description: 'VAPE TEMPERATURE RESEARCH',        tag: '[VAPE]',   tagColor: '#f0e040' },
       { kind: 'leaf', to: '/avb',       label: 'AVB ANALYSIS',  description: 'ALREADY VAPED BUD + TIMERS',       tag: '[DATA]',   tagColor: '#f59e0b' },
