@@ -3,8 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
 import SplashScreen from '../pages/SplashScreen'
-import { setVolume } from '../utils/sounds'
-import { useState } from 'react'
+
 import { useTransitionNav } from '../context/NavigationContext'
 import WipeOverlay from '../components/WipeOverlay'
 
@@ -141,75 +140,14 @@ function GBCLogo() {
   )
 }
 
-// ── Vol Rocker ─────────────────────────────────────────────────────────────────
-function VolRocker({ volume, onVolume }: { volume: number; onVolume: (v: number) => void }) {
-  const STEPS = 5
-  const filled = Math.round(volume * STEPS)
-
-  const adjust = (delta: number) => {
-    onVolume(Math.min(1, Math.max(0, Math.round((volume + delta) * STEPS) / STEPS)))
-  }
-
-  const halfBtn: React.CSSProperties = {
-    width: 22, height: 16,
-    background: 'linear-gradient(180deg, #2d2d2d 0%, #111 100%)',
-    border: 'none', cursor: 'pointer', padding: 0,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  }
-
-  return (
-    <div style={{
-      position: 'absolute', top: 8, right: 10, zIndex: 10,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-    }}>
-      <span style={{
-        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-        fontSize: 5, color: '#2a5808', letterSpacing: 0.5,
-      }}>VOL</span>
-
-      {/* Rocker pill */}
-      <div style={{
-        display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden',
-        border: '1px solid #060606',
-        boxShadow: [
-          'inset 0 1px 3px rgba(0,0,0,0.9)',
-          '0 2px 5px rgba(0,0,0,0.7)',
-          'inset 0 -1px 0 rgba(255,255,255,0.04)',
-        ].join(', '),
-      }}>
-        <button onClick={() => adjust(-0.2)} style={halfBtn}>
-          <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#555', lineHeight: 1 }}>−</span>
-        </button>
-        <div style={{ width: 1, background: '#060606', flexShrink: 0 }} />
-        <button onClick={() => adjust(0.2)} style={halfBtn}>
-          <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#555', lineHeight: 1 }}>+</span>
-        </button>
-      </div>
-
-      {/* Level dots */}
-      <div style={{ display: 'flex', gap: 3 }}>
-        {Array.from({ length: STEPS }).map((_, i) => (
-          <div key={i} style={{
-            width: 4, height: 4, borderRadius: '50%',
-            background: i < filled ? '#4a8a18' : '#152808',
-            boxShadow: i < filled ? '0 0 3px rgba(74,138,24,0.5)' : 'none',
-          }} />
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ── AppLayout ──────────────────────────────────────────────────────────────────
 export default function AppLayout() {
   const { font } = useVibe()
   const { layoutMode, setLayoutMode } = useLayoutMode()
-  const [volume, setVolumeState] = useState(0.8)
   const { wipePhase } = useTransitionNav()
 
   const emu = layoutMode === 'emulator'
-
-  const handleVolume = (v: number) => { setVolumeState(v); setVolume(v) }
 
   // Called by SplashScreen (manual click OR 3 s auto-timer)
   const handleStart = useCallback(() => {
@@ -265,8 +203,6 @@ export default function AppLayout() {
         {/* Minimal green rim above lens */}
         <div style={{ flexShrink: 0, height: '4px' }} />
 
-        {/* VOL — physical rocker built into top-right of green plastic */}
-        <VolRocker volume={volume} onVolume={handleVolume} />
 
         {/* ── Black lens — flex:1 so it grows to fill space above controls ─ */}
         <div style={{
