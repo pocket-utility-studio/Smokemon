@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
-import { useGifMode } from '../context/GifModeContext'
 import GBCBottomBar from '../components/GBCBottomBar'
 import SplashScreen from '../pages/SplashScreen'
 import { setVolume } from '../utils/sounds'
@@ -97,7 +96,6 @@ function GBCLogo() {
 
 export default function AppLayout() {
   const { font } = useVibe()
-  const { gifMode } = useGifMode()
   const [started, setStarted] = useState(() => sessionStorage.getItem('app-started') === '1')
   const [volume, setVolumeState] = useState(0.8)
   const { wipePhase } = useTransitionNav()
