@@ -10,7 +10,6 @@ function VideoPlayer({ src, onDone }: { src: string; onDone: () => void }) {
       src={src}
       autoPlay
       playsInline
-      muted
       onEnded={stableDone}
       style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
     />
@@ -75,21 +74,21 @@ function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
   )
 }
 
-type Phase = 'startup' | 'silver' | 'title'
+type Phase = 'startup' | 'title' | 'silver'
 
 export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [phase, setPhase] = useState<Phase>('startup')
-  const [silverVisible, setSilverVisible] = useState(false)
   const [titleVisible, setTitleVisible] = useState(false)
-  const silverDoneRef = useRef(false)
+  const [silverVisible, setSilverVisible] = useState(false)
   const startupDoneRef = useRef(false)
+  const silverDoneRef = useRef(false)
 
-  // Stage 1 → Stage 2: immediately when boot GIF finishes (8 s max fallback)
+  // Stage 1 → title: when boot GIF finishes (8s max fallback)
   const handleStartupDone = useCallback(() => {
     if (startupDoneRef.current) return
     startupDoneRef.current = true
-    setPhase('silver')
-    setSilverVisible(true)
+    setPhase('title')
+    setTimeout(() => setTitleVisible(true), 300)
   }, [])
 
   useEffect(() => {
@@ -97,18 +96,15 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
     return () => clearTimeout(t)
   }, [handleStartupDone])
 
-  // Stage 2 → Stage 3: advance when Silver GIF finishes (guarded against double-fire)
+  // Stage 3: video ends → enter app
   const handleSilverDone = useCallback(() => {
     if (silverDoneRef.current) return
     silverDoneRef.current = true
     setSilverVisible(false)
-    setTimeout(() => {
-      setPhase('title')
-      setTimeout(() => setTitleVisible(true), 300)
-    }, 400)
-  }, [])
+    setTimeout(() => onStart(), 400)
+  }, [onStart])
 
-  // Stage 2 fallback: max 30 seconds on splash video before moving to title
+  // Fallback: max 30s on video before entering app
   useEffect(() => {
     if (phase !== 'silver') return
     const t = setTimeout(handleSilverDone, 30000)
@@ -118,24 +114,28 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const handleClick = useCallback(() => {
     // Skip startup → go straight to title
     if (phase === 'startup') {
-      silverDoneRef.current = true
+      startupDoneRef.current = true
       setPhase('title')
       setTimeout(() => setTitleVisible(true), 300)
       return
     }
-    // Skip silver → go straight to title
-    if (phase === 'silver') {
-      handleSilverDone()
-      return
-    }
-    // Title: proceed into the app
+    // Title: user tap triggers video with sound (user gesture unlocks audio)
     if (phase === 'title') {
       unlockAudio()
       playBoot()
       setTimeout(() => playPressStart(), 350)
-      onStart()
+      setTitleVisible(false)
+      setTimeout(() => {
+        setPhase('silver')
+        setSilverVisible(true)
+      }, 400)
+      return
     }
-  }, [phase, onStart, handleSilverDone])
+    // Skip video → enter app immediately
+    if (phase === 'silver') {
+      handleSilverDone()
+    }
+  }, [phase, handleSilverDone])
 
   return (
     <div
@@ -144,7 +144,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         position: 'absolute', inset: 0,
         background: phase === 'startup' ? '#e8e8e0' : '#050a04',
         transition: 'background 0.6s ease',
-        cursor: phase === 'title' ? 'pointer' : 'default',
+        cursor: phase === 'title' || phase === 'silver' ? 'pointer' : 'default',
         overflow: 'hidden',
       }}
     >
