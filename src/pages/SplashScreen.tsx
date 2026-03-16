@@ -67,6 +67,12 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [silverVisible, setSilverVisible] = useState(false)
   const [titleVisible, setTitleVisible] = useState(false)
 
+  // Auto-boot after 3 000 ms regardless of GIF phase
+  useEffect(() => {
+    const t = setTimeout(onStart, 3000)
+    return () => clearTimeout(t)
+  }, [onStart])
+
   const handleStartupDone = useCallback(() => {
     setTimeout(() => { setPhase('silver'); setSilverVisible(true) }, 400)
   }, [])

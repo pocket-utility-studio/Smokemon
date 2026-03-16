@@ -4,6 +4,7 @@ import { StashProvider } from './context/StashContext'
 import { TimeOfDayProvider } from './context/TimeOfDayContext'
 import { NavigationProvider } from './context/NavigationContext'
 import { GifModeProvider } from './context/GifModeContext'
+import { LayoutModeProvider } from './context/LayoutModeContext'
 import AppLayout from './layouts/AppLayout'
 import DashboardHome from './pages/DashboardHome'
 import StrainMatchmaker from './pages/StrainMatchmaker'
@@ -26,6 +27,7 @@ export default function App() {
           <BrowserRouter basename="/Smokemon">
             <NavigationProvider>
             <GifModeProvider>
+            <LayoutModeProvider>
             <Routes>
               <Route element={<AppLayout />}>
                 <Route index element={<DashboardHome />} />
@@ -42,6 +44,7 @@ export default function App() {
                 <Route path="avb" element={<AbvPage />} />
               </Route>
             </Routes>
+            </LayoutModeProvider>
             </GifModeProvider>
             </NavigationProvider>
           </BrowserRouter>
