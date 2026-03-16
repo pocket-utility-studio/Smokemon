@@ -167,12 +167,6 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
           }}>
             SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span>DEX
           </span>
-          <span className="gbc-blink" style={{
-            fontFamily: "'PokemonGb', 'Press Start 2P'",
-            fontSize: 12, color: '#c8e890', letterSpacing: 2,
-          }}>
-            TAP TO CONTINUE
-          </span>
         </div>
       )}
     </div>
