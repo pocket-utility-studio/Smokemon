@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
-import GBCBottomBar from '../components/GBCBottomBar'
 import SplashScreen from '../pages/SplashScreen'
 import { setVolume } from '../utils/sounds'
 import { useState } from 'react'
@@ -206,6 +205,23 @@ export default function AppLayout() {
         {/* Minimal green rim above lens */}
         <div style={{ flexShrink: 0, height: '4px' }} />
 
+        {/* VOL — physical dial built into top-right of green plastic */}
+        <div style={{
+          position: 'absolute', top: 6, right: 10,
+          display: 'flex', alignItems: 'center', gap: 4, zIndex: 10,
+        }}>
+          <span style={{
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+            fontSize: 5, color: '#2a5808', letterSpacing: 0.5,
+          }}>VOL</span>
+          <input
+            type="range" min={0} max={100} value={Math.round(volume * 100)}
+            onChange={(e) => handleVolume(Number(e.target.value) / 100)}
+            className="gbc-vol-slider"
+            style={{ width: 52 }}
+          />
+        </div>
+
         {/* ── Black lens — flex:1 so it grows to fill space above controls ─ */}
         <div style={{
           flex: 1,
@@ -223,12 +239,10 @@ export default function AppLayout() {
           flexDirection: 'column',
         }}>
 
-          {/* Power LED — left rim */}
+          {/* Power LED — anchored in left bezel, above the active screen */}
           <div style={{
-            position: 'absolute', left: 10, top: 20,
+            position: 'absolute', left: 10, top: 10,
             display: 'flex', alignItems: 'center', gap: 4, zIndex: 2,
-            transition: `opacity ${T}`,
-            opacity: emu ? 1 : 0.5,
           }}>
             <div style={{
               width: 7, height: 7, borderRadius: '50%',
@@ -251,24 +265,6 @@ export default function AppLayout() {
             }}>POWER</span>
           </div>
 
-          {/* VOL slider — top right */}
-          <div style={{
-            position: 'absolute', top: 10, right: 8,
-            display: 'flex', alignItems: 'center', gap: 3, zIndex: 2,
-            transition: `opacity ${T}`,
-            opacity: emu ? 1 : 0.4,
-          }}>
-            <span style={{
-              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 4, color: '#333',
-            }}>VOL</span>
-            <input
-              type="range" min={0} max={100} value={Math.round(volume * 100)}
-              onChange={(e) => handleVolume(Number(e.target.value) / 100)}
-              className="gbc-vol-slider"
-            />
-          </div>
-
           {/*
             ── Screen area — flex:1 so it fills the lens ─────────────────────
             Chain: lens (flex col) → screen-area (flex:1) → inner frame (flex:1)
@@ -277,7 +273,7 @@ export default function AppLayout() {
           <div style={{
             flex: 1,
             minHeight: 0,
-            padding: '18px 14px 0',
+            padding: '26px 12px 0',
             display: 'flex',
             flexDirection: 'column',
           }}>
@@ -333,33 +329,21 @@ export default function AppLayout() {
             </div>
           </div>
 
-          {/* Bottom nav — inside the lens, collapses away in emulator mode */}
+          {/* Logo area — slim bottom bezel of lens */}
           <div style={{
-            flexShrink: 0,
-            maxHeight: emu ? '0px' : '80px',
-            overflow: 'hidden',
-            opacity: emu ? 0 : 1,
-            transition: `max-height ${T}, opacity ${T}`,
-            pointerEvents: emu ? 'none' : 'auto',
-          }}>
-            <GBCBottomBar />
-          </div>
-
-          {/* Logo area — bottom of lens */}
-          <div style={{
-            height: 56,
+            height: 40,
             flexShrink: 0,
             display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 3,
+            alignItems: 'center', justifyContent: 'center', gap: 2,
           }}>
             <GBCLogo />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
                 fontFamily: "'Arial', sans-serif", fontStyle: 'italic',
-                fontWeight: 700, fontSize: 8, color: '#444', letterSpacing: 1, userSelect: 'none',
+                fontWeight: 700, fontSize: 7, color: '#444', letterSpacing: 1, userSelect: 'none',
               }}>Nintendo</span>
               <span style={{
-                fontFamily: 'monospace', fontSize: 7, color: '#333', userSelect: 'none',
+                fontFamily: 'monospace', fontSize: 6, color: '#333', userSelect: 'none',
               }}>v{__APP_VERSION__}</span>
             </div>
           </div>

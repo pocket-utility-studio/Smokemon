@@ -4,9 +4,7 @@ import { playNavigate } from '../utils/sounds'
 import { haptic } from '../utils/haptic'
 
 const pokeBox = {
-  border: '4px double #84cc16',
-  outline: '2px solid #2a5008',
-  outlineOffset: '-6px',
+  border: '4px solid #84cc16',
   background: '#050e04',
 }
 
