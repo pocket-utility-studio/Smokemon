@@ -35,8 +35,7 @@ type TopItem = Leaf | Group
 
 const MENU: TopItem[] = [
   { kind: 'leaf', to: '/smokedex',    label: 'SMOKÉDEX',     description: 'YOUR PERSONAL STRAIN JOURNAL',       tag: '[DEX]',  tagColor: '#84cc16' },
-  { kind: 'leaf', to: '/poke-center', label: 'SMOKÉ CENTER', description: 'SYMPTOM-BASED RECOMMENDER',          tag: '[RX]',   tagColor: '#a78bfa' },
-  { kind: 'leaf', to: '/strain-match',label: 'STRAIN MATCH', description: 'AI POWERED STRAIN FINDER',           tag: '[AI]',   tagColor: '#84cc16' },
+  { kind: 'leaf', to: '/poke-center', label: 'SMOKÉ CENTER', description: 'AI POWERED STRAIN FINDER',           tag: '[RX]',   tagColor: '#a78bfa' },
   {
     kind: 'group', id: 'vape',
     label: "PROF T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
