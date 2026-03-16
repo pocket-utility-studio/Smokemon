@@ -43,6 +43,27 @@ These are the values that define the fullscreen appearance. Do not change withou
 
 ---
 
+## SPLASH SCREEN FLOW PROTECTION
+
+**Do NOT change the order or behaviour of the splash phases without explicit approval.**
+
+The current flow is locked and correct:
+
+| Step | Phase | What happens |
+|---|---|---|
+| 1 | `startup` | `gbc-startup.gif` plays automatically. Tap at any time to skip to step 2. |
+| 2 | `silver` | `splash.mp4` plays with sound (user tap = browser gesture = audio allowed). Tap to skip to step 3. |
+| 3 | `title` | SMOKEDEX screen with blinking TAP TO CONTINUE. Tap to enter app. |
+
+### Locked behaviours
+- GIF plays first, always — no auto-advance to mp4
+- mp4 plays second, triggered by user tap (this is intentional — tap = audio unlock)
+- SMOKEDEX title screen is last before entering the app
+- "TAP TO CONTINUE" blinks on the SMOKEDEX title screen
+- All three phases are in `src/pages/SplashScreen.tsx`, type `Phase = 'startup' | 'silver' | 'title'`
+
+---
+
 ## General project rules
 
 - No emojis anywhere
