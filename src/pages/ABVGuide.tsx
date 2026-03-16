@@ -154,7 +154,7 @@ export default function ABVGuide() {
           fontSize: 13,
           color: GBC_GREEN,
         }}>
-          AVB GUIDE
+          FOSSIL REVIVE
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P', monospace",

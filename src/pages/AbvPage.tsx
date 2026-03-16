@@ -192,7 +192,7 @@ export default function AbvPage() {
         paddingBottom: 8,
       }}>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
-          AVB STATUS
+          AVB ANALYSIS
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P'",

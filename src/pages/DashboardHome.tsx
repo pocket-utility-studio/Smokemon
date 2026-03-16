@@ -39,12 +39,12 @@ const MENU: TopItem[] = [
   { kind: 'leaf', to: '/strain-match',label: 'STRAIN MATCH', description: 'AI POWERED STRAIN FINDER',           tag: '[AI]',   tagColor: '#84cc16' },
   {
     kind: 'group', id: 'vape',
-    label: 'VAPE TOOLS', description: 'TEMP GUIDE, AVB STATUS & METHODS',
-    tag: '[VAPE]', tagColor: '#f0e040',
+    label: "T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
+    tag: '[LAB]', tagColor: '#f0e040',
     children: [
-      { kind: 'leaf', to: '/castform',  label: 'CASTFORM DIAL', description: 'VAPE TEMPERATURE GUIDE',           tag: '[VAPE]',   tagColor: '#f0e040' },
-      { kind: 'leaf', to: '/avb',       label: 'AVB STATUS',    description: 'ALREADY VAPED BUD + TIMERS',       tag: '[AVB]',    tagColor: '#f59e0b' },
-      { kind: 'leaf', to: '/abv-guide', label: 'AVB GUIDE',     description: '6 METHODS TO USE YOUR LEFTOVERS',  tag: '[HOW-TO]', tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/castform',  label: 'CASTFORM DIAL', description: 'VAPE TEMPERATURE RESEARCH',        tag: '[VAPE]',   tagColor: '#f0e040' },
+      { kind: 'leaf', to: '/avb',       label: 'AVB ANALYSIS',  description: 'ALREADY VAPED BUD + TIMERS',       tag: '[DATA]',   tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/abv-guide', label: 'FOSSIL REVIVE', description: '6 METHODS TO USE YOUR LEFTOVERS',  tag: '[COOK]',   tagColor: '#f59e0b' },
     ],
   },
   {
