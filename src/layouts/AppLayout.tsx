@@ -45,25 +45,29 @@ function DPad() {
   )
 }
 
-// ── A/B Buttons ────────────────────────────────────────────────────────────────
+// ── A/B Buttons — B lower-left, A upper-right (slanted like real hardware) ────
 function ActionButtons() {
   const btn = (label: string, size: number) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      <div style={{
-        width: size, height: size, borderRadius: '50%',
-        background: 'radial-gradient(circle at 35% 35%, #2a2a2a, #0e0e0e)',
-        border: '1px solid #080808',
-        boxShadow: '0 3px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.05)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
-      </div>
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'radial-gradient(circle at 35% 35%, #2a2a2a, #0e0e0e)',
+      border: '1px solid #080808',
+      boxShadow: '0 3px 6px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.05)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
     </div>
   )
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexShrink: 0 }}>
-      {btn('B', 36)}
-      {btn('A', 44)}
+    <div style={{ position: 'relative', width: 88, height: 70, flexShrink: 0 }}>
+      {/* B — lower-left */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0 }}>
+        {btn('B', 34)}
+      </div>
+      {/* A — upper-right */}
+      <div style={{ position: 'absolute', top: 0, right: 0 }}>
+        {btn('A', 42)}
+      </div>
     </div>
   )
 }
@@ -96,18 +100,19 @@ function StartSelect() {
   )
 }
 
-// ── Speaker Grille ─────────────────────────────────────────────────────────────
+// ── Speaker Grille — oval cluster of vertical pill slots (real hardware style) ─
 function SpeakerGrille() {
-  const rowCounts = [5, 6, 6, 6, 5]
+  // Column heights define the oval shape: short → tall → short
+  const slotCounts = [3, 5, 6, 6, 5, 3]
   return (
-    <div style={{ transform: 'rotate(-8deg)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {rowCounts.map((cols, r) => (
-        <div key={r} style={{ display: 'flex', gap: 4, marginLeft: r % 2 === 1 ? 5 : 0 }}>
-          {Array.from({ length: cols }).map((_, c) => (
-            <div key={c} style={{
-              width: 6, height: 6, borderRadius: '50%',
+    <div style={{ transform: 'rotate(-20deg)', display: 'flex', gap: 5, alignItems: 'center' }}>
+      {slotCounts.map((count, c) => (
+        <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+          {Array.from({ length: count }).map((_, r) => (
+            <div key={r} style={{
+              width: 4, height: 12, borderRadius: 3,
               background: '#040c02',
-              boxShadow: 'inset 0 2px 3px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.07)',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.06)',
             }} />
           ))}
         </div>
@@ -154,24 +159,25 @@ export default function AppLayout() {
   }, [setLayoutMode])
 
   return (
-    // ── Full-screen kiwi backdrop — device floats centred inside it ──────────
+    // ── Kiwi backdrop — shell anchored to top with safe-area padding ──────
     <div style={{
       width: '100vw',
       height: '100dvh',
       background: KIWI_GRAD,
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',   // top-anchored
       justifyContent: 'center',
       overflow: 'hidden',
+      paddingTop: 'max(env(safe-area-inset-top), 15px)',
+      boxSizing: 'border-box',
     }}>
 
       {/* ── GBC device shell ─────────────────────────────────────────────── */}
-      {/*   Emulator: constrained to 78:133 physical proportions             */}
-      {/*   Fullscreen: expands to fill the whole viewport                    */}
       <div style={{
         width: 'min(100vw, calc(100dvh * 78 / 133))',
-        // Height: emulator = GBC ratio, fullscreen = 100dvh
-        height: emu ? 'min(100dvh, calc(100vw * 133 / 78))' : '100dvh',
+        height: emu
+          ? 'min(calc(100dvh - max(env(safe-area-inset-top), 15px)), calc(100vw * 133 / 78))'
+          : 'calc(100dvh - max(env(safe-area-inset-top), 15px))',
         transition: `height ${T}`,
         background: KIWI_GRAD,
         display: 'flex',
@@ -185,8 +191,8 @@ export default function AppLayout() {
           flexShrink: 0,
           display: 'flex',
           justifyContent: 'center',
-          paddingTop: '1.5%',
-          transition: `opacity ${T}`,
+          paddingTop: emu ? '1.5%' : '3px',
+          transition: `padding-top ${T}, opacity ${T}`,
           opacity: emu ? 1 : 0.4,
         }}>
           <div style={{
@@ -197,14 +203,17 @@ export default function AppLayout() {
           }} />
         </div>
 
-        {/* Green plastic margin above lens */}
-        <div style={{ flex: '0 0 2%' }} />
-
-        {/* ── Black lens ───────────────────────────────────────────────── */}
-        {/*   Emulator: 4% green margin on sides                            */}
-        {/*   Fullscreen: expands to 1% margin (nearly edge-to-edge)        */}
+        {/* Thin green strip above lens */}
         <div style={{
           flexShrink: 0,
+          height: emu ? '2%' : '4px',
+          transition: `height ${T}`,
+        }} />
+
+        {/* ── Black lens — flex:1 so it grows to fill space above controls ─ */}
+        <div style={{
+          flex: 1,
+          minHeight: 0,
           margin: emu ? '0 4%' : '0 1%',
           transition: `margin ${T}`,
           background: BEZEL,
@@ -214,6 +223,8 @@ export default function AppLayout() {
             'inset 0 2px 12px rgba(0,0,0,0.95)',
             '0 6px 20px rgba(0,0,0,0.5)',
           ].join(', '),
+          display: 'flex',
+          flexDirection: 'column',
         }}>
 
           {/* Power LED — left rim */}
@@ -262,27 +273,31 @@ export default function AppLayout() {
             />
           </div>
 
-          {/* Screen area */}
-          <div style={{ padding: '28px 14px 0' }}>
+          {/*
+            ── Screen area — flex:1 so it fills the lens ─────────────────────
+            Chain: lens (flex col) → screen-area (flex:1) → inner frame (flex:1)
+            → active display (flex:1) → content (absolute fill)
+          */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            padding: '28px 14px 0',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
             {/* Dark inner frame */}
             <div style={{
+              flex: 1,
+              minHeight: 0,
               background: BEZEL_INNER,
               borderRadius: 6,
               padding: 5,
               boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.95)',
+              display: 'flex',
+              flexDirection: 'column',
             }}>
-              {/*
-                ── Active display — aspect-ratio box trick ─────────────────
-                We use padding-bottom instead of aspect-ratio so the
-                ratio IS animatable via CSS transition.
-                  Emulator  : 90% = 9/10 of width  →  10:9 (GBC native)
-                  Fullscreen: 133% = 4:3 portrait   →  maximum reading space
-              */}
-              <div style={{ position: 'relative', width: '100%' }}>
-                <div style={{
-                  paddingBottom: emu ? '90%' : '133%',
-                  transition: `padding-bottom ${T}`,
-                }} />
+              {/* Active display */}
+              <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
                 <div style={{
                   position: 'absolute', inset: 0,
                   borderRadius: 3,
@@ -325,6 +340,7 @@ export default function AppLayout() {
           {/* Logo area — bottom of lens */}
           <div style={{
             height: 56,
+            flexShrink: 0,
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', gap: 3,
           }}>
@@ -341,13 +357,13 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* ── Green controls area ──────────────────────────────────────────── */}
+        {/* ── Green controls area — collapses to nav bar height in fullscreen ── */}
         <div style={{
-          flex: 1,
-          minHeight: 0,
+          flexShrink: 0,
+          height: emu ? '42%' : 'calc(56px + max(12px, env(safe-area-inset-bottom)))',
+          transition: `height ${T}`,
+          overflow: 'hidden',
           position: 'relative',
-          padding: '3% 7% 0',
-          paddingBottom: 'max(2%, env(safe-area-inset-bottom))',
         }}>
 
           {/* Hardware buttons — visible in emulator, fade out in fullscreen */}
@@ -376,7 +392,7 @@ export default function AppLayout() {
             }}>
               <StartSelect />
             </div>
-            {/* Speaker */}
+            {/* Speaker — bottom right */}
             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <SpeakerGrille />
             </div>
