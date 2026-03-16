@@ -90,7 +90,7 @@ function StartSelect() {
   return (
     <div style={{
       display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center',
-      transform: 'rotate(-25deg)', transformOrigin: 'center',
+      transform: 'rotate(-15deg)', transformOrigin: 'center',
       pointerEvents: 'none', userSelect: 'none',
     }}>
       {pill('SELECT')}
@@ -99,19 +99,19 @@ function StartSelect() {
   )
 }
 
-// ── Speaker Grille — oval cluster of vertical pill slots (real hardware style) ─
+// ── Speaker Grille — dot grid matching real GBC hardware ──────────────────────
 function SpeakerGrille() {
-  // Column heights define the oval shape: short → tall → short
-  const slotCounts = [3, 5, 6, 6, 5, 3]
+  const cols = 5
+  const rows = 5
   return (
-    <div style={{ transform: 'rotate(-20deg)', display: 'flex', gap: 5, alignItems: 'center' }}>
-      {slotCounts.map((count, c) => (
-        <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
-          {Array.from({ length: count }).map((_, r) => (
-            <div key={r} style={{
-              width: 4, height: 12, borderRadius: 3,
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} style={{ display: 'flex', gap: 5 }}>
+          {Array.from({ length: cols }).map((_, c) => (
+            <div key={c} style={{
+              width: 6, height: 6, borderRadius: '50%',
               background: '#040c02',
-              boxShadow: 'inset 0 2px 4px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.06)',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.05)',
             }} />
           ))}
         </div>
@@ -344,9 +344,10 @@ export default function AppLayout() {
           {/* Hardware buttons — visible in emulator, fade out in fullscreen */}
           <div style={{
             position: 'absolute', inset: 0,
-            padding: '2% 7% 0',
-            paddingBottom: 'max(2%, env(safe-area-inset-bottom))',
+            padding: '4% 7% 4%',
+            paddingBottom: 'max(4%, env(safe-area-inset-bottom))',
             display: 'flex', flexDirection: 'column',
+            justifyContent: 'space-between',
             opacity: emu ? 1 : 0,
             transform: emu ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)',
             transition: `opacity ${T}, transform ${T}`,
@@ -355,20 +356,16 @@ export default function AppLayout() {
             {/* D-pad + A/B — close to lens */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: '4%',
             }}>
               <DPad />
               <ActionButtons />
             </div>
-            {/* Start + Select */}
-            <div style={{
-              display: 'flex', justifyContent: 'center', alignItems: 'center',
-              marginBottom: '4%',
-            }}>
+            {/* Start + Select — centered */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <StartSelect />
             </div>
             {/* Speaker — bottom right */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <SpeakerGrille />
             </div>
           </div>
