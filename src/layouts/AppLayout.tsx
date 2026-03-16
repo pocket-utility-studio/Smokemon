@@ -14,143 +14,162 @@ const BEZEL_INNER = '#0e0e0e'
 // Easing used on every animated property
 const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 
-// ── D-Pad ──────────────────────────────────────────────────────────────────────
-// 88px, 29px arms. Circular thumb-rest indentation. Embossed arrows.
-// Arrow centres: L=(14.5,43.5) R=(73,43.5) U=(43.5,14.5) D=(43.5,73)
-function DPad() {
-  const arm: React.CSSProperties = {
-    background: 'linear-gradient(160deg, #252525 0%, #161616 50%, #0e0e0e 100%)',
-    border: '1.5px solid #060606',
-    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06), inset 0 -1px 2px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.8)',
-    position: 'absolute',
-  }
-  const arrows = [
-    { top: 38, left: 10,    borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '9px solid #666',  filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
-    { top: 38, right: 10,   borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #666',   filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
-    { left: 44, top: 10,    borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '9px solid #666', filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
-    { left: 44, bottom: 10, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid #666',    filter: 'drop-shadow(0 -1px 0 rgba(255,255,255,0.08))' },
-  ]
+// ── GBC Controls SVG ───────────────────────────────────────────────────────────
+// Single SVG replaces all individual CSS button components.
+// viewBox 0 0 300 240 — coordinates derived from real Kiwi GBC reference photo.
+// Aspect ratio 300:240 ≈ 1.25:1 matches the controls area proportions.
+function GBCControlsSVG() {
+  // Key centres (x, y) in viewBox coordinates
+  const dp  = { x: 75,  y: 118 }  // D-pad
+  const bB  = { x: 197, y: 133 }  // B button
+  const aB  = { x: 240, y: 112 }  // A button
+  const bdg = { x: 150, y: 26  }  // Nintendo badge
+  const sel = { x: 107, y: 197 }  // SELECT
+  const sta = { x: 156, y: 192 }  // START
+  const spk = { x: 216, y: 180 }  // Speaker grid top-left
+
+  // Speaker: 7 cols × 6 rows, 8px spacing, r=2.8
+  const dots: { cx: number; cy: number }[] = []
+  for (let r = 0; r < 6; r++)
+    for (let c = 0; c < 7; c++)
+      dots.push({ cx: spk.x + c * 8, cy: spk.y + r * 8 })
+
   return (
-    <div style={{
-      position: 'relative', width: 88, height: 88,
-      pointerEvents: 'none', userSelect: 'none',
-      filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.8))',
-    }}>
-      <div style={{ ...arm, top: 29, left: 0, width: 88, height: 29, borderRadius: 4 }} />
-      <div style={{ ...arm, top: 0, left: 29, width: 29, height: 88, borderRadius: 4 }} />
-      <div style={{
-        position: 'absolute', top: 32.5, left: 32.5, width: 22, height: 22, borderRadius: '50%',
-        background: 'radial-gradient(circle at 42% 38%, #262626 0%, #141414 50%, #090909 100%)',
-        boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.95), inset 0 -1px 2px rgba(255,255,255,0.04)',
-      }} />
-      {arrows.map(({ filter: f, ...a }, i) => (
-        <div key={i} style={{ position: 'absolute', width: 0, height: 0, filter: f, ...a }} />
+    <svg
+      viewBox="0 0 300 240"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: '100%', height: '100%', display: 'block' }}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <defs>
+        <linearGradient id="g-arm" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#2a2a2a" />
+          <stop offset="50%"  stopColor="#181818" />
+          <stop offset="100%" stopColor="#0e0e0e" />
+        </linearGradient>
+        <radialGradient id="g-dome" cx="38%" cy="30%" r="65%">
+          <stop offset="0%"   stopColor="#484848" />
+          <stop offset="40%"  stopColor="#2c2c2c" />
+          <stop offset="70%"  stopColor="#161616" />
+          <stop offset="100%" stopColor="#0a0a0a" />
+        </radialGradient>
+        <radialGradient id="g-dpc" cx="42%" cy="38%" r="60%">
+          <stop offset="0%"   stopColor="#282828" />
+          <stop offset="50%"  stopColor="#141414" />
+          <stop offset="100%" stopColor="#080808" />
+        </radialGradient>
+        <linearGradient id="g-badge" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="rgba(0,0,0,0.07)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.22)" />
+        </linearGradient>
+        <linearGradient id="g-pill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#303030" />
+          <stop offset="60%"  stopColor="#232323" />
+          <stop offset="100%" stopColor="#1a1a1a" />
+        </linearGradient>
+        <filter id="f-btn" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.85)" />
+        </filter>
+        <filter id="f-dp" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="rgba(0,0,0,0.9)" />
+        </filter>
+      </defs>
+
+      {/* ── Nintendo badge ─────────────────────────────────── */}
+      <rect
+        x={bdg.x - 52} y={bdg.y - 13} width={104} height={26} rx={13}
+        fill="url(#g-badge)" stroke="rgba(0,0,0,0.30)" strokeWidth={1.5}
+      />
+      <text
+        x={bdg.x - 2} y={bdg.y + 5}
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif" fontStyle="italic" fontWeight="900"
+        fontSize={12} fill="rgba(0,0,0,0.28)"
+      >Nintendo</text>
+      <text
+        x={bdg.x + 50} y={bdg.y + 2}
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif" fontSize={7} fill="rgba(0,0,0,0.24)"
+      >®</text>
+
+      {/* ── D-pad ──────────────────────────────────────────── */}
+      {/* Horizontal arm */}
+      <rect
+        x={dp.x - 44} y={dp.y - 14} width={88} height={28} rx={4}
+        fill="url(#g-arm)" stroke="#050505" strokeWidth={1.5}
+        filter="url(#f-dp)"
+      />
+      {/* Vertical arm */}
+      <rect
+        x={dp.x - 14} y={dp.y - 44} width={28} height={88} rx={4}
+        fill="url(#g-arm)" stroke="#050505" strokeWidth={1.5}
+        filter="url(#f-dp)"
+      />
+      {/* Centre thumb indent */}
+      <circle cx={dp.x} cy={dp.y} r={12} fill="url(#g-dpc)" />
+      {/* Arrows */}
+      <polygon points={`${dp.x-26},${dp.y} ${dp.x-18},${dp.y-6} ${dp.x-18},${dp.y+6}`} fill="#555" />
+      <polygon points={`${dp.x+26},${dp.y} ${dp.x+18},${dp.y-6} ${dp.x+18},${dp.y+6}`} fill="#555" />
+      <polygon points={`${dp.x},${dp.y-26} ${dp.x-6},${dp.y-18} ${dp.x+6},${dp.y-18}`} fill="#555" />
+      <polygon points={`${dp.x},${dp.y+26} ${dp.x-6},${dp.y+18} ${dp.x+6},${dp.y+18}`} fill="#555" />
+
+      {/* ── B button ───────────────────────────────────────── */}
+      {/* Outer groove shadow ring */}
+      <circle cx={bB.x} cy={bB.y} r={22} fill="rgba(0,0,0,0.38)" />
+      {/* Dome */}
+      <circle
+        cx={bB.x} cy={bB.y} r={18}
+        fill="url(#g-dome)" stroke="#040404" strokeWidth={1.5}
+        filter="url(#f-btn)"
+      />
+      <text
+        x={bB.x} y={bB.y + 4} textAnchor="middle"
+        fontFamily="'PokemonGb', 'Press Start 2P', monospace"
+        fontSize={8} fill="#606060"
+      >B</text>
+
+      {/* ── A button ───────────────────────────────────────── */}
+      {/* Outer groove shadow ring */}
+      <circle cx={aB.x} cy={aB.y} r={28} fill="rgba(0,0,0,0.38)" />
+      {/* Dome */}
+      <circle
+        cx={aB.x} cy={aB.y} r={23}
+        fill="url(#g-dome)" stroke="#040404" strokeWidth={1.5}
+        filter="url(#f-btn)"
+      />
+      <text
+        x={aB.x} y={aB.y + 4} textAnchor="middle"
+        fontFamily="'PokemonGb', 'Press Start 2P', monospace"
+        fontSize={9} fill="#606060"
+      >A</text>
+
+      {/* ── SELECT pill ────────────────────────────────────── */}
+      <rect
+        x={sel.x - 24} y={sel.y - 7} width={48} height={14} rx={7}
+        fill="url(#g-pill)" stroke="#161616" strokeWidth={1}
+      />
+      <text
+        x={sel.x} y={sel.y + 17} textAnchor="middle"
+        fontFamily="'PokemonGb', 'Press Start 2P', monospace"
+        fontSize={4} fill="#3a6010"
+      >SELECT</text>
+
+      {/* ── START pill ─────────────────────────────────────── */}
+      <rect
+        x={sta.x - 24} y={sta.y - 7} width={48} height={14} rx={7}
+        fill="url(#g-pill)" stroke="#161616" strokeWidth={1}
+      />
+      <text
+        x={sta.x} y={sta.y + 17} textAnchor="middle"
+        fontFamily="'PokemonGb', 'Press Start 2P', monospace"
+        fontSize={4} fill="#3a6010"
+      >START</text>
+
+      {/* ── Speaker grille (7 × 6 dots) ────────────────────── */}
+      {dots.map(({ cx, cy }, i) => (
+        <circle key={i} cx={cx} cy={cy} r={2.8} fill="#0d0d0d" />
       ))}
-    </div>
-  )
-}
-
-// ── A Button — convex dome, label inside, shallow circular groove ─────────────
-function AButton() {
-  return (
-    <div style={{
-      width: 62, height: 62, borderRadius: '50%',
-      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.15) 100%)',
-      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      pointerEvents: 'none', userSelect: 'none',
-    }}>
-      <div style={{
-        width: 52, height: 52, borderRadius: '50%',
-        background: 'radial-gradient(circle at 38% 30%, #484848 0%, #2a2a2a 40%, #141414 70%, #0a0a0a 100%)',
-        border: '1.5px solid #050505',
-        boxShadow: '0 4px 10px rgba(0,0,0,0.95), inset 0 1px 3px rgba(255,255,255,0.1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#666' }}>A</span>
-      </div>
-    </div>
-  )
-}
-
-// ── B Button — same but smaller ───────────────────────────────────────────────
-function BButton() {
-  return (
-    <div style={{
-      width: 48, height: 48, borderRadius: '50%',
-      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.15) 100%)',
-      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      pointerEvents: 'none', userSelect: 'none',
-    }}>
-      <div style={{
-        width: 38, height: 38, borderRadius: '50%',
-        background: 'radial-gradient(circle at 38% 30%, #484848 0%, #2a2a2a 40%, #141414 70%, #0a0a0a 100%)',
-        border: '1.5px solid #050505',
-        boxShadow: '0 3px 8px rgba(0,0,0,0.95), inset 0 1px 3px rgba(255,255,255,0.1)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#666' }}>B</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Pill Button (SELECT / START) — flush matte rubber ────────────────────────
-function PillButton({ label }: { label: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, pointerEvents: 'none', userSelect: 'none' }}>
-      <div style={{
-        width: 36, height: 12, borderRadius: 7,
-        background: 'linear-gradient(180deg, #2e2e2e 0%, #222 60%, #1a1a1a 100%)',
-        border: '1px solid #181818',
-        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.5)',
-      }} />
-      <span style={{
-        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-        fontSize: 4, color: '#3a6010', letterSpacing: 0.5,
-      }}>{label}</span>
-    </div>
-  )
-}
-
-// ── Nintendo Oval Badge — embossed into green shell ───────────────────────────
-function NintendoBadge() {
-  return (
-    <div style={{
-      width: 100, height: 32, borderRadius: 16,
-      border: '1.5px solid rgba(0,0,0,0.28)',
-      background: 'linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.22) 100%)',
-      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.35), inset 0 -1px 2px rgba(255,255,255,0.07)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2,
-      pointerEvents: 'none', userSelect: 'none',
-    }}>
-      <span style={{
-        fontFamily: "'Arial', sans-serif",
-        fontStyle: 'italic', fontWeight: 900, fontSize: 13,
-        color: 'rgba(0,0,0,0.30)', letterSpacing: 0.2,
-      }}>Nintendo</span>
-      <span style={{ fontSize: 8, color: 'rgba(0,0,0,0.25)', fontFamily: 'Arial, sans-serif', marginTop: -3 }}>®</span>
-    </div>
-  )
-}
-
-// ── Speaker Grille — 7 cols × 6 rows dot grid, rectangular like real GBC ──────
-function SpeakerGrille() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, pointerEvents: 'none', userSelect: 'none' }}>
-      {Array.from({ length: 6 }).map((_, r) => (
-        <div key={r} style={{ display: 'flex', gap: 5 }}>
-          {Array.from({ length: 7 }).map((_, c) => (
-            <div key={c} style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, #010201 20%, #010101 100%)',
-              boxShadow: '0 -1px 0 rgba(255,255,255,0.07), inset 0 2px 4px rgba(0,0,0,1)',
-            }} />
-          ))}
-        </div>
-      ))}
-    </div>
+    </svg>
   )
 }
 
@@ -378,7 +397,7 @@ export default function AppLayout() {
           position: 'relative',
         }}>
 
-          {/* Hardware buttons — pixel-accurate absolute positioning */}
+          {/* Hardware buttons — single SVG, scales to fill controls area */}
           <div style={{
             position: 'absolute', inset: 0,
             opacity: emu ? 1 : 0,
@@ -386,34 +405,7 @@ export default function AppLayout() {
             transition: `opacity ${T}, transform ${T}`,
             pointerEvents: emu ? 'auto' : 'none',
           }}>
-            {/* Nintendo badge */}
-            <div style={{ position: 'absolute', left: '50%', top: '14%', transform: 'translate(-50%, -50%)' }}>
-              <NintendoBadge />
-            </div>
-            {/* D-pad */}
-            <div style={{ position: 'absolute', left: '24%', top: '46%', transform: 'translate(-50%, -50%)' }}>
-              <DPad />
-            </div>
-            {/* B button */}
-            <div style={{ position: 'absolute', left: '66%', top: '52%', transform: 'translate(-50%, -50%)' }}>
-              <BButton />
-            </div>
-            {/* A button */}
-            <div style={{ position: 'absolute', left: '78%', top: '43%', transform: 'translate(-50%, -50%)' }}>
-              <AButton />
-            </div>
-            {/* SELECT */}
-            <div style={{ position: 'absolute', left: '35%', top: '76%', transform: 'translate(-50%, -50%)' }}>
-              <PillButton label="SELECT" />
-            </div>
-            {/* START — same height as SELECT */}
-            <div style={{ position: 'absolute', left: '48%', top: '76%', transform: 'translate(-50%, -50%)' }}>
-              <PillButton label="START" />
-            </div>
-            {/* Speaker grille */}
-            <div style={{ position: 'absolute', left: '80%', top: '76%', transform: 'translate(-50%, -50%)' }}>
-              <SpeakerGrille />
-            </div>
+            <GBCControlsSVG />
           </div>
 
         </div>
