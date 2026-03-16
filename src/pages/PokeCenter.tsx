@@ -377,6 +377,7 @@ type PhaseState = 'idle' | 'loading' | 'result'
 export default function PokeCenter() {
   const { strains } = useStash()
   const { db } = useStrainDb()
+  const { setLayoutMode } = useLayoutMode()
   const [entered, setEntered] = useState(() => sessionStorage.getItem('pc-entered') === '1')
   const [selected, setSelected] = useState<Symptom[]>([])
   const [phase, setPhase] = useState<PhaseState>('idle')
@@ -408,7 +409,11 @@ export default function PokeCenter() {
     setRanked(scored)
     setResultIndex(startIndex)
     setPhase('loading')
-    setTimeout(() => setPhase('result'), 1500)
+    setLayoutMode('emulator')
+    setTimeout(() => {
+      setPhase('result')
+      setLayoutMode('fullscreen')
+    }, 1500)
   }
 
   const handleFind = () => {
@@ -420,7 +425,11 @@ export default function PokeCenter() {
     const nextIndex = (resultIndex + 1) % ranked.length
     setResultIndex(nextIndex)
     setPhase('loading')
-    setTimeout(() => setPhase('result'), 1500)
+    setLayoutMode('emulator')
+    setTimeout(() => {
+      setPhase('result')
+      setLayoutMode('fullscreen')
+    }, 1500)
   }
 
   return (
