@@ -7,10 +7,11 @@ type WipePhase = 'idle' | 'cover' | 'uncover'
 
 interface NavCtx {
   transitionTo: (path: string) => void
+  goBack: () => void
   wipePhase: WipePhase
 }
 
-const NavContext = createContext<NavCtx>({ transitionTo: () => {}, wipePhase: 'idle' })
+const NavContext = createContext<NavCtx>({ transitionTo: () => {}, goBack: () => {}, wipePhase: 'idle' })
 
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
@@ -34,8 +35,25 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     }, 340)
   }, [navigate])
 
+  const goBack = useCallback(() => {
+    if (busy.current) return
+    busy.current = true
+    haptic(20)
+    playSelect()
+    playWipeTransition()
+    setWipePhase('cover')
+    setTimeout(() => {
+      navigate(-1)
+      setWipePhase('uncover')
+      setTimeout(() => {
+        setWipePhase('idle')
+        busy.current = false
+      }, 380)
+    }, 340)
+  }, [navigate])
+
   return (
-    <NavContext.Provider value={{ transitionTo, wipePhase }}>
+    <NavContext.Provider value={{ transitionTo, goBack, wipePhase }}>
       {children}
     </NavContext.Provider>
   )
