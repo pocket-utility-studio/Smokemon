@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
-import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
@@ -89,17 +88,11 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
   const stableDone = useCallback(onDone, [])
   const audioRef = useRef<HTMLAudioElement>(null)
   const { setGifMode } = useGifMode()
-  const { setLayoutMode } = useLayoutMode()
 
   useEffect(() => {
     setGifMode(true)
     return () => setGifMode(false)
   }, [setGifMode])
-
-  useEffect(() => {
-    setLayoutMode('emulator')
-    return () => setLayoutMode('fullscreen')
-  }, [setLayoutMode])
 
   // Start the audio timer from the moment the first gif frame actually draws
   const handleFirstFrame = useCallback(() => {
@@ -377,7 +370,6 @@ type PhaseState = 'idle' | 'loading' | 'result'
 export default function PokeCenter() {
   const { strains } = useStash()
   const { db } = useStrainDb()
-  const { setLayoutMode } = useLayoutMode()
   const [entered, setEntered] = useState(() => sessionStorage.getItem('pc-entered') === '1')
   const [selected, setSelected] = useState<Symptom[]>([])
   const [phase, setPhase] = useState<PhaseState>('idle')
@@ -409,10 +401,8 @@ export default function PokeCenter() {
     setRanked(scored)
     setResultIndex(startIndex)
     setPhase('loading')
-    setLayoutMode('emulator')
     setTimeout(() => {
       setPhase('result')
-      setLayoutMode('fullscreen')
     }, 1500)
   }
 
@@ -425,10 +415,8 @@ export default function PokeCenter() {
     const nextIndex = (resultIndex + 1) % ranked.length
     setResultIndex(nextIndex)
     setPhase('loading')
-    setLayoutMode('emulator')
     setTimeout(() => {
       setPhase('result')
-      setLayoutMode('fullscreen')
     }, 1500)
   }
 
