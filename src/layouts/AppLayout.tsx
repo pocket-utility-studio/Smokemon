@@ -68,6 +68,50 @@ function ActionButtons() {
 }
 
 
+// ── Nintendo Logo ─────────────────────────────────────────────────────────────
+function NintendoLogo() {
+  return (
+    <div style={{
+      textAlign: 'center',
+      userSelect: 'none',
+      marginTop: 1,
+    }}>
+      <span style={{
+        fontFamily: "'Arial', sans-serif",
+        fontStyle: 'italic',
+        fontWeight: 700,
+        fontSize: 8,
+        color: '#444',
+        letterSpacing: 1,
+      }}>Nintendo</span>
+    </div>
+  )
+}
+
+// ── Speaker Grille ─────────────────────────────────────────────────────────────
+function SpeakerGrille() {
+  const cols = 7
+  const rows = 5
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: `repeat(${cols}, 7px)`,
+      gridTemplateRows: `repeat(${rows}, 7px)`,
+      gap: 4,
+    }}>
+      {Array.from({ length: cols * rows }).map((_, i) => (
+        <div key={i} style={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: '#050e02',
+          boxShadow: 'inset 0 2px 3px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.08)',
+        }} />
+      ))}
+    </div>
+  )
+}
+
 // ── GBC Logo ──────────────────────────────────────────────────────────────────
 function GBCLogo() {
   const colorWord = [
@@ -237,27 +281,49 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* GBC Logo inside bezel */}
+        {/* GBC Logo + Nintendo + version inside bezel */}
         <GBCLogo />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <NintendoLogo />
+          <span style={{
+            fontFamily: 'monospace',
+            fontSize: 8,
+            color: '#333',
+            userSelect: 'none',
+          }}>v{__APP_VERSION__}</span>
+        </div>
       </div>
 
-      {/* Controls row — only during intro */}
-      {!started && (
+      {/* Bottom shell — always visible, controls shown during intro */}
+      <div style={{
+        flexShrink: 0,
+        height: 120,
+        display: 'flex',
+        flexDirection: 'column',
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+      }}>
+        {/* Controls row */}
         <div style={{
           flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 24px',
-          minHeight: 0,
         }}>
-          <DPad />
-          <ActionButtons />
+          {!started ? <DPad /> : <div />}
+          {!started ? <ActionButtons /> : <div />}
         </div>
-      )}
 
-      {/* Bottom padding for safe area */}
-      <div style={{ flexShrink: 0, paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }} />
+        {/* Speaker row — always shown */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          padding: '0 24px 6px',
+        }}>
+          <SpeakerGrille />
+        </div>
+      </div>
     </div>
   )
 }

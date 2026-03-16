@@ -73,6 +73,7 @@ function StashList({
   db: StrainRecord[]
   onDelete: (id: string) => void
 }) {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
     return db.find((d) => String(d.Strain).toLowerCase().replace(/[^a-z0-9]/g, '') === norm)
@@ -103,26 +104,42 @@ function StashList({
               }}>
                 {s.name.toUpperCase()}
               </span>
-              <button
-                onClick={() => onDelete(s.id)}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${GBC_DARKEST}`,
-                  color: GBC_MUTED,
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 9,
-                  padding: '6px 8px',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  minWidth: 44,
-                  minHeight: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                [x]
-              </button>
+              {confirmDeleteId === s.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      onClick={() => { onDelete(s.id); setConfirmDeleteId(null) }}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
+                    >YES</button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
+                    >NO</button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteId(s.id)}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${GBC_DARKEST}`,
+                    color: GBC_MUTED,
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                    fontSize: 9,
+                    padding: '6px 8px',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    minWidth: 44,
+                    minHeight: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  [x]
+                </button>
+              )}
             </div>
 
             {/* Row 2: HP bar */}
@@ -196,6 +213,7 @@ function PartyView({
   onDelete: (id: string) => void
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(party[0]?.id ?? null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -342,26 +360,42 @@ function PartyView({
                   </span>
                 </div>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(s.id) }}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${GBC_DARKEST}`,
-                  color: GBC_MUTED,
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 9,
-                  padding: '8px 10px',
-                  cursor: 'pointer',
-                  minWidth: 44,
-                  minHeight: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  WebkitTapHighlightColor: 'transparent' as unknown as string,
-                }}
-              >
-                [x]
-              </button>
+              {confirmDeleteId === s.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(s.id); setConfirmDeleteId(null) }}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
+                    >YES</button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
+                    >NO</button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(s.id) }}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${GBC_DARKEST}`,
+                    color: GBC_MUTED,
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                    fontSize: 9,
+                    padding: '8px 10px',
+                    cursor: 'pointer',
+                    minWidth: 44,
+                    minHeight: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    WebkitTapHighlightColor: 'transparent' as unknown as string,
+                  }}
+                >
+                  [x]
+                </button>
+              )}
             </div>
           )
         })}
