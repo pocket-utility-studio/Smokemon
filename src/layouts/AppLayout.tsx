@@ -15,87 +15,112 @@ const BEZEL_INNER = '#0e0e0e'
 const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 
 // ── D-Pad ──────────────────────────────────────────────────────────────────────
-// 88px total, 29px arm width. Arm centers at 43.5px.
-// Outer section centers: left=(14.5,43.5), right=(73,43.5), up=(43.5,14.5), down=(43.5,73)
+// 88px total, 29px arm width. Real GBC has circular thumb-rest indentation
+// in centre and embossed raised arrows on each arm.
 function DPad() {
   const arm: React.CSSProperties = {
-    background: 'linear-gradient(160deg, #2a2a2a 0%, #141414 60%, #0e0e0e 100%)',
-    border: '1.5px solid #080808',
-    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.07), 0 4px 8px rgba(0,0,0,0.75)',
+    background: 'linear-gradient(160deg, #252525 0%, #161616 50%, #0e0e0e 100%)',
+    border: '1.5px solid #060606',
+    boxShadow: [
+      'inset 0 1px 2px rgba(255,255,255,0.06)',
+      'inset 0 -1px 2px rgba(0,0,0,0.8)',
+      '0 4px 10px rgba(0,0,0,0.8)',
+    ].join(', '),
     position: 'absolute',
   }
-  // Arrow: X=cross half-size (6px), Y=point size (9px). Color #888.
-  // Centers computed from outer section midpoints above.
+  // Embossed arrow: slightly raised look via box-shadow on the triangle
+  // Using border-trick triangles. Centers: L=(14.5,43.5) R=(73,43.5) U=(43.5,14.5) D=(43.5,73)
   const arrows = [
-    // left-pointing:  center=(14.5,43.5) → left=10, top=38
-    { top: 38, left: 10,    borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '9px solid #888' },
-    // right-pointing: center=(73,43.5)   → right=10, top=38
-    { top: 38, right: 10,   borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #888' },
-    // up-pointing:    center=(43.5,14.5) → left=44, top=10
-    { left: 44, top: 10,    borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '9px solid #888' },
-    // down-pointing:  center=(43.5,73)   → left=44, bottom=10
-    { left: 44, bottom: 10, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid #888' },
+    { top: 38, left: 10,    borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '9px solid #666',  filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
+    { top: 38, right: 10,   borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #666',   filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
+    { left: 44, top: 10,    borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '9px solid #666', filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
+    { left: 44, bottom: 10, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid #666',    filter: 'drop-shadow(0 -1px 0 rgba(255,255,255,0.08))' },
   ]
   return (
     <div style={{
       position: 'relative', width: 88, height: 88,
       flexShrink: 0, pointerEvents: 'none', userSelect: 'none',
-      filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.75))',
+      filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.8))',
     }}>
       {/* Horizontal arm */}
       <div style={{ ...arm, top: 29, left: 0, width: 88, height: 29, borderRadius: 4 }} />
       {/* Vertical arm */}
       <div style={{ ...arm, top: 0, left: 29, width: 29, height: 88, borderRadius: 4 }} />
-      {/* Center fill */}
+      {/* Circular thumb-rest indentation in the centre */}
       <div style={{
-        position: 'absolute', top: 29, left: 29, width: 29, height: 29,
-        background: '#181818', borderRadius: 2,
-        boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.9)',
+        position: 'absolute',
+        top: 29 + (29 - 22) / 2, left: 29 + (29 - 22) / 2,
+        width: 22, height: 22, borderRadius: '50%',
+        background: 'radial-gradient(circle at 42% 38%, #262626 0%, #141414 50%, #090909 100%)',
+        boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.95), inset 0 -1px 2px rgba(255,255,255,0.04)',
       }} />
-      {arrows.map((a, i) => (
-        <div key={i} style={{ position: 'absolute', width: 0, height: 0, ...a }} />
+      {arrows.map(({ filter: f, ...a }, i) => (
+        <div key={i} style={{ position: 'absolute', width: 0, height: 0, filter: f, ...a }} />
       ))}
     </div>
   )
 }
 
-// ── A/B Buttons — B lower-left, A upper-right (slanted like real hardware) ────
+// ── A/B Buttons — blank convex domed buttons in shallow circular grooves.
+// Labels "A" and "B" are printed on the shell, not on the buttons themselves.
 function ActionButtons() {
-  const btn = (label: string, size: number) => (
+  // Shallow circular groove recessed into shell, then blank convex button inside
+  const btn = (size: number) => (
     <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: 'radial-gradient(circle at 38% 32%, #444, #181818 55%, #0a0a0a)',
-      border: '2px solid #060606',
-      boxShadow: '0 6px 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.1)',
+      width: size + 10, height: size + 10, borderRadius: '50%',
+      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.2) 100%)',
+      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7), inset 0 -1px 2px rgba(255,255,255,0.04)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#555' }}>{label}</span>
+      {/* Convex domed button — glossy highlight top-left */}
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 32%, #484848 0%, #282828 40%, #141414 70%, #0a0a0a 100%)',
+        border: '1.5px solid #050505',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.6), inset 0 1px 3px rgba(255,255,255,0.1)',
+      }} />
     </div>
   )
   return (
-    <div style={{ position: 'relative', width: 105, height: 82, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
-      {/* B — lower-left, 38px */}
+    <div style={{ position: 'relative', width: 115, height: 92, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
+      {/* B — lower-left */}
       <div style={{ position: 'absolute', bottom: 0, left: 0 }}>
-        {btn('B', 38)}
+        {btn(38)}
       </div>
-      {/* A — upper-right, 52px */}
+      {/* B label on shell — above and right of B button */}
+      <span style={{
+        position: 'absolute', bottom: 42, left: 36,
+        fontFamily: "'Arial Black', Arial, sans-serif",
+        fontStyle: 'italic', fontWeight: 900, fontSize: 10,
+        color: 'rgba(0,0,0,0.35)', userSelect: 'none',
+      }}>B</span>
+      {/* A — upper-right */}
       <div style={{ position: 'absolute', top: 0, right: 0 }}>
-        {btn('A', 52)}
+        {btn(52)}
       </div>
+      {/* A label on shell — below and left of A button */}
+      <span style={{
+        position: 'absolute', top: 54, right: 52,
+        fontFamily: "'Arial Black', Arial, sans-serif",
+        fontStyle: 'italic', fontWeight: 900, fontSize: 12,
+        color: 'rgba(0,0,0,0.35)', userSelect: 'none',
+      }}>A</span>
     </div>
   )
 }
 
-// ── Start / Select ─────────────────────────────────────────────────────────────
+// ── Start / Select — soft conductive rubber, matte, almost flush with shell ───
 function StartSelect() {
   const pill = (label: string) => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      {/* Rubber pill: matte, barely raised, dark grey */}
       <div style={{
-        width: 34, height: 12,
-        background: 'linear-gradient(180deg, #2a2a2a 0%, #111 100%)',
-        borderRadius: 7,
-        border: '1.5px solid #060606',
-        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.95), inset 0 -1px 2px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04)',
+        width: 34, height: 11,
+        background: 'linear-gradient(180deg, #2e2e2e 0%, #242424 60%, #1c1c1c 100%)',
+        borderRadius: 6,
+        border: '1px solid #181818',
+        // Very subtle shadow — flush feel, not hard plastic
+        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), 0 1px 3px rgba(0,0,0,0.6)',
       }} />
       <span style={{
         fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -115,9 +140,8 @@ function StartSelect() {
   )
 }
 
-// ── Speaker Grille — oval cluster of vertical pill cutouts, real GBC style ────
+// ── Speaker Grille — physical slots cut through shell, depth visible inside ───
 function SpeakerGrille() {
-  // Column slot counts define the oval silhouette
   const slotCounts = [3, 5, 6, 6, 5, 3]
   return (
     <div style={{ transform: 'rotate(-20deg)', display: 'flex', gap: 5, alignItems: 'center' }}>
@@ -125,12 +149,18 @@ function SpeakerGrille() {
         <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
           {Array.from({ length: count }).map((_, r) => (
             <div key={r} style={{
-              width: 5, height: 13, borderRadius: 3,
-              background: 'linear-gradient(180deg, #020602 0%, #010301 100%)',
+              width: 5, height: 14, borderRadius: 3,
+              // Top edge (inside hole): bright plastic rim catching light
+              // Mid: very dark — looking into the device
+              // Bottom edge: subtle bounce light from interior
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, #020402 8%, #010201 80%, rgba(60,80,20,0.12) 100%)',
               boxShadow: [
-                'inset 0 2px 5px rgba(0,0,0,1)',
-                'inset 0 -1px 2px rgba(0,0,0,0.7)',
-                '0 1px 0 rgba(130,204,22,0.12)',
+                // Outer rim highlight — the plastic edge around the slot
+                '0 -1px 0 rgba(255,255,255,0.1)',
+                '0 1px 0 rgba(130,204,22,0.18)',
+                // Deep inset — simulates actual hole going into device
+                'inset 0 3px 6px rgba(0,0,0,1)',
+                'inset 0 -2px 4px rgba(0,0,0,0.9)',
               ].join(', '),
             }} />
           ))}
