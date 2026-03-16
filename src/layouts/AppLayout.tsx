@@ -175,7 +175,10 @@ export default function AppLayout() {
       {/* ── GBC device shell ─────────────────────────────────────────────── */}
       <div style={{
         width: 'min(100vw, calc(100dvh * 78 / 133))',
-        height: 'min(calc(100dvh - max(env(safe-area-inset-top, 0px), 20px)), calc(100vw * 133 / 78))',
+        height: emu
+          ? 'min(calc(100dvh - max(env(safe-area-inset-top, 0px), 20px)), calc(100vw * 133 / 78))'
+          : 'calc(100dvh - max(env(safe-area-inset-top, 0px), 20px))',
+        transition: `height ${T}`,
         background: KIWI_GRAD,
         display: 'flex',
         flexDirection: 'column',
@@ -207,7 +210,8 @@ export default function AppLayout() {
         <div style={{
           flex: 1,
           minHeight: 0,
-          margin: '0 4%',
+          margin: emu ? '0 4%' : '0 2%',
+          transition: `margin ${T}`,
           background: BEZEL,
           borderRadius: '12px 12px 6px 6px',
           position: 'relative',
@@ -329,6 +333,18 @@ export default function AppLayout() {
             </div>
           </div>
 
+          {/* Bottom nav — inside the lens, collapses away in emulator mode */}
+          <div style={{
+            flexShrink: 0,
+            maxHeight: emu ? '0px' : '80px',
+            overflow: 'hidden',
+            opacity: emu ? 0 : 1,
+            transition: `max-height ${T}, opacity ${T}`,
+            pointerEvents: emu ? 'none' : 'auto',
+          }}>
+            <GBCBottomBar />
+          </div>
+
           {/* Logo area — bottom of lens */}
           <div style={{
             height: 56,
@@ -352,7 +368,8 @@ export default function AppLayout() {
         {/* ── Green controls area — collapses to nav bar height in fullscreen ── */}
         <div style={{
           flexShrink: 0,
-          height: '42%',
+          height: emu ? '42%' : '0px',
+          transition: `height ${T}`,
           overflow: 'hidden',
           position: 'relative',
         }}>
@@ -387,18 +404,6 @@ export default function AppLayout() {
             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <SpeakerGrille />
             </div>
-          </div>
-
-          {/* Bottom nav — hidden in emulator, slides up in fullscreen */}
-          <div style={{
-            position: 'absolute',
-            bottom: 0, left: 0, right: 0,
-            opacity: emu ? 0 : 1,
-            transform: emu ? 'translateY(100%)' : 'translateY(0)',
-            transition: `opacity ${T}, transform ${T}`,
-            pointerEvents: emu ? 'none' : 'auto',
-          }}>
-            <GBCBottomBar />
           </div>
 
         </div>
