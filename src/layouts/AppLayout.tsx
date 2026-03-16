@@ -186,14 +186,14 @@ export default function AppLayout() {
         position: 'relative',
       }}>
 
-        {/* COMM port notch */}
+        {/* COMM port notch — tight to the top edge */}
         <div style={{
           flexShrink: 0,
           display: 'flex',
           justifyContent: 'center',
-          paddingTop: emu ? '1.5%' : '3px',
-          transition: `padding-top ${T}, opacity ${T}`,
+          paddingTop: '3px',
           opacity: emu ? 1 : 0.4,
+          transition: `opacity ${T}`,
         }}>
           <div style={{
             width: '12%', height: 6,
@@ -203,12 +203,8 @@ export default function AppLayout() {
           }} />
         </div>
 
-        {/* Thin green strip above lens */}
-        <div style={{
-          flexShrink: 0,
-          height: emu ? '2%' : '4px',
-          transition: `height ${T}`,
-        }} />
+        {/* Minimal green rim above lens */}
+        <div style={{ flexShrink: 0, height: '4px' }} />
 
         {/* ── Black lens — flex:1 so it grows to fill space above controls ─ */}
         <div style={{
@@ -281,7 +277,7 @@ export default function AppLayout() {
           <div style={{
             flex: 1,
             minHeight: 0,
-            padding: '28px 14px 0',
+            padding: '18px 14px 0',
             display: 'flex',
             flexDirection: 'column',
           }}>
@@ -369,7 +365,7 @@ export default function AppLayout() {
           {/* Hardware buttons — visible in emulator, fade out in fullscreen */}
           <div style={{
             position: 'absolute', inset: 0,
-            padding: '3% 7% 0',
+            padding: '2% 7% 0',
             paddingBottom: 'max(2%, env(safe-area-inset-bottom))',
             display: 'flex', flexDirection: 'column',
             opacity: emu ? 1 : 0,
