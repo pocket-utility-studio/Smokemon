@@ -241,18 +241,20 @@ export default function AppLayout() {
         <GBCLogo />
       </div>
 
-      {/* Controls row — always visible */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        minHeight: 0,
-      }}>
-        <DPad />
-        <ActionButtons />
-      </div>
+      {/* Controls row — only during intro */}
+      {!started && (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 24px',
+          minHeight: 0,
+        }}>
+          <DPad />
+          <ActionButtons />
+        </div>
+      )}
 
       {/* Bottom padding for safe area */}
       <div style={{ flexShrink: 0, paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }} />
