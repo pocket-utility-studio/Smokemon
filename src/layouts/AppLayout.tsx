@@ -15,21 +15,15 @@ const BEZEL_INNER = '#0e0e0e'
 const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 
 // ── D-Pad ──────────────────────────────────────────────────────────────────────
-// 88px total, 29px arm width. Real GBC has circular thumb-rest indentation
-// in centre and embossed raised arrows on each arm.
+// 88px, 29px arms. Circular thumb-rest indentation. Embossed arrows.
+// Arrow centres: L=(14.5,43.5) R=(73,43.5) U=(43.5,14.5) D=(43.5,73)
 function DPad() {
   const arm: React.CSSProperties = {
     background: 'linear-gradient(160deg, #252525 0%, #161616 50%, #0e0e0e 100%)',
     border: '1.5px solid #060606',
-    boxShadow: [
-      'inset 0 1px 2px rgba(255,255,255,0.06)',
-      'inset 0 -1px 2px rgba(0,0,0,0.8)',
-      '0 4px 10px rgba(0,0,0,0.8)',
-    ].join(', '),
+    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06), inset 0 -1px 2px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.8)',
     position: 'absolute',
   }
-  // Embossed arrow: slightly raised look via box-shadow on the triangle
-  // Using border-trick triangles. Centers: L=(14.5,43.5) R=(73,43.5) U=(43.5,14.5) D=(43.5,73)
   const arrows = [
     { top: 38, left: 10,    borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '9px solid #666',  filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
     { top: 38, right: 10,   borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #666',   filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.12))' },
@@ -39,18 +33,13 @@ function DPad() {
   return (
     <div style={{
       position: 'relative', width: 88, height: 88,
-      flexShrink: 0, pointerEvents: 'none', userSelect: 'none',
+      pointerEvents: 'none', userSelect: 'none',
       filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.8))',
     }}>
-      {/* Horizontal arm */}
       <div style={{ ...arm, top: 29, left: 0, width: 88, height: 29, borderRadius: 4 }} />
-      {/* Vertical arm */}
       <div style={{ ...arm, top: 0, left: 29, width: 29, height: 88, borderRadius: 4 }} />
-      {/* Circular thumb-rest indentation in the centre */}
       <div style={{
-        position: 'absolute',
-        top: 29 + (29 - 22) / 2, left: 29 + (29 - 22) / 2,
-        width: 22, height: 22, borderRadius: '50%',
+        position: 'absolute', top: 32.5, left: 32.5, width: 22, height: 22, borderRadius: '50%',
         background: 'radial-gradient(circle at 42% 38%, #262626 0%, #141414 50%, #090909 100%)',
         boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.95), inset 0 -1px 2px rgba(255,255,255,0.04)',
       }} />
@@ -61,66 +50,61 @@ function DPad() {
   )
 }
 
-// ── A/B Buttons — blank convex domed buttons in shallow circular grooves.
-// Labels "A" and "B" are printed on the shell, not on the buttons themselves.
-function ActionButtons() {
-  // Shallow circular groove recessed into shell, then blank convex button inside
-  const btn = (size: number) => (
-    <div style={{
-      width: size + 10, height: size + 10, borderRadius: '50%',
-      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.2) 100%)',
-      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.7), inset 0 -1px 2px rgba(255,255,255,0.04)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      {/* Convex domed button — glossy highlight top-left */}
-      <div style={{
-        width: size, height: size, borderRadius: '50%',
-        background: 'radial-gradient(circle at 38% 32%, #484848 0%, #282828 40%, #141414 70%, #0a0a0a 100%)',
-        border: '1.5px solid #050505',
-        boxShadow: '0 3px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.6), inset 0 1px 3px rgba(255,255,255,0.1)',
-      }} />
-    </div>
-  )
+// ── A Button — convex dome, label inside, shallow circular groove ─────────────
+function AButton() {
   return (
-    <div style={{ position: 'relative', width: 115, height: 92, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
-      {/* B — lower-left */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0 }}>
-        {btn(38)}
+    <div style={{
+      width: 62, height: 62, borderRadius: '50%',
+      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.15) 100%)',
+      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      pointerEvents: 'none', userSelect: 'none',
+    }}>
+      <div style={{
+        width: 52, height: 52, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 30%, #484848 0%, #2a2a2a 40%, #141414 70%, #0a0a0a 100%)',
+        border: '1.5px solid #050505',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.95), inset 0 1px 3px rgba(255,255,255,0.1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#666' }}>A</span>
       </div>
-      {/* B label on shell — above and right of B button */}
-      <span style={{
-        position: 'absolute', bottom: 42, left: 36,
-        fontFamily: "'Arial Black', Arial, sans-serif",
-        fontStyle: 'italic', fontWeight: 900, fontSize: 10,
-        color: 'rgba(0,0,0,0.35)', userSelect: 'none',
-      }}>B</span>
-      {/* A — upper-right */}
-      <div style={{ position: 'absolute', top: 0, right: 0 }}>
-        {btn(52)}
-      </div>
-      {/* A label on shell — below and left of A button */}
-      <span style={{
-        position: 'absolute', top: 54, right: 52,
-        fontFamily: "'Arial Black', Arial, sans-serif",
-        fontStyle: 'italic', fontWeight: 900, fontSize: 12,
-        color: 'rgba(0,0,0,0.35)', userSelect: 'none',
-      }}>A</span>
     </div>
   )
 }
 
-// ── Start / Select — soft conductive rubber, matte, almost flush with shell ───
-function StartSelect() {
-  const pill = (label: string) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-      {/* Rubber pill: matte, barely raised, dark grey */}
+// ── B Button — same but smaller ───────────────────────────────────────────────
+function BButton() {
+  return (
+    <div style={{
+      width: 48, height: 48, borderRadius: '50%',
+      background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.15) 100%)',
+      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      pointerEvents: 'none', userSelect: 'none',
+    }}>
       <div style={{
-        width: 34, height: 11,
-        background: 'linear-gradient(180deg, #2e2e2e 0%, #242424 60%, #1c1c1c 100%)',
-        borderRadius: 6,
+        width: 38, height: 38, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 30%, #484848 0%, #2a2a2a 40%, #141414 70%, #0a0a0a 100%)',
+        border: '1.5px solid #050505',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.95), inset 0 1px 3px rgba(255,255,255,0.1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#666' }}>B</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Pill Button (SELECT / START) — flush matte rubber ────────────────────────
+function PillButton({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, pointerEvents: 'none', userSelect: 'none' }}>
+      <div style={{
+        width: 36, height: 12, borderRadius: 7,
+        background: 'linear-gradient(180deg, #2e2e2e 0%, #222 60%, #1a1a1a 100%)',
         border: '1px solid #181818',
-        // Very subtle shadow — flush feel, not hard plastic
-        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), 0 1px 3px rgba(0,0,0,0.6)',
+        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.05), inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.5)',
       }} />
       <span style={{
         fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -128,40 +112,39 @@ function StartSelect() {
       }}>{label}</span>
     </div>
   )
+}
+
+// ── Nintendo Oval Badge — embossed into green shell ───────────────────────────
+function NintendoBadge() {
   return (
     <div style={{
-      display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center',
-      transform: 'rotate(-25deg)', transformOrigin: 'center',
+      width: 88, height: 28, borderRadius: 14,
+      border: '2px solid rgba(0,0,0,0.22)',
+      background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 100%)',
+      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.08), 0 1px 2px rgba(255,255,255,0.06)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       pointerEvents: 'none', userSelect: 'none',
     }}>
-      {pill('SELECT')}
-      {pill('START')}
+      <span style={{
+        fontFamily: "'Arial', sans-serif",
+        fontStyle: 'italic', fontWeight: 700, fontSize: 12,
+        color: 'rgba(0,0,0,0.35)', letterSpacing: 0.3,
+      }}>Nintendo</span>
     </div>
   )
 }
 
-// ── Speaker Grille — physical slots cut through shell, depth visible inside ───
+// ── Speaker Grille — 7×7 dot grid, straight (no rotation), deep cutout ────────
 function SpeakerGrille() {
-  const slotCounts = [3, 5, 6, 6, 5, 3]
   return (
-    <div style={{ transform: 'rotate(-20deg)', display: 'flex', gap: 5, alignItems: 'center' }}>
-      {slotCounts.map((count, c) => (
-        <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
-          {Array.from({ length: count }).map((_, r) => (
-            <div key={r} style={{
-              width: 5, height: 14, borderRadius: 3,
-              // Top edge (inside hole): bright plastic rim catching light
-              // Mid: very dark — looking into the device
-              // Bottom edge: subtle bounce light from interior
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, #020402 8%, #010201 80%, rgba(60,80,20,0.12) 100%)',
-              boxShadow: [
-                // Outer rim highlight — the plastic edge around the slot
-                '0 -1px 0 rgba(255,255,255,0.1)',
-                '0 1px 0 rgba(130,204,22,0.18)',
-                // Deep inset — simulates actual hole going into device
-                'inset 0 3px 6px rgba(0,0,0,1)',
-                'inset 0 -2px 4px rgba(0,0,0,0.9)',
-              ].join(', '),
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, pointerEvents: 'none', userSelect: 'none' }}>
+      {Array.from({ length: 7 }).map((_, r) => (
+        <div key={r} style={{ display: 'flex', gap: 5 }}>
+          {Array.from({ length: 7 }).map((_, c) => (
+            <div key={c} style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, #010201 15%, #010101 85%, rgba(60,80,20,0.1) 100%)',
+              boxShadow: '0 -1px 0 rgba(255,255,255,0.08), 0 1px 0 rgba(130,204,22,0.14), inset 0 2px 4px rgba(0,0,0,1)',
             }} />
           ))}
         </div>
@@ -391,34 +374,40 @@ export default function AppLayout() {
           position: 'relative',
         }}>
 
-          {/* Hardware buttons — visible in emulator, fade out in fullscreen */}
+          {/* Hardware buttons — pixel-accurate absolute positioning */}
           <div style={{
             position: 'absolute', inset: 0,
-            padding: '2% 7% 0',
-            paddingBottom: 'max(2%, env(safe-area-inset-bottom))',
-            display: 'flex', flexDirection: 'column',
             opacity: emu ? 1 : 0,
             transform: emu ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)',
             transition: `opacity ${T}, transform ${T}`,
             pointerEvents: emu ? 'auto' : 'none',
           }}>
-            {/* D-pad + A/B — close to lens */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: '4%',
-            }}>
+            {/* Nintendo badge */}
+            <div style={{ position: 'absolute', left: '50%', top: '12%', transform: 'translate(-50%, -50%)' }}>
+              <NintendoBadge />
+            </div>
+            {/* D-pad */}
+            <div style={{ position: 'absolute', left: '23%', top: '44%', transform: 'translate(-50%, -50%)' }}>
               <DPad />
-              <ActionButtons />
             </div>
-            {/* Start + Select */}
-            <div style={{
-              display: 'flex', justifyContent: 'center', alignItems: 'center',
-              marginBottom: '4%',
-            }}>
-              <StartSelect />
+            {/* B button */}
+            <div style={{ position: 'absolute', left: '67%', top: '48%', transform: 'translate(-50%, -50%)' }}>
+              <BButton />
             </div>
-            {/* Speaker — bottom right, flex:1 spacer creates the gap */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+            {/* A button */}
+            <div style={{ position: 'absolute', left: '79%', top: '39%', transform: 'translate(-50%, -50%)' }}>
+              <AButton />
+            </div>
+            {/* SELECT */}
+            <div style={{ position: 'absolute', left: '37%', top: '74%', transform: 'translate(-50%, -50%)' }}>
+              <PillButton label="SELECT" />
+            </div>
+            {/* START */}
+            <div style={{ position: 'absolute', left: '48%', top: '71%', transform: 'translate(-50%, -50%)' }}>
+              <PillButton label="START" />
+            </div>
+            {/* Speaker grille */}
+            <div style={{ position: 'absolute', left: '82%', top: '78%', transform: 'translate(-50%, -50%)' }}>
               <SpeakerGrille />
             </div>
           </div>
