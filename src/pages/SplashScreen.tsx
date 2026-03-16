@@ -74,37 +74,39 @@ function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
   )
 }
 
-type Phase = 'startup' | 'title' | 'silver'
+// Flow: startup (GIF) → tap → silver (mp4 with sound, tappable to skip) → title (tap to enter)
+type Phase = 'startup' | 'silver' | 'title'
 
 export default function SplashScreen({ onStart }: { onStart: () => void }) {
   const [phase, setPhase] = useState<Phase>('startup')
-  const [titleVisible, setTitleVisible] = useState(false)
+  const [gifDone, setGifDone] = useState(false)
   const [silverVisible, setSilverVisible] = useState(false)
-  const startupDoneRef = useRef(false)
+  const [titleVisible, setTitleVisible] = useState(false)
   const silverDoneRef = useRef(false)
 
-  // Stage 1 → title: when boot GIF finishes (8s max fallback)
+  // GIF finishes → show tap prompt, stay in startup until user taps
   const handleStartupDone = useCallback(() => {
-    if (startupDoneRef.current) return
-    startupDoneRef.current = true
-    setPhase('title')
-    setTimeout(() => setTitleVisible(true), 300)
+    setGifDone(true)
   }, [])
 
+  // 8s fallback in case GIF never loads
   useEffect(() => {
     const t = setTimeout(handleStartupDone, 8000)
     return () => clearTimeout(t)
   }, [handleStartupDone])
 
-  // Stage 3: video ends → enter app
+  // mp4 ends → go to title screen
   const handleSilverDone = useCallback(() => {
     if (silverDoneRef.current) return
     silverDoneRef.current = true
     setSilverVisible(false)
-    setTimeout(() => onStart(), 400)
-  }, [onStart])
+    setTimeout(() => {
+      setPhase('title')
+      setTimeout(() => setTitleVisible(true), 300)
+    }, 400)
+  }, [])
 
-  // Fallback: max 30s on video before entering app
+  // 30s fallback on video
   useEffect(() => {
     if (phase !== 'silver') return
     const t = setTimeout(handleSilverDone, 30000)
@@ -112,30 +114,25 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   }, [phase, handleSilverDone])
 
   const handleClick = useCallback(() => {
-    // Skip startup → go straight to title
+    // Startup: tap triggers mp4 (user gesture = audio allowed)
     if (phase === 'startup') {
-      startupDoneRef.current = true
-      setPhase('title')
-      setTimeout(() => setTitleVisible(true), 300)
-      return
-    }
-    // Title: user tap triggers video with sound (user gesture unlocks audio)
-    if (phase === 'title') {
       unlockAudio()
-      playBoot()
-      setTimeout(() => playPressStart(), 350)
-      setTitleVisible(false)
-      setTimeout(() => {
-        setPhase('silver')
-        setSilverVisible(true)
-      }, 400)
+      setPhase('silver')
+      setSilverVisible(true)
       return
     }
-    // Skip video → enter app immediately
+    // Silver: tap skips video → title screen
     if (phase === 'silver') {
       handleSilverDone()
+      return
     }
-  }, [phase, handleSilverDone])
+    // Title: tap enters app
+    if (phase === 'title') {
+      playBoot()
+      setTimeout(() => playPressStart(), 350)
+      onStart()
+    }
+  }, [phase, handleSilverDone, onStart])
 
   return (
     <div
@@ -144,12 +141,28 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
         position: 'absolute', inset: 0,
         background: phase === 'startup' ? '#e8e8e0' : '#050a04',
         transition: 'background 0.6s ease',
-        cursor: phase === 'title' || phase === 'silver' ? 'pointer' : 'default',
+        cursor: 'pointer',
         overflow: 'hidden',
       }}
     >
       {phase === 'startup' && (
-        <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <GifCanvas src={`${import.meta.env.BASE_URL}gbc-startup.gif`} onDone={handleStartupDone} />
+          {gifDone && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+              paddingBottom: 32,
+            }}>
+              <span className="gbc-blink" style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
+                fontSize: 10, color: '#4a7a10', letterSpacing: 2,
+              }}>
+                TAP TO CONTINUE
+              </span>
+            </div>
+          )}
+        </div>
       )}
 
       {phase === 'silver' && (
@@ -176,7 +189,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
             fontFamily: "'PokemonGb', 'Press Start 2P'",
             fontSize: 12, color: '#c8e890', letterSpacing: 2,
           }}>
-            PRESS START
+            TAP TO CONTINUE
           </span>
         </div>
       )}
