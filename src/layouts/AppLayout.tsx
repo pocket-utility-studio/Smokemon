@@ -32,10 +32,10 @@ function DPad() {
         boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)',
       }} />
       {[
-        { style: { top: 28, left: 6, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #444' } },
-        { style: { top: 28, right: 6, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #444' } },
-        { style: { left: 28, top: 6, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '8px solid #444' } },
-        { style: { left: 28, bottom: 6, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #444' } },
+        { style: { top: 30, left: 8,  width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #444' } },
+        { style: { top: 30, right: 8, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #444' } },
+        { style: { left: 36, top: 8,  width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '8px solid #444' } },
+        { style: { left: 36, bottom: 8, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #444' } },
       ].map((a, i) => (
         <div key={i} style={{ position: 'absolute', ...a.style }} />
       ))}
@@ -90,7 +90,6 @@ function StartSelect() {
   return (
     <div style={{
       display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center',
-      transform: 'rotate(-15deg)', transformOrigin: 'center',
       pointerEvents: 'none', userSelect: 'none',
     }}>
       {pill('SELECT')}
@@ -101,17 +100,30 @@ function StartSelect() {
 
 // ── Speaker Grille — dot grid matching real GBC hardware ──────────────────────
 function SpeakerGrille() {
-  const cols = 5
-  const rows = 5
+  const cols = 9
+  const rows = 8
+  // Corner radius: skip dots where row+col or mirrored positions are in the corner
+  const corner = 2
+  const skip = (r: number, c: number) => {
+    const rMirror = rows - 1 - r
+    const cMirror = cols - 1 - c
+    return (
+      (r < corner && c < corner - r) ||
+      (r < corner && cMirror < corner - r) ||
+      (rMirror < corner && c < corner - rMirror) ||
+      (rMirror < corner && cMirror < corner - rMirror)
+    )
+  }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <div style={{ transform: 'rotate(15deg)', display: 'flex', flexDirection: 'column', gap: 4 }}>
       {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} style={{ display: 'flex', gap: 5 }}>
+        <div key={r} style={{ display: 'flex', gap: 4 }}>
           {Array.from({ length: cols }).map((_, c) => (
             <div key={c} style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: '#040c02',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,1), 0 1px 0 rgba(255,255,255,0.05)',
+              width: 5, height: 5, borderRadius: '50%',
+              background: skip(r, c) ? 'transparent' : '#040c02',
+              boxShadow: skip(r, c) ? 'none' : 'inset 0 1px 3px rgba(0,0,0,1)',
+              flexShrink: 0,
             }} />
           ))}
         </div>
