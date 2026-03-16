@@ -2,6 +2,21 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { unlockAudio, playBoot, playPressStart } from '../utils/sounds'
 
+// Plays an mp4 once then calls onDone
+function VideoPlayer({ src, onDone }: { src: string; onDone: () => void }) {
+  const stableDone = useCallback(onDone, [])
+  return (
+    <video
+      src={src}
+      autoPlay
+      playsInline
+      muted
+      onEnded={stableDone}
+      style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+    />
+  )
+}
+
 // Renders a GIF frame-by-frame on a canvas — plays once then calls onDone
 function GifCanvas({ src, onDone }: { src: string; onDone: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -93,10 +108,10 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
     }, 400)
   }, [])
 
-  // Stage 2 fallback: max 4 seconds on Silver GIF before moving to title
+  // Stage 2 fallback: max 30 seconds on splash video before moving to title
   useEffect(() => {
     if (phase !== 'silver') return
-    const t = setTimeout(handleSilverDone, 4000)
+    const t = setTimeout(handleSilverDone, 30000)
     return () => clearTimeout(t)
   }, [phase, handleSilverDone])
 
@@ -139,7 +154,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
 
       {phase === 'silver' && (
         <div style={{ position: 'absolute', inset: 0, opacity: silverVisible ? 1 : 0, transition: 'opacity 0.4s' }}>
-          <GifCanvas src={`${import.meta.env.BASE_URL}pokesilver.gif`} onDone={handleSilverDone} />
+          <VideoPlayer src={`${import.meta.env.BASE_URL}splash.mp4`} onDone={handleSilverDone} />
         </div>
       )}
 
