@@ -118,33 +118,34 @@ function PillButton({ label }: { label: string }) {
 function NintendoBadge() {
   return (
     <div style={{
-      width: 88, height: 28, borderRadius: 14,
-      border: '2px solid rgba(0,0,0,0.22)',
-      background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.18) 100%)',
-      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.08), 0 1px 2px rgba(255,255,255,0.06)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      width: 100, height: 32, borderRadius: 16,
+      border: '1.5px solid rgba(0,0,0,0.28)',
+      background: 'linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.22) 100%)',
+      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.35), inset 0 -1px 2px rgba(255,255,255,0.07)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2,
       pointerEvents: 'none', userSelect: 'none',
     }}>
       <span style={{
         fontFamily: "'Arial', sans-serif",
-        fontStyle: 'italic', fontWeight: 700, fontSize: 12,
-        color: 'rgba(0,0,0,0.35)', letterSpacing: 0.3,
+        fontStyle: 'italic', fontWeight: 900, fontSize: 13,
+        color: 'rgba(0,0,0,0.30)', letterSpacing: 0.2,
       }}>Nintendo</span>
+      <span style={{ fontSize: 8, color: 'rgba(0,0,0,0.25)', fontFamily: 'Arial, sans-serif', marginTop: -3 }}>®</span>
     </div>
   )
 }
 
-// ── Speaker Grille — 7×7 dot grid, straight (no rotation), deep cutout ────────
+// ── Speaker Grille — 7 cols × 6 rows dot grid, rectangular like real GBC ──────
 function SpeakerGrille() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, pointerEvents: 'none', userSelect: 'none' }}>
-      {Array.from({ length: 7 }).map((_, r) => (
+      {Array.from({ length: 6 }).map((_, r) => (
         <div key={r} style={{ display: 'flex', gap: 5 }}>
           {Array.from({ length: 7 }).map((_, c) => (
             <div key={c} style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, #010201 15%, #010101 85%, rgba(60,80,20,0.1) 100%)',
-              boxShadow: '0 -1px 0 rgba(255,255,255,0.08), 0 1px 0 rgba(130,204,22,0.14), inset 0 2px 4px rgba(0,0,0,1)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, #010201 20%, #010101 100%)',
+              boxShadow: '0 -1px 0 rgba(255,255,255,0.07), inset 0 2px 4px rgba(0,0,0,1)',
             }} />
           ))}
         </div>
@@ -383,31 +384,31 @@ export default function AppLayout() {
             pointerEvents: emu ? 'auto' : 'none',
           }}>
             {/* Nintendo badge */}
-            <div style={{ position: 'absolute', left: '50%', top: '12%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '50%', top: '14%', transform: 'translate(-50%, -50%)' }}>
               <NintendoBadge />
             </div>
             {/* D-pad */}
-            <div style={{ position: 'absolute', left: '23%', top: '44%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '24%', top: '46%', transform: 'translate(-50%, -50%)' }}>
               <DPad />
             </div>
             {/* B button */}
-            <div style={{ position: 'absolute', left: '67%', top: '48%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '66%', top: '52%', transform: 'translate(-50%, -50%)' }}>
               <BButton />
             </div>
             {/* A button */}
-            <div style={{ position: 'absolute', left: '79%', top: '39%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '78%', top: '43%', transform: 'translate(-50%, -50%)' }}>
               <AButton />
             </div>
             {/* SELECT */}
-            <div style={{ position: 'absolute', left: '37%', top: '74%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '35%', top: '76%', transform: 'translate(-50%, -50%)' }}>
               <PillButton label="SELECT" />
             </div>
-            {/* START */}
-            <div style={{ position: 'absolute', left: '48%', top: '71%', transform: 'translate(-50%, -50%)' }}>
+            {/* START — same height as SELECT */}
+            <div style={{ position: 'absolute', left: '48%', top: '76%', transform: 'translate(-50%, -50%)' }}>
               <PillButton label="START" />
             </div>
             {/* Speaker grille */}
-            <div style={{ position: 'absolute', left: '82%', top: '78%', transform: 'translate(-50%, -50%)' }}>
+            <div style={{ position: 'absolute', left: '80%', top: '76%', transform: 'translate(-50%, -50%)' }}>
               <SpeakerGrille />
             </div>
           </div>
