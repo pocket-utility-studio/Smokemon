@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
-import { useGifMode } from '../context/GifModeContext'
 import GBCBottomBar from '../components/GBCBottomBar'
 import SplashScreen from '../pages/SplashScreen'
 import { setVolume } from '../utils/sounds'
@@ -141,7 +140,6 @@ function GBCLogo() {
 
 export default function AppLayout() {
   const { font } = useVibe()
-  const { gifMode } = useGifMode()
   const [started, setStarted] = useState(() => sessionStorage.getItem('app-started') === '1')
   const [volume, setVolumeState] = useState(0.8)
   const { wipePhase } = useTransitionNav()
@@ -149,68 +147,6 @@ export default function AppLayout() {
   const handleVolume = (v: number) => {
     setVolumeState(v)
     setVolume(v)
-  }
-
-  // ── Simple shell (no GIF playing) ───────────────────────────────────────────
-  if (!gifMode) {
-    return (
-      <div style={{
-        width: '100vw',
-        height: '100dvh',
-        background: KIWI,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        {/* Screen */}
-        <div style={{
-          flex: 1,
-          minHeight: 0,
-          margin: '12px 12px 0',
-          background: '#000',
-          borderRadius: '6px 6px 4px 4px',
-          overflow: 'hidden',
-          position: 'relative',
-        }}>
-          {/* Scanlines */}
-          <div aria-hidden style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 99,
-            backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
-          }} />
-          <div className={`${font} gbc-screen-content`} style={{
-            position: 'absolute', inset: 0, zIndex: 1,
-            overflowY: started ? 'auto' : 'hidden',
-            color: '#c8e890', fontSize: '16px',
-            display: 'flex', flexDirection: 'column',
-            background: '#0e1a0b',
-          }}>
-            {!started ? (
-              <SplashScreen onStart={() => { sessionStorage.setItem('app-started', '1'); setStarted(true) }} />
-            ) : (
-              <>
-                <div style={{ flex: 1 }}>
-                  <Outlet />
-                </div>
-                <GBCBottomBar />
-                {wipePhase !== 'idle' && <WipeOverlay phase={wipePhase} />}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* GAME BOY Color logo */}
-        <div style={{
-          flexShrink: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: 44,
-          paddingBottom: 'max(4px, env(safe-area-inset-bottom))',
-        }}>
-          <GBCLogo />
-        </div>
-      </div>
-    )
   }
 
   return (
