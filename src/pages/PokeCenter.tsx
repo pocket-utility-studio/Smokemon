@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useStash } from '../context/StashContext'
@@ -82,6 +82,153 @@ function GifCanvas({ src, onDone, onFirstFrame }: { src: string; onDone: () => v
   )
 }
 
+// ── CSS GBC Device Frame ──────────────────────────────────────────────────────
+
+function GBCDeviceFrame({ children }: { children: React.ReactNode }) {
+  const KIWI = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
+  const colorWord = [
+    { ch: 'C', c: '#e03030' }, { ch: 'o', c: '#3060e0' }, { ch: 'L', c: '#d4b800' },
+    { ch: 'o', c: '#20a030' }, { ch: 'R', c: '#e03030' },
+  ]
+
+  // D-pad
+  const dpad = (
+    <div style={{ position: 'relative', width: 54, height: 54, flexShrink: 0 }}>
+      <div style={{ position: 'absolute', top: 18, left: 0, width: 54, height: 18, background: '#1a1a1a', border: '1px solid #080808', borderRadius: 2 }} />
+      <div style={{ position: 'absolute', top: 0, left: 18, width: 18, height: 54, background: '#1a1a1a', border: '1px solid #080808', borderRadius: 2 }} />
+      <div style={{ position: 'absolute', top: 18, left: 18, width: 18, height: 18, background: '#141414', borderRadius: 1 }} />
+    </div>
+  )
+
+  // A/B buttons
+  const btn = (label: string, size: number) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        background: 'radial-gradient(circle at 35% 35%, #2a2a2a, #0e0e0e)',
+        border: '1px solid #080808',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <span style={{ fontFamily: 'Arial', fontSize: 7, color: '#444', fontWeight: 'bold' }}>{label}</span>
+      </div>
+    </div>
+  )
+
+  // Speaker dots
+  const speaker = (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 5px)', gap: '3px' }}>
+      {Array.from({ length: 30 }).map((_, i) => (
+        <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#050e02', boxShadow: 'inset 0 1px 2px rgba(0,0,0,1)' }} />
+      ))}
+    </div>
+  )
+
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: KIWI,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {/* Device body */}
+      <div style={{
+        width: '82%',
+        maxWidth: 320,
+        background: KIWI,
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: '12px 12px 50% 50% / 12px 12px 20px 20px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15)',
+        overflow: 'hidden',
+        aspectRatio: '0.65',
+      }}>
+
+        {/* COMM notch */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 3 }}>
+          <div style={{ width: 32, height: 5, background: 'linear-gradient(180deg,#3a7008,#2a5806)', borderRadius: '0 0 3px 3px' }} />
+        </div>
+
+        {/* Black bezel */}
+        <div style={{
+          margin: '3px 3px 0',
+          background: '#181818',
+          borderRadius: '6px 6px 4px 4px',
+          padding: '5px 3px 7px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          flex: '0 0 auto',
+        }}>
+          {/* Power LED row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingBottom: 2 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#ff2020', boxShadow: '0 0 4px #ff2020' }} />
+            <div style={{ display: 'flex', gap: 2 }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `5px solid ${i===1?'#555':'#333'}` }} />
+              ))}
+            </div>
+            <span style={{ fontFamily: 'Arial', fontSize: 4, color: '#333', letterSpacing: 1 }}>POWER</span>
+          </div>
+
+          {/* Screen */}
+          <div style={{
+            background: '#0e0e0e',
+            borderRadius: 3,
+            padding: 3,
+            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.95)',
+          }}>
+            <div style={{
+              position: 'relative',
+              borderRadius: 2,
+              overflow: 'hidden',
+              aspectRatio: '10/9',
+              background: '#0e1a0b',
+            }}>
+              {/* Scanlines */}
+              <div aria-hidden style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2,
+                backgroundImage: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.15) 0px,rgba(0,0,0,0.15) 1px,transparent 1px,transparent 3px)',
+              }} />
+              <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+                {children}
+              </div>
+            </div>
+          </div>
+
+          {/* GAME BOY Color logo */}
+          <div style={{ textAlign: 'center', userSelect: 'none' }}>
+            <span style={{ fontFamily: "'Arial Black',Arial,sans-serif", fontStyle: 'italic', fontWeight: 900, fontSize: 9, color: '#888', letterSpacing: 0.5 }}>GAME BOY </span>
+            {colorWord.map(({ ch, c }, i) => (
+              <span key={i} style={{ fontFamily: "'Arial Black',Arial,sans-serif", fontStyle: 'italic', fontWeight: 900, fontSize: 9, color: c }}>{ch}</span>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontFamily: 'Arial', fontStyle: 'italic', fontWeight: 700, fontSize: 6, color: '#444', letterSpacing: 1 }}>Nintendo</span>
+          </div>
+        </div>
+
+        {/* Controls area */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '6px 10px 10px' }}>
+          {/* D-pad + A/B row */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {dpad}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+              {btn('B', 26)}
+              {btn('A', 32)}
+            </div>
+          </div>
+          {/* Speaker */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            {speaker}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Building-entry transition ─────────────────────────────────────────────────
 
 function BuildingEntry({ onDone }: { onDone: () => void }) {
@@ -105,14 +252,13 @@ function BuildingEntry({ onDone }: { onDone: () => void }) {
       style={{
         position: 'absolute', inset: 0, zIndex: 9999,
         background: '#050a04',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
         cursor: 'pointer',
       }}
     >
       <audio ref={audioRef} src={`${import.meta.env.BASE_URL}111-pokemon-recovery.mp3`} />
-      <GifCanvas src={`${import.meta.env.BASE_URL}pokemon-center.gif`} onDone={stableDone} onFirstFrame={handleFirstFrame} />
+      <GBCDeviceFrame>
+        <GifCanvas src={`${import.meta.env.BASE_URL}pokemon-center.gif`} onDone={stableDone} onFirstFrame={handleFirstFrame} />
+      </GBCDeviceFrame>
     </div>
   )
 }
