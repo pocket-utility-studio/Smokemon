@@ -102,7 +102,7 @@ function MenuRow({
       style={{
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         padding: isActive ? '16px 10px' : '12px 10px',
-        background: isActive ? 'rgba(132,204,22,0.10)' : 'transparent',
+        background: isActive ? '#84cc16' : 'transparent',
         border: 'none', boxSizing: 'border-box', cursor: 'pointer',
         flexShrink: 0, width: '100%', textAlign: 'left', gap: 8,
       }}
@@ -111,8 +111,9 @@ function MenuRow({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {/* Cursor arrow */}
         <span style={{
-          fontFamily: FONT, fontSize: 13, color: '#84cc16',
+          fontFamily: FONT, fontSize: 13,
           opacity: isActive ? 1 : 0, flexShrink: 0, width: 14,
+          color: isActive ? '#050e04' : '#84cc16',
         }}>►</span>
 
         {!isBack && <Sprite color={tagColor} />}
@@ -121,7 +122,7 @@ function MenuRow({
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{
             fontFamily: FONT, fontSize: 13,
-            color: isBack ? '#4a7a10' : isActive ? '#e8ffb0' : '#84cc16',
+            color: isBack ? '#4a7a10' : isActive ? '#050e04' : '#84cc16',
           }}>
             {isBack ? '◄ BACK' : label}
           </span>
@@ -139,7 +140,7 @@ function MenuRow({
       {isActive && description && (
         <div style={{
           fontFamily: FONT, fontSize: 9,
-          color: '#88ff88', paddingLeft: isBack ? 24 : 48,
+          color: isActive ? '#0a2808' : '#88ff88', paddingLeft: isBack ? 24 : 48,
           lineHeight: 1.8,
         }}>{description}</div>
       )}

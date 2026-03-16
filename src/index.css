@@ -136,3 +136,32 @@ body {
 .gbc-shake {
   animation: gbc-shake 0.28s ease-in-out;
 }
+
+/* pixelated rendering for all in-screen content */
+.gbc-screen-content * {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Active LCD display — subtle pixel-grid overlay (::after) */
+.gbc-active-display {
+  position: relative;
+}
+.gbc-active-display::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px);
+  pointer-events: none;
+  z-index: 200;
+  mix-blend-mode: multiply;
+  border-radius: 0 !important;
+}
+
+/* Solid inversion on tap/press inside the screen */
+.gbc-screen-content button:active {
+  background: #84cc16 !important;
+  color: #050e04 !important;
+}
