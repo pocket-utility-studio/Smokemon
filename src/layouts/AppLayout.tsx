@@ -15,29 +15,45 @@ const BEZEL_INNER = '#0e0e0e'
 const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 
 // ── D-Pad ──────────────────────────────────────────────────────────────────────
+// 88px total, 29px arm width. Arm centers at 43.5px.
+// Outer section centers: left=(14.5,43.5), right=(73,43.5), up=(43.5,14.5), down=(43.5,73)
 function DPad() {
   const arm: React.CSSProperties = {
-    background: 'linear-gradient(180deg, #222 0%, #111 100%)',
-    border: '1px solid #080808',
-    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.06), 2px 4px 6px rgba(0,0,0,0.7)',
+    background: 'linear-gradient(160deg, #2a2a2a 0%, #141414 60%, #0e0e0e 100%)',
+    border: '1.5px solid #080808',
+    boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.07), 0 4px 8px rgba(0,0,0,0.75)',
     position: 'absolute',
   }
+  // Arrow: X=cross half-size (6px), Y=point size (9px). Color #888.
+  // Centers computed from outer section midpoints above.
+  const arrows = [
+    // left-pointing:  center=(14.5,43.5) → left=10, top=38
+    { top: 38, left: 10,    borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '9px solid #888' },
+    // right-pointing: center=(73,43.5)   → right=10, top=38
+    { top: 38, right: 10,   borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #888' },
+    // up-pointing:    center=(43.5,14.5) → left=44, top=10
+    { left: 44, top: 10,    borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '9px solid #888' },
+    // down-pointing:  center=(43.5,73)   → left=44, bottom=10
+    { left: 44, bottom: 10, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '9px solid #888' },
+  ]
   return (
-    <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
-      <div style={{ ...arm, top: 24, left: 0, width: 72, height: 24, borderRadius: 3 }} />
-      <div style={{ ...arm, top: 0, left: 24, width: 24, height: 72, borderRadius: 3 }} />
+    <div style={{
+      position: 'relative', width: 88, height: 88,
+      flexShrink: 0, pointerEvents: 'none', userSelect: 'none',
+      filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.75))',
+    }}>
+      {/* Horizontal arm */}
+      <div style={{ ...arm, top: 29, left: 0, width: 88, height: 29, borderRadius: 4 }} />
+      {/* Vertical arm */}
+      <div style={{ ...arm, top: 0, left: 29, width: 29, height: 88, borderRadius: 4 }} />
+      {/* Center fill */}
       <div style={{
-        position: 'absolute', top: 24, left: 24, width: 24, height: 24,
-        background: '#1a1a1a', borderRadius: 2,
-        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)',
+        position: 'absolute', top: 29, left: 29, width: 29, height: 29,
+        background: '#181818', borderRadius: 2,
+        boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.9)',
       }} />
-      {[
-        { style: { top: 30, left: 8,  width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderRight: '8px solid #444' } },
-        { style: { top: 30, right: 8, width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '8px solid #444' } },
-        { style: { left: 36, top: 8,  width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderBottom: '8px solid #444' } },
-        { style: { left: 36, bottom: 8, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #444' } },
-      ].map((a, i) => (
-        <div key={i} style={{ position: 'absolute', ...a.style }} />
+      {arrows.map((a, i) => (
+        <div key={i} style={{ position: 'absolute', width: 0, height: 0, ...a }} />
       ))}
     </div>
   )
@@ -48,23 +64,23 @@ function ActionButtons() {
   const btn = (label: string, size: number) => (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      background: 'radial-gradient(circle at 35% 30%, #3a3a3a, #0e0e0e)',
-      border: '2px solid #050505',
-      boxShadow: '0 5px 10px rgba(0,0,0,0.85), 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 3px rgba(255,255,255,0.12)',
+      background: 'radial-gradient(circle at 38% 32%, #444, #181818 55%, #0a0a0a)',
+      border: '2px solid #060606',
+      boxShadow: '0 6px 12px rgba(0,0,0,0.9), 0 2px 4px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.1)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#444' }}>{label}</span>
+      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#555' }}>{label}</span>
     </div>
   )
   return (
-    <div style={{ position: 'relative', width: 88, height: 70, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
-      {/* B — lower-left */}
+    <div style={{ position: 'relative', width: 105, height: 82, flexShrink: 0, pointerEvents: 'none', userSelect: 'none' }}>
+      {/* B — lower-left, 38px */}
       <div style={{ position: 'absolute', bottom: 0, left: 0 }}>
-        {btn('B', 34)}
+        {btn('B', 38)}
       </div>
-      {/* A — upper-right */}
+      {/* A — upper-right, 52px */}
       <div style={{ position: 'absolute', top: 0, right: 0 }}>
-        {btn('A', 42)}
+        {btn('A', 52)}
       </div>
     </div>
   )
@@ -73,13 +89,13 @@ function ActionButtons() {
 // ── Start / Select ─────────────────────────────────────────────────────────────
 function StartSelect() {
   const pill = (label: string) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
       <div style={{
-        width: 32, height: 11,
-        background: 'linear-gradient(180deg, #2d2d2d 0%, #111 100%)',
-        borderRadius: 6,
-        border: '1px solid #080808',
-        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.04)',
+        width: 34, height: 12,
+        background: 'linear-gradient(180deg, #2a2a2a 0%, #111 100%)',
+        borderRadius: 7,
+        border: '1.5px solid #060606',
+        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.95), inset 0 -1px 2px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.04)',
       }} />
       <span style={{
         fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -89,7 +105,8 @@ function StartSelect() {
   )
   return (
     <div style={{
-      display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center',
+      display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center',
+      transform: 'rotate(-25deg)', transformOrigin: 'center',
       pointerEvents: 'none', userSelect: 'none',
     }}>
       {pill('SELECT')}
@@ -98,32 +115,23 @@ function StartSelect() {
   )
 }
 
-// ── Speaker Grille — dot grid matching real GBC hardware ──────────────────────
+// ── Speaker Grille — oval cluster of vertical pill cutouts, real GBC style ────
 function SpeakerGrille() {
-  const cols = 9
-  const rows = 8
-  // Corner radius: skip dots where row+col or mirrored positions are in the corner
-  const corner = 2
-  const skip = (r: number, c: number) => {
-    const rMirror = rows - 1 - r
-    const cMirror = cols - 1 - c
-    return (
-      (r < corner && c < corner - r) ||
-      (r < corner && cMirror < corner - r) ||
-      (rMirror < corner && c < corner - rMirror) ||
-      (rMirror < corner && cMirror < corner - rMirror)
-    )
-  }
+  // Column slot counts define the oval silhouette
+  const slotCounts = [3, 5, 6, 6, 5, 3]
   return (
-    <div style={{ transform: 'rotate(15deg)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} style={{ display: 'flex', gap: 4 }}>
-          {Array.from({ length: cols }).map((_, c) => (
-            <div key={c} style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: skip(r, c) ? 'transparent' : '#040c02',
-              boxShadow: skip(r, c) ? 'none' : 'inset 0 1px 3px rgba(0,0,0,1)',
-              flexShrink: 0,
+    <div style={{ transform: 'rotate(-20deg)', display: 'flex', gap: 5, alignItems: 'center' }}>
+      {slotCounts.map((count, c) => (
+        <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+          {Array.from({ length: count }).map((_, r) => (
+            <div key={r} style={{
+              width: 5, height: 13, borderRadius: 3,
+              background: 'linear-gradient(180deg, #020602 0%, #010301 100%)',
+              boxShadow: [
+                'inset 0 2px 5px rgba(0,0,0,1)',
+                'inset 0 -1px 2px rgba(0,0,0,0.7)',
+                '0 1px 0 rgba(130,204,22,0.12)',
+              ].join(', '),
             }} />
           ))}
         </div>
@@ -356,10 +364,9 @@ export default function AppLayout() {
           {/* Hardware buttons — visible in emulator, fade out in fullscreen */}
           <div style={{
             position: 'absolute', inset: 0,
-            padding: '4% 7% 4%',
-            paddingBottom: 'max(4%, env(safe-area-inset-bottom))',
+            padding: '2% 7% 0',
+            paddingBottom: 'max(2%, env(safe-area-inset-bottom))',
             display: 'flex', flexDirection: 'column',
-            justifyContent: 'space-between',
             opacity: emu ? 1 : 0,
             transform: emu ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)',
             transition: `opacity ${T}, transform ${T}`,
@@ -368,16 +375,20 @@ export default function AppLayout() {
             {/* D-pad + A/B — close to lens */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: '4%',
             }}>
               <DPad />
               <ActionButtons />
             </div>
-            {/* Start + Select — centered */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {/* Start + Select */}
+            <div style={{
+              display: 'flex', justifyContent: 'center', alignItems: 'center',
+              marginBottom: '4%',
+            }}>
               <StartSelect />
             </div>
-            {/* Speaker — bottom right */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+            {/* Speaker — bottom right, flex:1 spacer creates the gap */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <SpeakerGrille />
             </div>
           </div>
