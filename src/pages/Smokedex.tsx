@@ -729,18 +729,23 @@ function PartyView({
 
       {/* ── Mixed Salad / Entourage Calculator ────────────────────────────── */}
       {party.length >= 2 && (() => {
+        const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const findDb = (name: string) => db.find((d) => normName(String(d.Strain)) === normName(name))
+
         const handleMix = async () => {
           const [idA, idB] = mixSlots
           const sA = party.find((p) => p.id === idA)
           const sB = party.find((p) => p.id === idB)
           if (!sA || !sB) return
+          const dbA = findDb(sA.name)
+          const dbB = findDb(sB.name)
           setMixLoading(true)
           setMixResult(null)
           setMixError(null)
           try {
             const r = await mixStrains(
-              { name: sA.name, type: sA.type, thc: sA.thc, cbd: sA.cbd, terpenes: '', effects: '' },
-              { name: sB.name, type: sB.type, thc: sB.thc, cbd: sB.cbd, terpenes: '', effects: '' },
+              { name: sA.name, type: sA.type ?? dbA?.Type, thc: sA.thc ?? dbA?.thc, cbd: sA.cbd ?? dbA?.cbd, terpenes: dbA?.terpenes, effects: dbA?.Effects },
+              { name: sB.name, type: sB.type ?? dbB?.Type, thc: sB.thc ?? dbB?.thc, cbd: sB.cbd ?? dbB?.cbd, terpenes: dbB?.terpenes, effects: dbB?.Effects },
             )
             setMixResult(r)
           } catch (e) {
@@ -811,17 +816,41 @@ function PartyView({
                 {mixError === 'NO_KEY' ? 'NO API KEY — SET ONE IN POKECENTER' : mixError}
               </span>
             )}
-            {mixResult && (
-              <div style={{
-                border: '2px solid #2a4a08', background: '#060e05', padding: 10,
-                display: 'flex', flexDirection: 'column', gap: 8,
-              }}>
-                <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>PROF T-OAK SAYS:</span>
-                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {mixResult}
-                </p>
-              </div>
-            )}
+            {mixResult && (() => {
+              const MIX_HEADERS = ['COMBINED EFFECT', 'FLAVOUR PROFILE', 'BEST FOR', 'MIXING TIP'] as const
+              const MIX_COLORS: Record<string, string> = {
+                'COMBINED EFFECT': GBC_GREEN,
+                'FLAVOUR PROFILE': GBC_AMBER,
+                'BEST FOR':        GBC_VIOLET,
+                'MIXING TIP':      '#5a9a18',
+              }
+              const regex = new RegExp(`(${MIX_HEADERS.join('|')})`, 'g')
+              const parts = mixResult.split(regex)
+              const sections: { header: string; body: string }[] = []
+              if (parts[0].trim()) sections.push({ header: '', body: parts[0].trim() })
+              for (let i = 1; i < parts.length; i += 2) {
+                sections.push({ header: parts[i], body: (parts[i + 1] ?? '').trimStart() })
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {sections.map((sec, i) => {
+                    const col = MIX_COLORS[sec.header] ?? GBC_TEXT
+                    return (
+                      <div key={i} style={{ border: `2px solid ${sec.header ? col : GBC_DARKEST}`, background: '#060e05', padding: 10 }}>
+                        {sec.header && (
+                          <span style={{ fontFamily: PVSF, fontSize: 8, color: col, display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>
+                            {sec.header}
+                          </span>
+                        )}
+                        <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
+                          {sec.body}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </div>
         )
       })()}
