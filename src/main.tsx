@@ -8,6 +8,10 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload()
   })
+  // Force-check for a new SW on every app open — fixes stale PWA on iOS
+  navigator.serviceWorker.ready.then((reg) => {
+    reg.update()
+  })
 }
 
 createRoot(document.getElementById('root')!).render(
