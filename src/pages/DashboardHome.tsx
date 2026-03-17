@@ -48,7 +48,7 @@ const MENU: TopItem[] = [
   },
   {
     kind: 'group', id: 'library',
-    label: 'LIBRARY', description: 'TERPENES, HISTORY & LAW REFERENCE',
+    label: 'TRAINER SCHOOL', description: 'TERPENES, HISTORY & LAW REFERENCE',
     tag: '[LEARN]', tagColor: '#a78bfa',
     children: [
       { kind: 'leaf', to: '/terpenes', label: 'TERPENE DICT', description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',    tag: '[LEARN]', tagColor: '#a78bfa' },
@@ -58,7 +58,7 @@ const MENU: TopItem[] = [
     ],
   },
   { kind: 'leaf', to: '/escape', label: 'ESCAPE ROPE', description: 'PANIC & GROUNDING GUIDE',    tag: '[SOS]',  tagColor: '#e84040' },
-  { kind: 'leaf', to: '/save',   label: 'SAVE STATE',  description: 'EXPORT / IMPORT YOUR DATA',  tag: '[DATA]', tagColor: '#4a9a20' },
+  { kind: 'leaf', to: '/save',   label: 'SAVE GAME',   description: 'EXPORT / IMPORT YOUR DATA',  tag: '[DATA]', tagColor: '#4a9a20' },
 ]
 
 // ── Sprite ────────────────────────────────────────────────────────────────────

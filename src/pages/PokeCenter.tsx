@@ -597,7 +597,7 @@ export default function PokeCenter() {
         {strains.filter((s) => !s.inStock).length > 0 && (
           <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
             <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
-              PC STASH
+              BILL'S PC
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {strains.filter((s) => !s.inStock).map((s) => (
@@ -626,9 +626,9 @@ export default function PokeCenter() {
             onChange={(e) => setDesiredEffect(e.target.value)}
             placeholder="e.g. I want to relax and sleep..."
             style={{
-              width: '100%', background: GBC_BOX,
-              border: `2px solid ${focused ? '#4a8a10' : GBC_DARKEST}`,
-              color: GBC_TEXT, fontSize: 13, fontFamily: 'monospace',
+              width: '100%', background: '#060e05',
+              border: `2px solid ${focused ? '#84cc16' : '#3a6010'}`,
+              color: '#e8f8c0', fontSize: 13, fontFamily: 'monospace',
               padding: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box',
               lineHeight: 1.7,
             }}

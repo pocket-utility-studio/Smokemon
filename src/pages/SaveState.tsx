@@ -41,11 +41,13 @@ export default function SaveState() {
   const [exportFeedback, setExportFeedback] = useState<FeedbackState>('idle')
   const [importFeedback, setImportFeedback] = useState<FeedbackState>('idle')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveProgress, setSaveProgress] = useState(0)
 
   const handleExport = () => {
     if (saving) return
+    setShowSaveConfirm(false)
     setSaving(true)
     setSaveProgress(0)
     playSave()
@@ -126,7 +128,7 @@ export default function SaveState() {
         marginBottom: 0,
       }}>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
-          SAVE STATE
+          SAVE GAME
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P'",
@@ -148,11 +150,21 @@ export default function SaveState() {
         <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
           Download all your stash data as a .json file for safe keeping.
         </p>
-        <button onClick={handleExport} style={primaryBtn}>
-          {exportFeedback === 'idle' && '► EXPORT SAVE FILE'}
-          {exportFeedback === 'saved' && 'SAVED!'}
-          {exportFeedback === 'error' && 'ERROR'}
-        </button>
+        {!showSaveConfirm ? (
+          <button onClick={() => setShowSaveConfirm(true)} style={primaryBtn}>
+            ► SAVE GAME
+          </button>
+        ) : (
+          <div style={{ ...pokeBox, border: '3px solid #84cc16', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#84cc16', textAlign: 'center', lineHeight: 1.8 }}>
+              WOULD YOU LIKE TO{'\n'}SAVE THE GAME?
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleExport} style={{ ...primaryBtn, fontSize: 8 }}>► YES</button>
+              <button onClick={() => setShowSaveConfirm(false)} style={{ ...btnBase, fontSize: 8, border: '3px solid #2a4a08', color: '#4a7a10', background: 'transparent' }}>► NO</button>
+            </div>
+          </div>
+        )}
         {exportFeedback === 'saved' && (
           <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#84cc16', textAlign: 'center' }}>
             FILE DOWNLOADED

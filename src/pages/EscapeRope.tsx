@@ -132,7 +132,7 @@ const PHASE_LABEL: Record<BreathPhase, string> = {
 // ── Techniques ────────────────────────────────────────────────────────────────
 
 const TECHNIQUES = [
-  { id: 'grounding',  label: '5-4-3-2-1 GROUNDING', desc: 'Anchor yourself to the present using your senses.' },
+  { id: 'breath478',  label: '4-7-8 BREATHING',      desc: 'Slow your heart rate fast with this nerve-calming breath pattern.' },
   { id: 'cold',       label: 'COLD WATER RESET',     desc: 'Trigger the dive reflex with freezing water on your face.' },
   { id: 'peppercorn', label: 'PEPPERCORN PROTOCOL',  desc: 'Chew 3 black peppercorns. Beta-caryophyllene may take the edge off.' },
   { id: 'cbd',        label: 'CBD DOSE',              desc: 'Pure CBD isolate can balance the high without adding more THC.' },
@@ -141,7 +141,7 @@ const TECHNIQUES = [
 ]
 
 const TECHNIQUE_STEPS: Record<string, string[]> = {
-  grounding:  ['NAME 5 THINGS YOU CAN SEE.', 'NAME 4 THINGS YOU CAN TOUCH.', 'NAME 3 THINGS YOU CAN HEAR.', 'NAME 2 THINGS YOU CAN SMELL.', 'NAME 1 THING YOU CAN TASTE.', 'BREATHE. YOU ARE HERE.'],
+  breath478:  ['SIT UPRIGHT AND CLOSE YOUR EYES.', 'INHALE QUIETLY THROUGH YOUR NOSE FOR 4 SECONDS.', 'HOLD YOUR BREATH FOR 7 SECONDS.', 'EXHALE COMPLETELY THROUGH YOUR MOUTH FOR 8 SECONDS.', 'THAT IS ONE CYCLE. REPEAT 3-4 TIMES.', 'THE EXTENDED EXHALE ACTIVATES YOUR PARASYMPATHETIC NERVOUS SYSTEM.'],
   cold:       ['GO TO A SINK OR BASIN.', 'FILL IT WITH THE COLDEST WATER YOU CAN GET.', 'SPLASH YOUR FACE SEVERAL TIMES.', 'THE MAMMALIAN DIVE REFLEX WILL SLOW YOUR HEART RATE.'],
   peppercorn: ['FIND 3 WHOLE BLACK PEPPERCORNS.', 'CHEW THEM SLOWLY.', 'BETA-CARYOPHYLLENE BINDS TO CB2 RECEPTORS.', 'IT MAY HELP TAKE THE EDGE OFF ANXIETY.'],
   cbd:        ['MEASURE A DOSE OF PURE CBD ISOLATE.', 'CBD IS ANXIOLYTIC AND NON-INTOXICATING.', 'IT WILL NOT INCREASE THE HIGH.', 'GIVE IT 15-20 MINUTES TO WORK.'],

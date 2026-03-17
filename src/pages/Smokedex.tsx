@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
+import Fuse from 'fuse.js'
 import Tesseract from 'tesseract.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
@@ -244,7 +245,22 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
   )
 }
 
-// ── PC stash list ──────────────────────────────────────────────────────────────
+// ── Item label helper ─────────────────────────────────────────────────────────
+// Maps a gram amount string to the closest Pokémon item name
+function getItemLabel(amountStr: string): string {
+  const g = parseFloat(amountStr)
+  if (isNaN(g)) return amountStr.toUpperCase()
+  let item: string
+  if (g <= 0)   item = 'ANTIDOTE'
+  else if (g <= 1)   item = 'POTION'
+  else if (g <= 3.5) item = 'SUPER POTION'
+  else if (g <= 7)   item = 'HYPER POTION'
+  else if (g <= 14)  item = 'MAX POTION'
+  else               item = 'FULL RESTORE'
+  return `[${item}] (${amountStr})`
+}
+
+// ── Bill's PC stash list ───────────────────────────────────────────────────────
 
 function StashList({
   strains,
@@ -554,7 +570,7 @@ function PartyView({
                       )}
                       {s.amount && (
                         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
-                          {s.amount.toUpperCase()}
+                          {getItemLabel(s.amount)}
                         </span>
                       )}
                     </div>
@@ -892,17 +908,32 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
     setGeminiAdded(false)
   }, [query, category, sort])
 
+  const fuse = useMemo(() => new Fuse(db, {
+    keys: [
+      { name: 'Strain',      weight: 3 },
+      { name: 'Effects',     weight: 1.5 },
+      { name: 'terpenes',    weight: 1.2 },
+      { name: 'Flavor',      weight: 1 },
+      { name: 'Description', weight: 0.8 },
+      { name: 'medical',     weight: 0.8 },
+      { name: 'Type',        weight: 0.5 },
+    ],
+    threshold: 0.4,       // 0 = exact, 1 = match anything — 0.4 is forgiving of typos
+    distance: 200,
+    includeScore: true,
+    useExtendedSearch: false,
+  }), [db])
+
   const { pageResults, total, totalPages } = useMemo(() => {
-    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
     let pool = db.filter(category.filter)
 
-    if (words.length > 0) {
-      // Score and sort by relevance
-      const scored = pool
-        .map((s) => ({ s, score: scoreResult(s, words) }))
-        .filter(({ score }) => score > 0)
-        .sort((a, b) => b.score - a.score)
-      pool = scored.map(({ s }) => s)
+    if (query.trim()) {
+      const fuseResults = fuse.search(query.trim())
+      // Filter to category and preserve Fuse relevance order
+      const inCategory = new Set(pool.map((s) => s.Strain))
+      pool = fuseResults
+        .filter(({ item }) => inCategory.has(item.Strain))
+        .map(({ item }) => item)
     } else {
       pool = [...pool]
       if (sort === 'az')     pool.sort((a, b) => displayName(a).localeCompare(displayName(b)))
@@ -914,7 +945,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1
     const pageResults = pool.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
     return { pageResults, total, totalPages }
-  }, [db, query, category, sort, page])
+  }, [db, fuse, query, category, sort, page])
 
   if (selected) {
     return <StrainDetail strain={selected} onBack={() => setSelected(null)} />
@@ -1413,7 +1444,7 @@ export default function Smokedex() {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         <button style={tabBtn(tab === 'party')} onClick={() => setTab('party')}>PARTY</button>
-        <button style={tabBtn(tab === 'pc')} onClick={() => setTab('pc')}>PC</button>
+        <button style={tabBtn(tab === 'pc')} onClick={() => setTab('pc')}>BILL'S PC</button>
         <button style={tabBtn(tab === 'dex')} onClick={() => setTab('dex')}>DEX</button>
         <button style={tabBtn(tab === 'add')} onClick={() => setTab('add')}>ADD</button>
       </div>
@@ -1421,7 +1452,7 @@ export default function Smokedex() {
       {/* Summary bar */}
       {tab !== 'dex' && tab !== 'add' && (
         <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>
-          {party.length}/6 IN PARTY · {strains.length} IN PC
+          {party.length}/6 IN PARTY · {strains.length} IN BILL'S PC
         </div>
       )}
 

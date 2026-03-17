@@ -19,7 +19,7 @@ const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 // Single SVG replaces all individual CSS button components.
 // viewBox 0 0 300 240 — coordinates derived from real Kiwi GBC reference photo.
 // Aspect ratio 300:240 ≈ 1.25:1 matches the controls area proportions.
-function GBCControlsSVG() {
+function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
   // Key centres (x, y) in viewBox coordinates
   const dp  = { x: 75,  y: 118 }  // D-pad
   const bB  = { x: 197, y: 133 }  // B button
@@ -128,6 +128,13 @@ function GBCControlsSVG() {
         fontFamily="'PokemonGb', 'Press Start 2P', monospace"
         fontSize={8} fill="#606060"
       >B</text>
+      {/* Transparent hit area — goBack() */}
+      <circle
+        cx={bB.x} cy={bB.y} r={22}
+        fill="transparent"
+        style={{ cursor: 'pointer' }}
+        onClick={onBPress}
+      />
 
       {/* ── A button ───────────────────────────────────────── */}
       {/* Outer groove shadow ring */}
@@ -451,7 +458,7 @@ export default function AppLayout() {
             transition: `opacity ${T}, transform ${T}`,
             pointerEvents: emu ? 'auto' : 'none',
           }}>
-            <GBCControlsSVG />
+            <GBCControlsSVG onBPress={() => { haptic(20); goBack() }} />
           </div>
 
         </div>
