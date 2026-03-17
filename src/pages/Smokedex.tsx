@@ -5,8 +5,8 @@ import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { lookupStrainData, mixStrains } from '../services/gemini'
-import type { StrainLookupResult } from '../services/gemini'
+import { lookupStrainData, mixStrains, suggestMix } from '../services/gemini'
+import type { StrainLookupResult, MixSuggestion } from '../services/gemini'
 import { BudSprite, ALL_BUD_DESIGNS, getBudDesign } from '../components/BudSprite'
 import type { BudContext } from '../components/BudSprite'
 import BitBudCanvas from '../components/BitBudCanvas'
@@ -475,6 +475,8 @@ function PartyView({
   const [mixResult, setMixResult]         = useState<string | null>(null)
   const [mixLoading, setMixLoading]       = useState(false)
   const [mixError, setMixError]           = useState<string | null>(null)
+  const [suggestion, setSuggestion]       = useState<MixSuggestion | null>(null)
+  const [suggestLoading, setSuggestLoading] = useState(false)
 
   const handleSurpriseMe = () => {
     if (party.length === 0) return
@@ -755,6 +757,29 @@ function PartyView({
           }
         }
 
+        const handleSuggest = async () => {
+          setSuggestLoading(true)
+          setSuggestion(null)
+          setMixResult(null)
+          setMixError(null)
+          try {
+            const enrichedParty = party.map((s) => {
+              const d = findDb(s.name)
+              return { name: s.name, type: s.type ?? d?.Type, thc: s.thc ?? d?.thc, cbd: s.cbd ?? d?.cbd, terpenes: d?.terpenes, effects: d?.Effects }
+            })
+            const sugg = await suggestMix(enrichedParty)
+            setSuggestion(sugg)
+            // Auto-fill dropdowns with suggested strains
+            const idA = party.find((p) => p.name.toLowerCase() === sugg.strainA.toLowerCase())?.id ?? null
+            const idB = party.find((p) => p.name.toLowerCase() === sugg.strainB.toLowerCase())?.id ?? null
+            setMixSlots([idA, idB])
+          } catch (e) {
+            setMixError(e instanceof Error ? e.message : 'Error')
+          } finally {
+            setSuggestLoading(false)
+          }
+        }
+
         const canMix = !!mixSlots[0] && !!mixSlots[1] && mixSlots[0] !== mixSlots[1]
 
         return (
@@ -767,12 +792,45 @@ function PartyView({
             flexDirection: 'column',
             gap: 10,
           }}>
-            <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED, letterSpacing: 0.5 }}>
-              MIXED SALAD — ENTOURAGE CALC
-            </span>
-            <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.6, margin: 0 }}>
-              Select 2 strains to mix. Prof T-Oak predicts the combined effect.
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED, letterSpacing: 0.5 }}>
+                MIXED SALAD — ENTOURAGE CALC
+              </span>
+              <button
+                onClick={handleSuggest}
+                disabled={suggestLoading || mixLoading}
+                style={{
+                  fontFamily: PVSF, fontSize: 7, padding: '5px 8px', flexShrink: 0,
+                  border: `2px solid ${GBC_VIOLET}`,
+                  color: suggestLoading ? GBC_MUTED : GBC_VIOLET,
+                  background: 'rgba(167,139,250,0.08)',
+                  cursor: suggestLoading || mixLoading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {suggestLoading ? '...' : '★ SUGGEST'}
+              </button>
+            </div>
+
+            {/* Suggestion panel */}
+            {suggestion && (
+              <div style={{ border: `2px solid ${GBC_VIOLET}`, background: '#080a10', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_VIOLET }}>PROF T-OAK SUGGESTS:</span>
+                <span style={{ fontFamily: PVSF, fontSize: 8, color: GBC_TEXT }}>
+                  {suggestion.strainA.toUpperCase()} + {suggestion.strainB.toUpperCase()}
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div>
+                    <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_AMBER, display: 'block', marginBottom: 3 }}>FLAVOUR</span>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>{suggestion.flavourReason}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_VIOLET, display: 'block', marginBottom: 3 }}>TERPENE SYNERGY</span>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>{suggestion.terpeneReason}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: 6 }}>
               {([0, 1] as const).map((slot) => (
                 <select
@@ -783,6 +841,7 @@ function PartyView({
                     next[slot] = e.target.value || null
                     setMixSlots(next)
                     setMixResult(null)
+                    setSuggestion(null)
                   }}
                   style={{
                     flex: 1, fontFamily: PVSF, fontSize: 8, padding: '8px 6px',

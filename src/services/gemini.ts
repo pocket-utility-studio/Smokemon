@@ -178,6 +178,62 @@ One practical suggestion: ideal vaporiser temperature for this blend, a recommen
 
 Keep Professor Oak's warm, enthusiastic tone throughout. Address the trainer directly.`
 
+export interface MixSuggestion {
+  strainA: string
+  strainB: string
+  flavourReason: string
+  terpeneReason: string
+}
+
+/**
+ * Ask Professor T-Oak to suggest the most interesting pairing from the party,
+ * based on terpene synergy and flavour compatibility.
+ */
+export async function suggestMix(party: EnrichedStrain[]): Promise<MixSuggestion> {
+  if (party.length < 2) throw new Error('Need at least 2 strains')
+  const client = getClient()
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+  const partyList = party
+    .map((s) => {
+      let line = `- ${s.name} (${s.type ?? 'unknown'}`
+      if (s.thc != null) line += `, THC ${s.thc}%`
+      if (s.terpenes)    line += `, terpenes: ${s.terpenes}`
+      if (s.effects)     line += `, effects: ${s.effects}`
+      line += ')'
+      return line
+    })
+    .join('\n')
+
+  const prompt = `You are Professor T-Oak, cannabis terpene expert with the enthusiasm of Professor Oak from Pokémon.
+
+From the trainer's party below, choose the TWO strains that would create the most interesting combination — the pair with the best terpene synergy AND most complementary flavour profiles.
+
+Respond with ONLY a valid JSON object, no markdown, no code fences, exactly this structure:
+{
+  "strainA": "<exact name from the list>",
+  "strainB": "<exact name from the list>",
+  "flavourReason": "<2 sentences: which terpenes create which flavours in each strain, and why they complement each other on the palate>",
+  "terpeneReason": "<2 sentences: which specific terpenes interact synergistically between the two strains and what therapeutic or experiential benefit that synergy produces>"
+}
+
+Party:
+${partyList}`
+
+  const result = await model.generateContent(prompt)
+  const text = result.response.text().trim()
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Unexpected response from AI')
+  const data = JSON.parse(jsonMatch[0])
+  if (!data.strainA || !data.strainB) throw new Error('Missing strain names in suggestion')
+  return {
+    strainA:       data.strainA,
+    strainB:       data.strainB,
+    flavourReason: data.flavourReason ?? '',
+    terpeneReason: data.terpeneReason ?? '',
+  }
+}
+
 /**
  * Mix two strains and predict their combined entourage effect.
  */
