@@ -177,51 +177,17 @@ function LoadingBar() {
   )
 }
 
-// ── Nurse Joy pixel art portrait ──────────────────────────────────────────────
-// SVG sprite using rect elements for GBC pixel-art look.
-// Limited palette: pink hair, skin, white cap, red cross, simple features.
+// ── Nurse Joy sprite ──────────────────────────────────────────────────────────
 
 function NurseJoySprite({ size = 60 }: { size?: number }) {
   return (
-    <svg
-      width={size} height={size}
-      viewBox="0 0 60 60"
-      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0 }}
-    >
-      {/* Nurse cap — white/GBC-tinted */}
-      <rect x="14" y="1"  width="32" height="18" fill="#cce0c8" />
-      <rect x="10" y="18" width="40" height="5"  fill="#cce0c8" />
-      {/* Red cross on cap */}
-      <rect x="27" y="4"  width="6"  height="12" fill="#e84040" />
-      <rect x="21" y="9"  width="18" height="4"  fill="#e84040" />
-      {/* Hair buns — left */}
-      <rect x="0"  y="16" width="14" height="14" rx="6" fill="#c85878" />
-      <rect x="2"  y="18" width="6"  height="5"  fill="#e890a8" />
-      {/* Hair buns — right */}
-      <rect x="46" y="16" width="14" height="14" rx="6" fill="#c85878" />
-      <rect x="52" y="18" width="6"  height="5"  fill="#e890a8" />
-      {/* Face */}
-      <rect x="12" y="22" width="36" height="26" rx="5" fill="#f4c890" />
-      {/* Eyes */}
-      <rect x="18" y="29" width="7"  height="7"  fill="#181828" />
-      <rect x="35" y="29" width="7"  height="7"  fill="#181828" />
-      {/* Eye shine */}
-      <rect x="19" y="30" width="2"  height="2"  fill="#e0f0d8" />
-      <rect x="36" y="30" width="2"  height="2"  fill="#e0f0d8" />
-      {/* Blush */}
-      <rect x="12" y="39" width="9"  height="4"  fill="#f8a0a8" opacity="0.6" />
-      <rect x="39" y="39" width="9"  height="4"  fill="#f8a0a8" opacity="0.6" />
-      {/* Smile — pixel curve */}
-      <rect x="21" y="44" width="4"  height="2"  fill="#b03858" />
-      <rect x="25" y="46" width="10" height="3"  fill="#b03858" />
-      <rect x="35" y="44" width="4"  height="2"  fill="#b03858" />
-      {/* Uniform collar */}
-      <rect x="10" y="48" width="40" height="12" fill="#b8d8c8" />
-      {/* Collar V-neck cutout */}
-      <rect x="24" y="48" width="12" height="5"  fill="#f4c890" />
-      <rect x="27" y="53" width="3"  height="4"  fill="#b8d8c8" />
-      <rect x="30" y="53" width="3"  height="4"  fill="#b8d8c8" />
-    </svg>
+    <img
+      src={`${import.meta.env.BASE_URL}nurse-joy.png`}
+      alt="Nurse Joy"
+      width={size}
+      height={size}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, objectFit: 'contain' }}
+    />
   )
 }
 
@@ -241,7 +207,7 @@ function NurseJoyDialogue({ text }: { text: string }) {
         borderBottom: `1px solid ${GBC_DARKEST}`, paddingBottom: 8, marginBottom: 10,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        <NurseJoySprite size={36} />
+        <NurseJoySprite size={44} />
         <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN }}>NURSE JOY</span>
       </div>
       <p style={{
