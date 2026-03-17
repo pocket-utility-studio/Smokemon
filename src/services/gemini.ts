@@ -9,6 +9,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { StrainEntry } from '../context/StashContext'
 
+export interface StrainLookupResult {
+  thc?: number
+  cbd?: number
+  type?: 'sativa' | 'indica' | 'hybrid'
+  terpenes?: string
+  effects?: string
+}
+
 // ── Client ────────────────────────────────────────────────────────────────────
 
 function getClient(): GoogleGenerativeAI {
@@ -55,4 +63,34 @@ export async function askProfessorToke(
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
+}
+
+// ── Strain lookup ──────────────────────────────────────────────────────────────
+
+const STRAIN_LOOKUP_PROMPT = (name: string) =>
+  `You are a cannabis database. Provide typical data for the strain "${name}".
+Respond ONLY with a single valid JSON object. Use null for any unknown fields.
+{
+  "thc": <number|null>,
+  "cbd": <number|null>,
+  "type": <"sativa"|"indica"|"hybrid"|null>,
+  "terpenes": <"comma-separated dominant terpenes"|null>,
+  "effects": <"short description of typical effects"|null>
+}`
+
+export async function lookupStrainData(name: string): Promise<StrainLookupResult> {
+  const client = getClient()
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const result = await model.generateContent(STRAIN_LOOKUP_PROMPT(name))
+  const text = result.response.text().trim()
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Unexpected response from AI')
+  const data = JSON.parse(jsonMatch[0])
+  const out: StrainLookupResult = {}
+  if (typeof data.thc === 'number')   out.thc = data.thc
+  if (typeof data.cbd === 'number')   out.cbd = data.cbd
+  if (data.type === 'sativa' || data.type === 'indica' || data.type === 'hybrid') out.type = data.type
+  if (typeof data.terpenes === 'string' && data.terpenes) out.terpenes = data.terpenes
+  if (typeof data.effects === 'string' && data.effects)   out.effects = data.effects
+  return out
 }
