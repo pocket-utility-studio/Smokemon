@@ -248,8 +248,8 @@ function NurseJoyDialogue({ text }: { text: string }) {
 
 // ── Party card ────────────────────────────────────────────────────────────────
 
-function PartyCard({ name, type, thc, inStock, dbMatch }: {
-  name: string; type?: string; thc?: number; inStock: boolean; dbMatch?: StrainRecord
+function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
+  name: string; type?: string; thc?: number; inStock: boolean; dbMatch?: StrainRecord; onToggle: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const col = type === 'sativa' ? GBC_GREEN : type === 'indica' ? GBC_VIOLET : GBC_AMBER
@@ -270,7 +270,7 @@ function PartyCard({ name, type, thc, inStock, dbMatch }: {
       style={{
         ...pokeBox,
         padding: '10px 10px',
-        opacity: inStock ? 1 : 0.4,
+        opacity: inStock ? 1 : 0.5,
         flex: expanded ? '1 1 100%' : '1 1 calc(50% - 4px)',
         minWidth: 0,
         cursor: 'pointer',
@@ -286,6 +286,18 @@ function PartyCard({ name, type, thc, inStock, dbMatch }: {
         <div style={{ fontFamily: FONT, fontSize: 9, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
           {name.toUpperCase()}
         </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggle() }}
+          style={{
+            fontFamily: FONT, fontSize: 11, flexShrink: 0,
+            width: 28, height: 28, cursor: 'pointer',
+            border: `2px solid ${inStock ? GBC_MUTED : GBC_GREEN}`,
+            background: inStock ? 'transparent' : 'rgba(132,204,22,0.15)',
+            color: inStock ? GBC_MUTED : GBC_GREEN,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            WebkitTapHighlightColor: 'transparent' as unknown as string,
+          }}
+        >{inStock ? '-' : '+'}</button>
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         {type && (
@@ -366,7 +378,7 @@ function findDbMatch(name: string, db: StrainRecord[]): StrainRecord | undefined
 }
 
 export default function PokeCenter() {
-  const { strains } = useStash()
+  const { strains, updateStrain } = useStash()
   const { db } = useStrainDb()
   const [entered, setEntered] = useState(false)
   const [desiredEffect, setDesiredEffect] = useState('')
@@ -506,16 +518,46 @@ export default function PokeCenter() {
           </div>
           {party.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 9, color: GBC_DARKEST, lineHeight: 1.8 }}>
-              {strains.length === 0 ? 'NO STRAINS IN STASH.\nADD SOME IN SMOKÉDEX FIRST.' : 'NO STRAINS IN STOCK.\nMARK A STRAIN AS IN STOCK IN SMOKÉDEX.'}
+              {strains.length === 0 ? 'NO STRAINS IN STASH. ADD SOME IN SMOKÉDEX FIRST.' : 'NO STRAINS IN STOCK. ADD ONE FROM YOUR STASH BELOW.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {party.map((s) => (
-                <PartyCard key={s.id} name={s.name} type={s.type} thc={s.thc} inStock={s.inStock} dbMatch={findDbMatch(s.name, db)} />
+                <PartyCard
+                  key={s.id}
+                  name={s.name}
+                  type={s.type}
+                  thc={s.thc}
+                  inStock={s.inStock}
+                  dbMatch={findDbMatch(s.name, db)}
+                  onToggle={() => updateStrain(s.id, { inStock: !s.inStock })}
+                />
               ))}
             </div>
           )}
         </div>
+
+        {/* Stash — add to party */}
+        {strains.filter((s) => !s.inStock).length > 0 && (
+          <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
+            <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
+              PC STASH
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {strains.filter((s) => !s.inStock).map((s) => (
+                <PartyCard
+                  key={s.id}
+                  name={s.name}
+                  type={s.type}
+                  thc={s.thc}
+                  inStock={s.inStock}
+                  dbMatch={findDbMatch(s.name, db)}
+                  onToggle={() => updateStrain(s.id, { inStock: !s.inStock })}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Ask Nurse Joy */}
         <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
