@@ -209,7 +209,7 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <BudSprite name={strain.name} type={type} size={28} budDesign={design} />
+              <BudSprite name={strain.name} type={type} size={21} budDesign={design} />
             </button>
           ))}
         </div>
@@ -282,7 +282,7 @@ function StashList({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editingId === s.id ? 14 : 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                 <TypeSprite type={s.type} size={28} />
-                <BudSprite name={s.name} type={s.type} size={28} context={dbCtx} budDesign={s.budDesign} />
+                <BudSprite name={s.name} type={s.type} size={21} context={dbCtx} budDesign={s.budDesign} />
               </div>
               <span style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -445,7 +445,7 @@ function PartyView({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editing ? 14 : 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <TypeSprite type={selected.type} size={36} />
-              <BudSprite name={selected.name} type={selected.type} size={36} context={selDbCtx} budDesign={selected.budDesign} />
+              <BudSprite name={selected.name} type={selected.type} size={27} context={selDbCtx} budDesign={selected.budDesign} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: typeColor(selected.type), lineHeight: 1.5, wordBreak: 'break-word' }}>
@@ -545,7 +545,7 @@ function PartyView({
             >
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
                 <TypeSprite type={s.type} size={24} />
-                <BudSprite name={s.name} type={s.type} size={24} context={dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined} budDesign={s.budDesign} />
+                <BudSprite name={s.name} type={s.type} size={18} context={dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined} budDesign={s.budDesign} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
