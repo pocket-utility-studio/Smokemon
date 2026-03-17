@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const FONT = "'PokemonGb', 'Press Start 2P', monospace"
+
 const pokeBox = {
   border: '3px solid #84cc16',
   boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
@@ -30,19 +32,70 @@ const DATE_FACTS: Record<string, string> = {
   '12-20': 'In 2020, the US House of Representatives passed the MORE Act (Marijuana Opportunity Reinvestment and Expungement Act) to federally decriminalise cannabis for the first time — though it did not pass the Senate.',
 }
 
-const TRIVIA_POOL: string[] = [
-  'Cannabis contains over 140 known cannabinoids, of which THC and CBD are the most studied. Lesser-known cannabinoids such as CBG, CBC, CBN, and THCV are the subject of growing research interest.',
-  'The entourage effect is a proposed mechanism by which the various compounds in cannabis — cannabinoids, terpenes, and flavonoids — work together synergistically to produce effects greater than any single compound alone.',
-  'Terpenes are the aromatic compounds responsible for the scent of cannabis and many other plants. Limonene is associated with uplifting citrus notes, while linalool (also found in lavender) is associated with calming, floral effects.',
-  'The endocannabinoid system (ECS) regulates a wide range of physiological processes including pain perception, mood, appetite, memory, and immune function. It was only formally identified in the early 1990s.',
-  'Industrial hemp and psychoactive cannabis are both Cannabis sativa L. but are distinguished legally and horticulturally by their THC content. EU regulations define hemp as containing no more than 0.3% THC by dry weight.',
-  'Vaporising cannabis at controlled temperatures below 230°C allows users to inhale cannabinoids and terpenes without the combustion byproducts (carbon monoxide, tar, benzene) associated with smoking.',
-  'THCA (tetrahydrocannabinolic acid) is the raw, non-psychoactive precursor to THC found in the living cannabis plant. It converts to THC through decarboxylation — the application of heat.',
-  'CBN (cannabinol) forms as THC oxidises and degrades over time, particularly when cannabis is exposed to air and light. It is associated with sedative properties and is being researched for sleep applications.',
-  'Spain has among the highest rates of cannabis consumption in the European Union. Barcelona is home to hundreds of cannabis social clubs, though their legal status remains ambiguous under national law.',
-  'The first vaporiser designed specifically for cannabis was patented in the early 1990s. Temperature-controlled vaporisation allows selective activation of different cannabinoids and terpenes at their specific boiling points.',
-  'Linalool, a terpene found in both cannabis and lavender, activates the same GABA receptors in the brain targeted by benzodiazepines — potentially explaining its calming and anti-anxiety properties.',
-  'Cannabis roots were used in traditional Chinese medicine as far back as 2700 BCE, with preparations applied for pain, inflammation, and a range of other conditions. The Pen-ts ao Ching (Divine Husbandman\'s Classic) documents these uses.',
+type Fact = { text: string; category: string; color: string }
+
+const TRIVIA_POOL: Fact[] = [
+  // SCIENCE
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'THC and CBD are both derived from CBGa (cannabigerolic acid) — the "mother cannabinoid" from which all major cannabinoids are synthesised.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'The endocannabinoid system was only discovered in 1988 when CB1 receptors were first identified by Allyn Howlett and William Devane.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: '2-AG and anandamide are the body\'s own endocannabinoids — produced on demand, not stored, and broken down immediately after use.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Cannabis terpenes can modulate blood-brain barrier permeability, potentially enhancing cannabinoid uptake and altering how compounds reach the brain.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Myrcene is the most abundant terpene in most cannabis strains, often exceeding 50% of total terpene content.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'THCA (tetrahydrocannabinolic acid) is non-psychoactive until decarboxylated by heat above approximately 105°C — raw cannabis will not get you high.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'CBN forms as THC oxidises over time. Aged, air-exposed cannabis has significantly higher CBN and lower THC than fresh material.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'The boiling point of THC is approximately 157°C; CBD boils at around 160°C; myrcene at 167°C. Temperature control directly changes which compounds you inhale.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Caryophyllene is unique: the only terpene that also acts as a cannabinoid, binding directly to CB2 receptors without producing psychoactive effects.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'The entourage effect proposes that cannabinoids and terpenes work synergistically — whole-plant extracts typically outperform isolated compounds in studies.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Terpenes evaporate at lower temperatures than cannabinoids. The first vapour at low temps (below 160°C) is mostly terpenes, not THC.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'The CB1 receptor density in the brain is one of the highest of any G-protein coupled receptor in the entire central nervous system.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Cannabis flavonoids called cannflavins A and B are approximately 30 times more potent than aspirin as anti-inflammatory agents in lab studies.' },
+  { category: '[SCIENCE]', color: '#a78bfa', text: 'Linalool activates GABA receptors — the same receptors targeted by benzodiazepines — potentially explaining its anxiolytic and sedating effects.' },
+  // HISTORY
+  { category: '[HISTORY]', color: '#f59e0b', text: 'Cannabis cultivation evidence dates back over 10,000 years in China — the oldest known woven hemp textile was found there.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'The Pen-ts\'ao Ching (2700 BCE), attributed to Emperor Shen Nong, is the first written record of cannabis as medicine.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 1484, Pope Innocent VIII issued a papal bull condemning cannabis use in connection with witchcraft practices.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'Napoleon\'s army encountered hashish in Egypt (1798–1801). It was later banned by French military decree, but the encounter sparked European scientific interest.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 1839, William B. O\'Shaughnessy introduced cannabis to Western medicine via his landmark paper on its use in tetanus and convulsions.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'The 1937 US Marihuana Tax Act effectively criminalised cannabis nationally — largely driven by a lobbying campaign connected to newspaper magnate William Randolph Hearst.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'Dr. Raphael Mechoulam first isolated and synthesised THC in 1964 at Hebrew University, Jerusalem — launching the modern era of cannabinoid science.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 1988, the first CB1 receptor was discovered by Allyn Howlett and William Devane, revealing the existence of the endocannabinoid system.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 1993, the CB2 receptor was identified, opening new research into cannabis for immune and inflammatory conditions.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 1996, California passed Proposition 215 — the first US state medical cannabis law, fundamentally changing the political landscape.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 2001, Canada became the first country to establish a national medical cannabis programme.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'Uruguay became the first country to fully legalise recreational cannabis in 2013 under President José Mujica.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'Canada became the first G7 nation to legalise recreational cannabis nationally in October 2018.' },
+  { category: '[HISTORY]', color: '#f59e0b', text: 'In 2020, the UN Commission on Narcotic Drugs voted to remove cannabis from Schedule IV (most restrictive) — it remains in Schedule I.' },
+  // CULTURE
+  { category: '[CULTURE]', color: '#84cc16', text: 'The term "420" traces to a group of San Rafael High School students who met at 4:20 PM in 1971 to search for an abandoned cannabis crop.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'Bob Marley was buried with a Bible, a guitar, and a bud of cannabis.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'The phrase "reefer madness" comes from the 1936 propaganda film commissioned to frighten Americans away from cannabis use.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'Carl Sagan wrote essays under the pseudonym "Mr X" describing his cannabis use and its role in inspiring his scientific thinking.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'The word "assassin" may derive from "hashishin" — members of an 11th century Persian sect led by Hassan-i-Sabbah, allegedly rewarded with hashish.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'Hemp rope was used in the rigging of Christopher Columbus\'s ships in 1492.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'Cannabis was listed in the United States Pharmacopeia as a recognised medicine from 1850 to 1942.' },
+  { category: '[CULTURE]', color: '#84cc16', text: 'The first vaporiser designed specifically for cannabis was patented in the United States in 1994.' },
+  // LAW
+  { category: '[LAW]', color: '#e84040', text: 'In 2003, the US government held Patent 6,630,507 covering cannabinoids as neuroprotectants — while simultaneously classifying cannabis as Schedule I with no accepted medical use.' },
+  { category: '[LAW]', color: '#e84040', text: 'Thailand became the first Asian country to decriminalise cannabis in 2022, but reversed course with new restrictions in 2024.' },
+  { category: '[LAW]', color: '#e84040', text: 'The Netherlands\' cannabis tolerance policy (gedoogbeleid) has been in place since the 1970s — cannabis is illegal but prosecution is formally deprioritised.' },
+  { category: '[LAW]', color: '#e84040', text: 'Spain\'s cannabis social clubs operate under constitutional rights of privacy and freedom of association — not explicit legislation — creating regional legal fragmentation.' },
+  { category: '[LAW]', color: '#e84040', text: 'In 2020, the US MORE Act passed the House of Representatives to federally decriminalise cannabis. It did not pass the Senate.' },
+  { category: '[LAW]', color: '#e84040', text: 'Malta became the first EU member state to legalise personal cannabis use and home cultivation in 2021.' },
+  // GROW
+  { category: '[GROW]', color: '#84cc16', text: 'Cannabis is dioecious — it produces separate male and female plants. Only unfertilised females produce the resin-rich flowers used for consumption.' },
+  { category: '[GROW]', color: '#84cc16', text: 'The term "sensimilla" (from Spanish sin semilla, "without seeds") refers to unfertilised female flowers — the standard for modern cannabis production.' },
+  { category: '[GROW]', color: '#84cc16', text: 'Hemp and cannabis are the same species (Cannabis sativa L.) — distinguished legally by THC content, not by biology or genetics.' },
+  { category: '[GROW]', color: '#84cc16', text: 'Cannabis plants grown under 12 hours of light per day enter the flowering stage. Growers use this to trigger blooming indoors year-round.' },
+  { category: '[GROW]', color: '#84cc16', text: 'Trichomes — the crystal-like structures on cannabis flowers — are the primary site of cannabinoid and terpene production.' },
+  { category: '[GROW]', color: '#84cc16', text: 'The ruderalis subspecies of cannabis is autoflowering — it flowers based on age rather than light cycle — enabling faster grows at northern latitudes.' },
+  { category: '[GROW]', color: '#84cc16', text: 'Cannabis roots were used in traditional Chinese medicine for over 2,000 years for pain and inflammation.' },
+  // CANNA
+  { category: '[CANNA]', color: '#c8e890', text: 'There are over 140 known cannabinoids in cannabis — THC and CBD are the most studied, but CBG, CBC, CBN, and THCV each have distinct properties.' },
+  { category: '[CANNA]', color: '#c8e890', text: 'CBG (cannabigerol) is considered the precursor cannabinoid — all major cannabinoids derive from CBGA through enzymatic conversion in the plant.' },
+  { category: '[CANNA]', color: '#c8e890', text: 'THCV (tetrahydrocannabivarin) is structurally similar to THC but acts as a CB1 antagonist at low doses — potentially suppressing appetite rather than stimulating it.' },
+  { category: '[CANNA]', color: '#c8e890', text: 'CBC (cannabichromene) does not bind to CB1 receptors but may amplify the pain-relieving effects of THC and CBD through other pathways.' },
+  { category: '[CANNA]', color: '#c8e890', text: 'CBG has shown antibacterial activity against MRSA strains in preliminary lab studies — a finding of significant medical interest.' },
+  { category: '[CANNA]', color: '#c8e890', text: 'Epidiolex (plant-derived CBD) was approved by the FDA in 2018 for two forms of severe childhood epilepsy — the first plant-derived cannabis medicine to receive FDA approval.' },
 ]
 
 function getTodayKey(): string {
@@ -61,7 +114,7 @@ function formatDate(): string {
 }
 
 export default function FactCartridge() {
-  const [triviaIndex, setTriviaIndex] = useState(0)
+  const [triviaIndex, setTriviaIndex] = useState(() => Math.floor(Math.random() * TRIVIA_POOL.length))
 
   const todayKey = getTodayKey()
   const dateFact = DATE_FACTS[todayKey]
@@ -70,8 +123,11 @@ export default function FactCartridge() {
     setTriviaIndex((prev) => (prev + 1) % TRIVIA_POOL.length)
   }
 
-  const displayFact = triviaIndex === 0 && dateFact ? dateFact : TRIVIA_POOL[triviaIndex % TRIVIA_POOL.length]
-  const factTitle = triviaIndex === 0 && dateFact ? 'ON THIS DAY' : 'DID YOU KNOW?'
+  const isDateFact = triviaIndex === 0 && dateFact
+  const displayFact: Fact = isDateFact
+    ? { text: dateFact, category: '[HISTORY]', color: '#f59e0b' }
+    : TRIVIA_POOL[triviaIndex % TRIVIA_POOL.length]
+  const factTitle = isDateFact ? 'ON THIS DAY' : 'DID YOU KNOW?'
 
   return (
     <div style={{
@@ -92,11 +148,11 @@ export default function FactCartridge() {
         paddingBottom: 8,
         marginBottom: 0,
       }}>
-        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
+        <span style={{ fontFamily: FONT, fontSize: 13, color: '#84cc16' }}>
           FACT CARTRIDGE
         </span>
         <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P'",
+          fontFamily: FONT,
           fontSize: 8,
           color: '#4a7a10',
           border: '2px solid #2a4a08',
@@ -114,7 +170,7 @@ export default function FactCartridge() {
         textAlign: 'center',
       }}>
         <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P'",
+          fontFamily: FONT,
           fontSize: 14,
           color: '#84cc16',
           letterSpacing: 2,
@@ -148,10 +204,10 @@ export default function FactCartridge() {
               alignItems: 'center',
               gap: 3,
             }}>
-              <span style={{ fontSize: 6, color: '#84cc16', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>FACT</span>
-              <span style={{ fontSize: 7, color: '#c8e890', fontFamily: "'PokemonGb', 'Press Start 2P'", letterSpacing: 0.5 }}>CART</span>
+              <span style={{ fontSize: 6, color: '#84cc16', fontFamily: FONT, letterSpacing: 0.5 }}>FACT</span>
+              <span style={{ fontSize: 7, color: '#c8e890', fontFamily: FONT, letterSpacing: 0.5 }}>CART</span>
               <div style={{ width: '80%', height: 1, background: '#2a4a08' }} />
-              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: "'PokemonGb', 'Press Start 2P'" }}>DAILY</span>
+              <span style={{ fontSize: 5, color: '#4a7a10', fontFamily: FONT }}>DAILY</span>
             </div>
             {/* Bottom notch lines */}
             <div style={{ position: 'absolute', bottom: 4, left: 5, right: 5, display: 'flex', gap: 2 }}>
@@ -178,7 +234,7 @@ export default function FactCartridge() {
       {/* Main fact poke-box */}
       <div style={{ ...pokeBox, padding: 14, flex: 1 }}>
         <span style={{
-          fontFamily: "'PokemonGb', 'Press Start 2P'",
+          fontFamily: FONT,
           fontSize: 9,
           color: '#84cc16',
           display: 'block',
@@ -187,9 +243,9 @@ export default function FactCartridge() {
         }}>
           {factTitle}
         </span>
-        {triviaIndex === 0 && dateFact && (
+        {isDateFact && (
           <span style={{
-            fontFamily: "'PokemonGb', 'Press Start 2P'",
+            fontFamily: FONT,
             fontSize: 7,
             color: '#4a7a10',
             display: 'block',
@@ -198,6 +254,17 @@ export default function FactCartridge() {
             {formatDate().replace(/ \/ /g, '.')}
           </span>
         )}
+        <span style={{
+          fontFamily: FONT,
+          fontSize: 8,
+          color: displayFact.color,
+          border: `1px solid ${displayFact.color}`,
+          padding: '2px 6px',
+          display: 'inline-block',
+          marginBottom: 10,
+        }}>
+          {displayFact.category}
+        </span>
         <p style={{
           fontFamily: 'monospace',
           fontSize: 13,
@@ -205,7 +272,7 @@ export default function FactCartridge() {
           lineHeight: 1.7,
           margin: 0,
         }}>
-          {displayFact}
+          {displayFact.text}
         </p>
       </div>
 
@@ -235,7 +302,7 @@ export default function FactCartridge() {
           fontSize: 11,
           padding: '12px 16px',
           width: '100%',
-          fontFamily: "'PokemonGb', 'Press Start 2P'",
+          fontFamily: FONT,
           cursor: 'pointer',
           borderRadius: 0,
           letterSpacing: 1,

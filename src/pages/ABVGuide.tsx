@@ -167,6 +167,31 @@ export default function ABVGuide() {
         </span>
       </div>
 
+      {/* Prof T-Oak intro */}
+      <div style={{
+        ...pokeBox,
+        padding: '12px',
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start',
+      }}>
+        <img
+          src={`${import.meta.env.BASE_URL}prof-toak.png`}
+          alt="Prof T-Oak"
+          width={48}
+          height={48}
+          style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, objectFit: 'contain' }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: GBC_GREEN }}>
+            PROF T-OAK
+          </span>
+          <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>
+            Don't throw out that AVB! Choose a method below to revive those remaining cannabinoids. Each technique has its own onset time and potency profile.
+          </p>
+        </div>
+      </div>
+
       {/* Info poke-box */}
       <div style={{
         ...pokeBox,

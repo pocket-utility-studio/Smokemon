@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 const pokeBox = {
   border: '3px solid #84cc16',
   boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
@@ -30,9 +32,46 @@ const LAW_SECTIONS = [
     text:
       'Supply or sale of cannabis is a criminal offense under Article 368 of the Penal Code. This applies regardless of the quantity involved and carries custodial sentences.',
   },
+  {
+    title: 'POSSESSION AMOUNTS',
+    accent: '#f59e0b',
+    text:
+      'Possession of small amounts for personal use is a civil offense, not criminal. There is no fixed legal threshold — police discretion applies. Quantities suggesting supply intent are treated as trafficking under the Penal Code.',
+  },
+  {
+    title: 'DRIVING',
+    accent: '#e84040',
+    text:
+      'Driving under the influence of cannabis is a serious traffic offense. Roadside drug saliva tests are used by Spanish traffic police (Guardia Civil de Tráfico). A positive test results in licence suspension and fines, regardless of impairment level.',
+  },
+  {
+    title: 'CBD PRODUCTS',
+    accent: '#84cc16',
+    text:
+      'CBD products with less than 0.3% THC are legal to buy and sell in Spain as food supplements or cosmetics. They may not be marketed with medical claims. Hemp cultivation for industrial use requires a licence from the Ministry of Agriculture.',
+  },
+  {
+    title: 'TRAVEL & CUSTOMS',
+    accent: '#e84040',
+    text:
+      'Crossing any international border with cannabis — including within the EU Schengen zone — is illegal under international law. Spanish customs apply zero tolerance. Cannabis purchased legally in another country cannot be imported.',
+  },
+]
+
+const KEY_FACTS = [
+  'Personal use at home: tolerated',
+  'Public use: civil fine (Ley Mordaza)',
+  'Supply/sale: criminal offense',
+  'Driving + cannabis: licence suspension',
+  'CBD <0.3% THC: legal to buy',
+  'Crossing borders: always illegal',
+  'Cannabis clubs: legal grey area',
+  'No fixed possession threshold in law',
 ]
 
 export default function LawGuide() {
+  const keyFacts = useMemo(() => [...KEY_FACTS].sort(() => Math.random() - 0.5).slice(0, 2), [])
+
   return (
     <div style={{
       minHeight: '100%',
@@ -192,6 +231,43 @@ export default function LawGuide() {
           <span style={{ color: '#f59e0b' }}>PUBLIC</span>
           {' '}spaces is a civil — not criminal — offense, subject to administrative fines.
         </p>
+      </div>
+
+      {/* Quick reference poke-box */}
+      <div style={{ ...pokeBox, padding: 14 }}>
+        <span style={{
+          fontFamily: "'PokemonGb', 'Press Start 2P'",
+          fontSize: 9,
+          color: '#84cc16',
+          display: 'block',
+          marginBottom: 10,
+          letterSpacing: 0.5,
+        }}>
+          QUICK REFERENCE
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {keyFacts.map((fact) => (
+            <div key={fact} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P'",
+                fontSize: 10,
+                color: '#84cc16',
+                flexShrink: 0,
+                lineHeight: 1.6,
+              }}>
+                *
+              </span>
+              <span style={{
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: '#c8e890',
+                lineHeight: 1.6,
+              }}>
+                {fact}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Law section cards */}

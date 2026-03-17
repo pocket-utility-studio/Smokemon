@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -84,6 +84,78 @@ const terpenes = [
     description:
       'A sweet, herbal terpene used widely in perfumery. In cannabis it contributes to uplifting, euphoric effects. Research also points to strong antifungal and antiviral properties.',
   },
+  {
+    name: 'Bisabolol',
+    aroma: ['Floral', 'Sweet', 'Chamomile'],
+    effects: ['Calming', 'Anti-inflammatory', 'Skin healing'],
+    foundIn: ['Chamomile', 'Candeia tree', 'Sweet basil'],
+    color: '#a78bfa',
+    description:
+      'Best known as a skincare ingredient, bisabolol has significant anti-inflammatory and analgesic properties. It may also enhance skin absorption of other compounds — suggesting it could help cannabinoids penetrate more effectively.',
+  },
+  {
+    name: 'Valencene',
+    aroma: ['Citrus', 'Sweet', 'Orange peel'],
+    effects: ['Energising', 'Anti-inflammatory', 'Uplifting'],
+    foundIn: ['Valencia oranges', 'Grapefruit', 'Tangerines'],
+    color: '#f59e0b',
+    description:
+      'Named after Valencia oranges. Gives strains like Tangie their distinctive sweet citrus punch. Research suggests anti-inflammatory effects, and it is used as a natural insect repellent in some applications.',
+  },
+  {
+    name: 'Geraniol',
+    aroma: ['Floral', 'Rose', 'Fruity'],
+    effects: ['Neuroprotective', 'Anti-anxiety', 'Relaxing'],
+    foundIn: ['Roses', 'Geraniums', 'Citronella'],
+    color: '#a78bfa',
+    description:
+      'A rosy, floral terpene also used extensively in perfumery. Geraniol shows strong neuroprotective properties in preliminary research and has demonstrated effectiveness as a natural mosquito repellent.',
+  },
+  {
+    name: 'Camphene',
+    aroma: ['Woody', 'Fir', 'Damp earth'],
+    effects: ['Anti-inflammatory', 'Antioxidant', 'Analgesic'],
+    foundIn: ['Fir needles', 'Ginger', 'Cypress'],
+    color: '#84cc16',
+    description:
+      'One of the lesser-known cannabis terpenes, camphene has a distinctly damp, earthy-fir quality. Traditionally used in 19th century oil lamps for its flammability. Research suggests cardiovascular benefits and strong antioxidant properties.',
+  },
+  {
+    name: 'Eucalyptol',
+    aroma: ['Minty', 'Cooling', 'Medicinal'],
+    effects: ['Mental clarity', 'Bronchodilator', 'Anti-inflammatory'],
+    foundIn: ['Eucalyptus', 'Bay laurel', 'Tea tree'],
+    color: '#84cc16',
+    description:
+      'The dominant compound in eucalyptus oil. Eucalyptol acts as a powerful bronchodilator — opening airways — which may partly explain why some users report easier breathing when vaping strains high in this terpene.',
+  },
+  {
+    name: 'Terpineol',
+    aroma: ['Pine', 'Floral', 'Lilac'],
+    effects: ['Sedating', 'Relaxing', 'Antibacterial'],
+    foundIn: ['Pine bark', 'Eucalyptus', 'Lime blossoms'],
+    color: '#a78bfa',
+    description:
+      'Commonly found alongside high-myrcene strains, terpineol is thought to amplify sedating effects. It is widely used in cosmetics and cleaning products and has demonstrated antibiotic properties against several bacteria including E. coli.',
+  },
+  {
+    name: 'Nerolidol',
+    aroma: ['Woody', 'Floral', 'Fresh bark'],
+    effects: ['Sedating', 'Anti-parasitic', 'Anti-fungal'],
+    foundIn: ['Neroli', 'Jasmine', 'Ginger'],
+    color: '#a78bfa',
+    description:
+      'A sesquiterpene with notable sedating properties. Research has found nerolidol to be effective against Leishmania parasites and certain fungi. Its distinctive bark-like scent appears in strains with earthy, woody profiles.',
+  },
+  {
+    name: 'Guaiol',
+    aroma: ['Pine', 'Rose', 'Woody'],
+    effects: ['Anti-inflammatory', 'Antimicrobial', 'Diuretic'],
+    foundIn: ['Guaiacum wood', 'Cypress pine', 'Apples'],
+    color: '#84cc16',
+    description:
+      'A sesquiterpene alcohol (technically not a terpene but classified with them). Guaiacum wood has been used medicinally for centuries for arthritis and respiratory conditions. Found in strains with complex woody-floral profiles.',
+  },
 ]
 
 type QuizQuestion = {
@@ -94,17 +166,39 @@ type QuizQuestion = {
 }
 
 function buildQuiz(): QuizQuestion[] {
+  const templates = [
+    (t: typeof terpenes[0]) => ({
+      question: `Which terpene smells like ${t.aroma.slice(0, 2).join(' & ')}?`,
+      hint: `Also found in: ${t.foundIn.slice(0, 2).join(', ')}`,
+    }),
+    (t: typeof terpenes[0]) => ({
+      question: `Which terpene is associated with ${t.effects[0]}?`,
+      hint: `Aroma: ${t.aroma.slice(0, 2).join(', ')}`,
+    }),
+    (t: typeof terpenes[0]) => ({
+      question: `Which terpene is found in ${t.foundIn[0]}?`,
+      hint: `Effects: ${t.effects.slice(0, 2).join(', ')}`,
+    }),
+    (t: typeof terpenes[0]) => ({
+      question: `"${t.aroma.slice(0, 2).join(', ')}" aromas — which terpene?`,
+      hint: `Effect: ${t.effects[0]}`,
+    }),
+  ]
+
   return [...terpenes]
     .sort(() => Math.random() - 0.5)
+    .slice(0, 8)
     .map((t) => {
+      const template = templates[Math.floor(Math.random() * templates.length)]
+      const { question, hint } = template(t)
       const wrong = terpenes
         .filter((x) => x.name !== t.name)
         .sort(() => Math.random() - 0.5)
         .slice(0, 3)
         .map((x) => x.name)
       return {
-        question: `Which terpene smells like ${t.aroma.slice(0, 2).join(' & ')}?`,
-        hint: `Also found in: ${t.foundIn.slice(0, 2).join(', ')}`,
+        question,
+        hint,
         options: [...wrong, t.name].sort(() => Math.random() - 0.5),
         correct: t.name,
       }
@@ -141,6 +235,8 @@ export default function TerpeneDictionary() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
+
+  const shuffledTerpenes = useMemo(() => [...terpenes].sort(() => Math.random() - 0.5), [])
 
   const startQuiz = useCallback(() => {
     setQuestions(buildQuiz())
@@ -240,7 +336,7 @@ export default function TerpeneDictionary() {
       {/* Dictionary tab */}
       {tab === 'dict' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {terpenes.map((t) => (
+          {shuffledTerpenes.map((t) => (
             <div
               key={t.name}
               style={{
