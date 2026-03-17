@@ -2,7 +2,18 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { writeFileSync } from 'fs'
 import pkg from './package.json'
+
+// Writes dist/version.json after every build.
+// The SW globPatterns exclude .json so this file is never precached —
+// it is always fetched live from the network, making version checks reliable.
+const versionJsonPlugin = {
+  name: 'version-json',
+  closeBundle() {
+    writeFileSync('dist/version.json', JSON.stringify({ version: pkg.version }))
+  },
+}
 
 export default defineConfig({
   base: '/Smokemon/',
@@ -12,6 +23,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    versionJsonPlugin,
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
