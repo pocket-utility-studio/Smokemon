@@ -3,7 +3,7 @@ import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
-import { askProfessorToke } from '../services/gemini'
+import { askNurseJoy } from '../services/gemini'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -295,7 +295,7 @@ export default function PokeCenter() {
     setResponse('')
     setError('')
     try {
-      const result = await askProfessorToke(fullQuery, party)
+      const result = await askNurseJoy(fullQuery, party)
       setResponse(result)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong.'
@@ -403,10 +403,11 @@ export default function PokeCenter() {
             onChange={(e) => setDesiredEffect(e.target.value)}
             placeholder="e.g. I want to relax and sleep..."
             style={{
-              width: '100%', background: GBC_BG,
+              width: '100%', background: GBC_BOX,
               border: `2px solid ${focused ? '#4a8a10' : GBC_DARKEST}`,
               color: GBC_TEXT, fontSize: 13, fontFamily: 'monospace',
-              padding: '10px', resize: 'none', outline: 'none', boxSizing: 'border-box',
+              padding: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box',
+              lineHeight: 1.7,
             }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
@@ -453,8 +454,9 @@ export default function PokeCenter() {
             ...pokeBox, padding: '24px 12px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
           }}>
-            <span className="gbc-blink" style={{ fontFamily: FONT, fontSize: 11, color: GBC_GREEN, textAlign: 'center', lineHeight: 2 }}>
-              NURSE JOY IS ANALYZING{'\n'}YOUR PARTY...
+            <NurseJoySprite size={48} />
+            <span style={{ fontFamily: FONT, fontSize: 11, color: GBC_GREEN, textAlign: 'center', lineHeight: 2 }}>
+              NURSE JOY IS CHECKING{'\n'}YOUR PARTY...
             </span>
             <LoadingBar />
           </div>

@@ -218,7 +218,7 @@ export default function CastformDial() {
         marginBottom: 0,
       }}>
         <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 13, color: '#84cc16' }}>
-          CASTFORM DIAL
+          HEAT LAB
         </span>
         <span style={{
           fontFamily: "'PokemonGb', 'Press Start 2P'",

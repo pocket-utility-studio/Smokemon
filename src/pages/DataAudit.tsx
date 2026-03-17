@@ -3,6 +3,7 @@ import { useStrainDb, displayName, fetchLiveStrain } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
 import { lookupStrainData } from '../services/gemini'
 import type { StrainLookupResult } from '../services/gemini'
+import { useTransitionNav } from '../context/NavigationContext'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
@@ -49,6 +50,7 @@ function typeColor(type: string): string {
 
 export default function DataAudit() {
   const { db, loading } = useStrainDb()
+  const { transitionTo } = useTransitionNav()
 
   const [sample, setSample] = useState<StrainRecord[]>([])
   const [liveData, setLiveData] = useState<Record<string, { thc?: number; cbd?: number; terpenes?: string } | null>>({})
@@ -194,10 +196,20 @@ export default function DataAudit() {
           {outliers.slice(0, 8).map((s) => (
             <div key={s.Strain} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: 6,
+              marginBottom: 6, gap: 8,
             }}>
-              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_TEXT }}>{displayName(s)}</span>
-              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED }}>THC {s.thc}%</span>
+              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_TEXT, flex: 1 }}>{displayName(s)}</span>
+              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED, flexShrink: 0 }}>THC {s.thc}%</span>
+              <button
+                onClick={() => transitionTo('/smokedex')}
+                style={{
+                  fontFamily: FONT, fontSize: 7, padding: '4px 8px', minHeight: 32,
+                  border: `1px solid ${GBC_AMBER}`, background: 'transparent',
+                  color: GBC_AMBER, cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                EDIT
+              </button>
             </div>
           ))}
           {outliers.length > 8 && (

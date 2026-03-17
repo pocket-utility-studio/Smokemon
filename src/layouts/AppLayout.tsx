@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
 import SplashScreen from '../pages/SplashScreen'
 
 import { useTransitionNav } from '../context/NavigationContext'
 import WipeOverlay from '../components/WipeOverlay'
+import GBCBottomBar from '../components/GBCBottomBar'
 
 const KIWI_GRAD = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
 const BEZEL = '#181818'
@@ -200,6 +201,10 @@ export default function AppLayout() {
   const { layoutMode, setLayoutMode } = useLayoutMode()
   const { wipePhase } = useTransitionNav()
 
+  const location = useLocation()
+  const LAB_ROUTES = ['/castform', '/avb', '/abv-guide']
+  const isInLab = LAB_ROUTES.some((r) => location.pathname === r || location.pathname.startsWith(r + '/'))
+
   const emu = layoutMode === 'emulator'
   // Separate from emu — only true during the initial splash boot sequence
   const [booting, setBooting] = useState(() => sessionStorage.getItem('hasBooted') !== '1')
@@ -337,6 +342,21 @@ export default function AppLayout() {
                     position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 99,
                     backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
                   }} />
+                  {/* Prof T-Oak — lab pages only */}
+                  <div style={{
+                    position: 'absolute', right: 8, top: 6, zIndex: 98,
+                    pointerEvents: 'none',
+                    opacity: booting || !isInLab ? 0 : 0.75,
+                    transition: `opacity ${T}`,
+                  }}>
+                    <img
+                      src={`${import.meta.env.BASE_URL}prof-toak.png`}
+                      alt="Prof T-Oak"
+                      width={22}
+                      height={22}
+                      style={{ imageRendering: 'pixelated', display: 'block' }}
+                    />
+                  </div>
                   {/* Content */}
                   <div className={`${font} gbc-screen-content`} style={{
                     position: 'absolute', inset: 0, zIndex: 1,
@@ -351,6 +371,15 @@ export default function AppLayout() {
                       pointerEvents: booting ? 'none' : 'auto',
                     }}>
                       <Outlet />
+                    </div>
+                    {/* Bottom nav bar */}
+                    <div style={{
+                      flexShrink: 0,
+                      opacity: booting ? 0 : 1,
+                      transition: `opacity ${T}`,
+                      pointerEvents: booting ? 'none' : 'auto',
+                    }}>
+                      <GBCBottomBar />
                     </div>
                     {/* Splash — always in DOM, fades out after boot */}
                     <div style={{

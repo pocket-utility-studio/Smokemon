@@ -42,8 +42,8 @@ function typeColor(type?: StrainEntry['type']): string {
 }
 
 const BALL_SPRITES: Record<string, string> = {
-  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
-  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
   indica: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
 }
 
@@ -794,115 +794,106 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         )}
       </div>
 
+      {/* Gemini search — always available when a query is entered */}
+      {query.trim() && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={fetchFromGemini}
+            disabled={geminiLoading}
+            style={{
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+              fontSize: 9, padding: '10px 14px', width: '100%', minHeight: 44,
+              border: `2px solid ${geminiLoading ? GBC_DARKEST : GBC_VIOLET}`,
+              background: geminiLoading ? 'rgba(167,139,250,0.05)' : 'rgba(167,139,250,0.08)',
+              color: geminiLoading ? GBC_DARKEST : GBC_VIOLET,
+              cursor: geminiLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {geminiLoading ? '► SEARCHING GEMINI...' : '► SEARCH WITH GEMINI'}
+          </button>
+          {geminiError && (
+            <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#e84040', margin: 0, lineHeight: 1.8 }}>
+              {geminiError}
+            </p>
+          )}
+          {geminiResult && (() => {
+            const col = geminiResult.type === 'sativa' ? GBC_GREEN : geminiResult.type === 'indica' ? GBC_VIOLET : GBC_AMBER
+            const alreadyInStash = strains.some(s => s.name.toLowerCase() === geminiResult.name.toLowerCase())
+            return (
+              <div style={{ ...pokeBox, border: `3px solid ${GBC_VIOLET}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_VIOLET, marginBottom: 2 }}>
+                  GEMINI RESULT
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 13, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
+                    {geminiResult.name.toUpperCase()}
+                  </span>
+                  {geminiResult.type && (
+                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>
+                      {geminiResult.type.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                {(geminiResult.thc != null || geminiResult.cbd != null) && (
+                  <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
+                    {geminiResult.thc != null ? `THC ${geminiResult.thc}%` : ''}
+                    {geminiResult.thc != null && geminiResult.cbd != null ? '  ·  ' : ''}
+                    {geminiResult.cbd != null ? `CBD ${geminiResult.cbd}%` : ''}
+                    <span style={{ fontSize: 7, color: GBC_DARKEST, marginLeft: 8 }}>[AI EST.]</span>
+                  </div>
+                )}
+                {geminiResult.terpenes && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {geminiResult.terpenes.split(/[,;]+/).map(t => t.trim()).filter(Boolean).map(t => (
+                      <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                        {t.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {geminiResult.effects && (
+                  <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>
+                    {geminiResult.effects}
+                  </p>
+                )}
+                {geminiResult.history && (
+                  <div style={{ borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 10 }}>
+                    <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginBottom: 6 }}>
+                      STRAIN HISTORY
+                    </div>
+                    <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.8, margin: 0, opacity: 0.85 }}>
+                      {geminiResult.history}
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={addGeminiToStash}
+                  disabled={alreadyInStash || geminiAdded}
+                  style={{
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                    fontSize: 10, padding: '12px 0', width: '100%', minHeight: 44,
+                    border: `3px solid ${alreadyInStash || geminiAdded ? GBC_DARKEST : GBC_GREEN}`,
+                    background: alreadyInStash || geminiAdded ? 'transparent' : GBC_GREEN,
+                    color: alreadyInStash || geminiAdded ? GBC_MUTED : GBC_BG,
+                    cursor: alreadyInStash || geminiAdded ? 'not-allowed' : 'pointer',
+                    boxShadow: alreadyInStash || geminiAdded ? 'none' : 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+                  }}
+                >
+                  {geminiAdded ? 'ADDED!' : alreadyInStash ? 'ALREADY IN STASH' : '+ ADD TO STASH'}
+                </button>
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
       {/* Results */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {pageResults.length === 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* No results + Gemini prompt */}
-            <div style={{ ...pokeBox, padding: '16px 14px' }}>
-              <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: query.trim() ? 12 : 0 }}>
-                NOT IN LOCAL DEX
-              </p>
-              {query.trim() && (
-                <button
-                  onClick={fetchFromGemini}
-                  disabled={geminiLoading}
-                  style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 9, padding: '10px 14px', width: '100%', minHeight: 44,
-                    border: `2px solid ${geminiLoading ? GBC_DARKEST : GBC_VIOLET}`,
-                    background: geminiLoading ? 'rgba(167,139,250,0.05)' : 'rgba(167,139,250,0.08)',
-                    color: geminiLoading ? GBC_DARKEST : GBC_VIOLET,
-                    cursor: geminiLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {geminiLoading ? '► SEARCHING...' : '► SEARCH WITH GEMINI'}
-                </button>
-              )}
-              {geminiError && (
-                <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#e84040', marginTop: 8, lineHeight: 1.8 }}>
-                  {geminiError}
-                </p>
-              )}
-            </div>
-
-            {/* Gemini result card */}
-            {geminiResult && (() => {
-              const col = geminiResult.type === 'sativa' ? GBC_GREEN : geminiResult.type === 'indica' ? GBC_VIOLET : GBC_AMBER
-              const alreadyInStash = strains.some(s => s.name.toLowerCase() === geminiResult.name.toLowerCase())
-              return (
-                <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 13, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
-                      {geminiResult.name.toUpperCase()}
-                    </span>
-                    {geminiResult.type && (
-                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>
-                        {geminiResult.type.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* THC / CBD */}
-                  {(geminiResult.thc != null || geminiResult.cbd != null) && (
-                    <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
-                      {geminiResult.thc != null ? `THC ${geminiResult.thc}%` : ''}
-                      {geminiResult.thc != null && geminiResult.cbd != null ? '  ·  ' : ''}
-                      {geminiResult.cbd != null ? `CBD ${geminiResult.cbd}%` : ''}
-                      <span style={{ fontSize: 7, color: GBC_DARKEST, marginLeft: 8 }}>[AI EST.]</span>
-                    </div>
-                  )}
-
-                  {/* Terpenes */}
-                  {geminiResult.terpenes && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {geminiResult.terpenes.split(/[,;]+/).map(t => t.trim()).filter(Boolean).map(t => (
-                        <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
-                          {t.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Effects */}
-                  {geminiResult.effects && (
-                    <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>
-                      {geminiResult.effects}
-                    </p>
-                  )}
-
-                  {/* History */}
-                  {geminiResult.history && (
-                    <div style={{ borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 10 }}>
-                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginBottom: 6 }}>
-                        STRAIN HISTORY
-                      </div>
-                      <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.8, margin: 0, opacity: 0.85 }}>
-                        {geminiResult.history}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Add to stash */}
-                  <button
-                    onClick={addGeminiToStash}
-                    disabled={alreadyInStash || geminiAdded}
-                    style={{
-                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                      fontSize: 10, padding: '12px 0', width: '100%', minHeight: 44,
-                      border: `3px solid ${alreadyInStash || geminiAdded ? GBC_DARKEST : GBC_GREEN}`,
-                      background: alreadyInStash || geminiAdded ? 'transparent' : GBC_GREEN,
-                      color: alreadyInStash || geminiAdded ? GBC_MUTED : GBC_BG,
-                      cursor: alreadyInStash || geminiAdded ? 'not-allowed' : 'pointer',
-                      boxShadow: alreadyInStash || geminiAdded ? 'none' : 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
-                    }}
-                  >
-                    {geminiAdded ? 'ADDED!' : alreadyInStash ? 'ALREADY IN STASH' : '+ ADD TO STASH'}
-                  </button>
-                </div>
-              )
-            })()}
+          <div style={{ ...pokeBox, padding: '16px 14px' }}>
+            <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, margin: 0 }}>
+              NOT IN LOCAL DEX
+            </p>
           </div>
         )}
         {pageResults.map((s) => {
@@ -1005,6 +996,7 @@ export default function Smokedex() {
   const { strains, addStrain, deleteStrain } = useStash()
   const { db } = useStrainDb()
   const [tab, setTab] = useState<'party' | 'pc' | 'dex' | 'add'>('party')
+  const [confirmPurge, setConfirmPurge] = useState(false)
   const [form, setForm] = useState({ ...emptyForm })
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [scanning, setScanning] = useState(false)
@@ -1232,7 +1224,44 @@ export default function Smokedex() {
             <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, marginTop: 10 }}>Add your first strain using the ADD tab.</p>
           </div>
         ) : (
-          <StashList strains={strains} db={db} onDelete={deleteStrain} />
+          <>
+            {(() => {
+              const highThcIds = strains.filter((s) => s.thc != null && s.thc > 35).map((s) => s.id)
+              if (highThcIds.length === 0) return null
+              return (
+                <div style={{
+                  border: '2px solid #f59e0b',
+                  background: GBC_BOX,
+                  padding: '10px 12px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>
+                    {highThcIds.length} STRAIN{highThcIds.length !== 1 ? 'S' : ''} &gt;35% THC
+                  </span>
+                  {confirmPurge ? (
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <button
+                        onClick={() => { highThcIds.forEach((id) => deleteStrain(id)); setConfirmPurge(false) }}
+                        style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '6px 10px', minHeight: 36, border: '2px solid #e84040', background: 'transparent', color: '#e84040', cursor: 'pointer' }}
+                      >YES</button>
+                      <button
+                        onClick={() => setConfirmPurge(false)}
+                        style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '6px 10px', minHeight: 36, border: `2px solid ${GBC_DARKEST}`, background: 'transparent', color: GBC_MUTED, cursor: 'pointer' }}
+                      >NO</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmPurge(true)}
+                      style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '6px 10px', minHeight: 36, border: `2px solid ${GBC_AMBER}`, background: 'transparent', color: GBC_AMBER, cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      PURGE ALL
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
+            <StashList strains={strains} db={db} onDelete={deleteStrain} />
+          </>
         )
       )}
 
