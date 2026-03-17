@@ -2,8 +2,10 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import Tesseract from 'tesseract.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
-import { useStrainDb, displayName, fetchLiveStrain } from '../hooks/useStrainDb'
+import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
+import { lookupStrainData } from '../services/gemini'
+import type { StrainLookupResult } from '../services/gemini'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -617,15 +619,60 @@ function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => 
 // ── Dex list ──────────────────────────────────────────────────────────────────
 
 function StrainDex({ db }: { db: StrainRecord[] }) {
+  const { addStrain, strains } = useStash()
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
   const [category, setCategory] = useState<DexCategory>(DEX_CATEGORIES[0])
   const [selected, setSelected] = useState<StrainRecord | null>(null)
   const [sort, setSort] = useState<SortKey>('az')
   const [page, setPage] = useState(0)
+  const [geminiResult, setGeminiResult] = useState<(StrainLookupResult & { name: string }) | null>(null)
+  const [geminiLoading, setGeminiLoading] = useState(false)
+  const [geminiError, setGeminiError] = useState('')
+  const [geminiAdded, setGeminiAdded] = useState(false)
 
-  // Reset to page 0 whenever search/filter/sort changes
-  useEffect(() => { setPage(0) }, [query, category, sort])
+  const fetchFromGemini = async () => {
+    const name = query.trim()
+    if (!name || geminiLoading) return
+    setGeminiLoading(true)
+    setGeminiError('')
+    setGeminiResult(null)
+    setGeminiAdded(false)
+    try {
+      const data = await lookupStrainData(name)
+      setGeminiResult({ ...data, name })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : ''
+      setGeminiError(msg === 'NO_KEY' ? 'SET API KEY IN SMOKÉ CENTER FIRST' : 'GEMINI LOOKUP FAILED')
+    } finally {
+      setGeminiLoading(false)
+    }
+  }
+
+  const addGeminiToStash = () => {
+    if (!geminiResult) return
+    addStrain({
+      name: geminiResult.name,
+      type: geminiResult.type,
+      thc:  geminiResult.thc,
+      cbd:  geminiResult.cbd,
+      notes: [
+        geminiResult.effects  ? `Effects: ${geminiResult.effects}` : '',
+        geminiResult.terpenes ? `Terpenes: ${geminiResult.terpenes}` : '',
+        geminiResult.history  ? `History: ${geminiResult.history}` : '',
+      ].filter(Boolean).join('\n') || undefined,
+      inStock: true,
+    })
+    setGeminiAdded(true)
+  }
+
+  // Reset to page 0 and clear Gemini result whenever search/filter/sort changes
+  useEffect(() => {
+    setPage(0)
+    setGeminiResult(null)
+    setGeminiError('')
+    setGeminiAdded(false)
+  }, [query, category, sort])
 
   const { pageResults, total, totalPages } = useMemo(() => {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -750,10 +797,112 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
       {/* Results */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {pageResults.length === 0 && (
-          <div style={{ ...pokeBox, padding: '24px 12px', textAlign: 'center' }}>
-            <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED }}>
-              NO RESULTS
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* No results + Gemini prompt */}
+            <div style={{ ...pokeBox, padding: '16px 14px' }}>
+              <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: query.trim() ? 12 : 0 }}>
+                NOT IN LOCAL DEX
+              </p>
+              {query.trim() && (
+                <button
+                  onClick={fetchFromGemini}
+                  disabled={geminiLoading}
+                  style={{
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                    fontSize: 9, padding: '10px 14px', width: '100%', minHeight: 44,
+                    border: `2px solid ${geminiLoading ? GBC_DARKEST : GBC_VIOLET}`,
+                    background: geminiLoading ? 'rgba(167,139,250,0.05)' : 'rgba(167,139,250,0.08)',
+                    color: geminiLoading ? GBC_DARKEST : GBC_VIOLET,
+                    cursor: geminiLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {geminiLoading ? '► SEARCHING...' : '► SEARCH WITH GEMINI'}
+                </button>
+              )}
+              {geminiError && (
+                <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#e84040', marginTop: 8, lineHeight: 1.8 }}>
+                  {geminiError}
+                </p>
+              )}
+            </div>
+
+            {/* Gemini result card */}
+            {geminiResult && (() => {
+              const col = geminiResult.type === 'sativa' ? GBC_GREEN : geminiResult.type === 'indica' ? GBC_VIOLET : GBC_AMBER
+              const alreadyInStash = strains.some(s => s.name.toLowerCase() === geminiResult.name.toLowerCase())
+              return (
+                <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 13, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
+                      {geminiResult.name.toUpperCase()}
+                    </span>
+                    {geminiResult.type && (
+                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>
+                        {geminiResult.type.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* THC / CBD */}
+                  {(geminiResult.thc != null || geminiResult.cbd != null) && (
+                    <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
+                      {geminiResult.thc != null ? `THC ${geminiResult.thc}%` : ''}
+                      {geminiResult.thc != null && geminiResult.cbd != null ? '  ·  ' : ''}
+                      {geminiResult.cbd != null ? `CBD ${geminiResult.cbd}%` : ''}
+                      <span style={{ fontSize: 7, color: GBC_DARKEST, marginLeft: 8 }}>[AI EST.]</span>
+                    </div>
+                  )}
+
+                  {/* Terpenes */}
+                  {geminiResult.terpenes && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {geminiResult.terpenes.split(/[,;]+/).map(t => t.trim()).filter(Boolean).map(t => (
+                        <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
+                          {t.toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Effects */}
+                  {geminiResult.effects && (
+                    <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>
+                      {geminiResult.effects}
+                    </p>
+                  )}
+
+                  {/* History */}
+                  {geminiResult.history && (
+                    <div style={{ borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 10 }}>
+                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginBottom: 6 }}>
+                        STRAIN HISTORY
+                      </div>
+                      <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.8, margin: 0, opacity: 0.85 }}>
+                        {geminiResult.history}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Add to stash */}
+                  <button
+                    onClick={addGeminiToStash}
+                    disabled={alreadyInStash || geminiAdded}
+                    style={{
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                      fontSize: 10, padding: '12px 0', width: '100%', minHeight: 44,
+                      border: `3px solid ${alreadyInStash || geminiAdded ? GBC_DARKEST : GBC_GREEN}`,
+                      background: alreadyInStash || geminiAdded ? 'transparent' : GBC_GREEN,
+                      color: alreadyInStash || geminiAdded ? GBC_MUTED : GBC_BG,
+                      cursor: alreadyInStash || geminiAdded ? 'not-allowed' : 'pointer',
+                      boxShadow: alreadyInStash || geminiAdded ? 'none' : 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+                    }}
+                  >
+                    {geminiAdded ? 'ADDED!' : alreadyInStash ? 'ALREADY IN STASH' : '+ ADD TO STASH'}
+                  </button>
+                </div>
+              )
+            })()}
           </div>
         )}
         {pageResults.map((s) => {
@@ -864,33 +1013,37 @@ export default function Smokedex() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [autoFilling, setAutoFilling] = useState(false)
   const [autoFillMsg, setAutoFillMsg] = useState('')
+  const [autoFillHistory, setAutoFillHistory] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const applyAutoFill = async (name: string) => {
     if (!name.trim() || autoFilling) return
     setAutoFilling(true)
     setAutoFillMsg('')
+    setAutoFillHistory('')
     try {
-      const data = await fetchLiveStrain(name.trim())
-      if (!data) { setAutoFillMsg('NOT IN DATABASE'); return }
+      const data = await lookupStrainData(name.trim())
       setForm((prev) => {
-        const mergedNotes = [
-          prev.notes.trim(),
-          data.terpenes ? `Terpenes: ${data.terpenes}` : '',
-        ].filter(Boolean).join('\n')
+        const noteParts: string[] = []
+        if (data.terpenes) noteParts.push(`Terpenes: ${data.terpenes}`)
+        if (data.effects)  noteParts.push(`Effects: ${data.effects}`)
+        const mergedNotes = [prev.notes.trim(), ...noteParts].filter(Boolean).join('\n')
         return {
           ...prev,
-          thc:   prev.thc !== '' ? prev.thc : data.thc  != null ? String(data.thc)  : prev.thc,
-          cbd:   prev.cbd !== '' ? prev.cbd : data.cbd  != null ? String(data.cbd)  : prev.cbd,
+          type:  prev.type ?? data.type,
+          thc:   prev.thc !== '' ? prev.thc : data.thc != null ? String(data.thc) : prev.thc,
+          cbd:   prev.cbd !== '' ? prev.cbd : data.cbd != null ? String(data.cbd) : prev.cbd,
           notes: mergedNotes,
         }
       })
+      if (data.history) setAutoFillHistory(data.history)
       setAutoFillMsg('FILLED!')
-    } catch {
-      setAutoFillMsg('ERROR')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : ''
+      setAutoFillMsg(msg === 'NO_KEY' ? 'SET KEY IN SMOKÉ CENTER' : 'NOT FOUND')
     } finally {
       setAutoFilling(false)
-      setTimeout(() => setAutoFillMsg(''), 3000)
+      setTimeout(() => setAutoFillMsg(''), 4000)
     }
   }
 
@@ -953,7 +1106,7 @@ export default function Smokedex() {
           cbd: ocrCbd || prev.cbd,
         }
       })
-      // Auto-fill from API if we got a name but no THC/CBD from the label
+      // Auto-fill from Gemini if we got a name but no THC/CBD from the label
       if (parsedName && !ocrThc && !ocrCbd) {
         await applyAutoFill(parsedName)
       }
@@ -1267,6 +1420,18 @@ export default function Smokedex() {
                     {autoFillMsg}
                   </span>
                 )}
+              </div>
+            )}
+
+            {/* Strain history from Gemini */}
+            {autoFillHistory && (
+              <div style={{ background: GBC_BG, border: `1px solid ${GBC_DARKEST}`, padding: '10px 12px' }}>
+                <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginBottom: 6 }}>
+                  STRAIN HISTORY
+                </div>
+                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, opacity: 0.85 }}>
+                  {autoFillHistory}
+                </p>
               </div>
             )}
 

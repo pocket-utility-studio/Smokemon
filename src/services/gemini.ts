@@ -15,6 +15,7 @@ export interface StrainLookupResult {
   type?: 'sativa' | 'indica' | 'hybrid'
   terpenes?: string
   effects?: string
+  history?: string
 }
 
 // ── Client ────────────────────────────────────────────────────────────────────
@@ -68,14 +69,15 @@ export async function askProfessorToke(
 // ── Strain lookup ──────────────────────────────────────────────────────────────
 
 const STRAIN_LOOKUP_PROMPT = (name: string) =>
-  `You are a cannabis database. Provide typical data for the strain "${name}".
+  `You are a cannabis strain encyclopedia. Provide accurate data for the strain "${name}".
 Respond ONLY with a single valid JSON object. Use null for any unknown fields.
 {
-  "thc": <number|null>,
-  "cbd": <number|null>,
+  "thc": <typical THC % as number|null>,
+  "cbd": <typical CBD % as number|null>,
   "type": <"sativa"|"indica"|"hybrid"|null>,
-  "terpenes": <"comma-separated dominant terpenes"|null>,
-  "effects": <"short description of typical effects"|null>
+  "terpenes": <"comma-separated dominant terpenes, e.g. Myrcene, Limonene, Caryophyllene"|null>,
+  "effects": <"short comma-separated list of typical effects"|null>,
+  "history": <"2-4 sentences covering the strain's origin, breeder, genetics/lineage, and any notable facts about how it was developed"|null>
 }`
 
 export async function lookupStrainData(name: string): Promise<StrainLookupResult> {
@@ -91,6 +93,7 @@ export async function lookupStrainData(name: string): Promise<StrainLookupResult
   if (typeof data.cbd === 'number')   out.cbd = data.cbd
   if (data.type === 'sativa' || data.type === 'indica' || data.type === 'hybrid') out.type = data.type
   if (typeof data.terpenes === 'string' && data.terpenes) out.terpenes = data.terpenes
-  if (typeof data.effects === 'string' && data.effects)   out.effects = data.effects
+  if (typeof data.effects  === 'string' && data.effects)  out.effects  = data.effects
+  if (typeof data.history  === 'string' && data.history)  out.history  = data.history
   return out
 }
