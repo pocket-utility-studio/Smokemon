@@ -214,6 +214,36 @@ function NurseJoySprite({ size = 60 }: { size?: number }) {
   )
 }
 
+// ── Nurse Joy response parser ─────────────────────────────────────────────────
+
+const SECTION_HEADERS = [
+  'RECOMMENDATION',
+  'TERPENE SCIENCE',
+  'TEMPERATURE GUIDE',
+  'STRAIN HISTORY',
+  'WHAT TO EXPECT',
+]
+
+const SECTION_COLORS: Record<string, string> = {
+  'RECOMMENDATION':   GBC_GREEN,
+  'TERPENE SCIENCE':  '#a78bfa',
+  'TEMPERATURE GUIDE':'#f59e0b',
+  'STRAIN HISTORY':   '#5a9a18',
+  'WHAT TO EXPECT':   '#84cc16',
+}
+
+function parseResponse(text: string): { header: string; body: string }[] {
+  const regex = new RegExp(`(${SECTION_HEADERS.join('|')})`, 'g')
+  const parts = text.split(regex)
+  const sections: { header: string; body: string }[] = []
+  // parts[0] is any preamble before first header
+  if (parts[0].trim()) sections.push({ header: '', body: parts[0].trim() })
+  for (let i = 1; i < parts.length; i += 2) {
+    sections.push({ header: parts[i], body: (parts[i + 1] ?? '').trimStart() })
+  }
+  return sections.length ? sections : [{ header: '', body: text }]
+}
+
 // ── Nurse Joy dialogue box ────────────────────────────────────────────────────
 
 function NurseJoyDialogue({ text }: { text: string }) {
@@ -224,23 +254,49 @@ function NurseJoyDialogue({ text }: { text: string }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [displayed])
 
+  const sections = parseResponse(displayed)
+
   return (
     <div style={{ ...pokeBox, padding: '14px' }}>
+      {/* Header */}
       <div style={{
-        borderBottom: `1px solid ${GBC_DARKEST}`, paddingBottom: 8, marginBottom: 10,
+        borderBottom: `1px solid ${GBC_DARKEST}`, paddingBottom: 8, marginBottom: 14,
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <NurseJoySprite size={44} />
         <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN }}>NURSE JOY</span>
       </div>
-      <p style={{
-        fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT,
-        lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap',
-        minHeight: 80,
-      }}>
-        {displayed}
-        {!done && <span className="gbc-blink" style={{ color: GBC_GREEN }}>█</span>}
-      </p>
+
+      {/* Sections */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {sections.map((sec, i) => {
+          const isLast = i === sections.length - 1
+          const col = sec.header ? (SECTION_COLORS[sec.header] ?? GBC_GREEN) : GBC_TEXT
+          return (
+            <div key={i}>
+              {sec.header && (
+                <div style={{
+                  fontFamily: FONT, fontSize: 9, color: col,
+                  borderBottom: `1px solid ${GBC_DARKEST}`,
+                  paddingBottom: 6, marginBottom: 8,
+                  letterSpacing: 0.5,
+                }}>
+                  {sec.header}
+                </div>
+              )}
+              <p style={{
+                fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT,
+                lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap',
+              }}>
+                {sec.body}
+                {isLast && !done && (
+                  <span className="gbc-blink" style={{ color: GBC_GREEN }}>█</span>
+                )}
+              </p>
+            </div>
+          )
+        })}
+      </div>
       <div ref={bottomRef} />
     </div>
   )
