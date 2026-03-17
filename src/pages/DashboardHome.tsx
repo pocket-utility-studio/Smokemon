@@ -53,7 +53,7 @@ const MENU: TopItem[] = [
     children: [
       { kind: 'leaf', to: '/terpenes', label: 'TERPENE DICT', description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',    tag: '[LEARN]', tagColor: '#a78bfa' },
       { kind: 'leaf', to: '/facts',    label: 'FACT CART',    description: 'DAILY CANNABIS HISTORY',           tag: '[DAILY]', tagColor: '#84cc16' },
-      { kind: 'leaf', to: '/law',      label: 'LAW GUIDE',    description: 'UK MEDICAL CANNABIS LAW',           tag: '[UK]',    tagColor: '#e84040' },
+      { kind: 'leaf', to: '/law',      label: 'LAW GUIDE',    description: 'UK + ES CANNABIS LAW',              tag: '[LAW]',   tagColor: '#e84040' },
       { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT', description: 'VERIFY STRAIN DATA QUALITY', tag: '[AUDIT]', tagColor: '#4a9a20' },
     ],
   },
