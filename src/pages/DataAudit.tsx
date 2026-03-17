@@ -48,6 +48,51 @@ function typeColor(type: string): string {
   return GBC_AMBER
 }
 
+// Pixel-art Porygon — 32×32 grid, each cell 3px, GBC palette
+function PorygonSprite() {
+  const C = '#0a1408'  // outline
+  const W = '#d8efc0'  // cream body
+  const P = '#c060a0'  // pink
+  const B = '#5080c8'  // blue
+  const R = '#84cc16'  // kiwi (replaces red for GBC mono)
+  type Row = string[]
+  // 16×16 pixel grid (scaled 3× = 48px)
+  const grid: Row[] = [
+    [...'................'],
+    [...'....CCCCCC......'],
+    [...'...CWWWWWWC.....'],
+    [...'..CWWWWWWWWC....'],
+    [...'..CPPWWWWWWCC...'],
+    [...'..CPPWWWWWWWC...'],
+    [...'..CBBBBBBBBBCC..'],
+    [...'...CBBBBBBC.CC..'],
+    [...'...CBRRRRBC.....'],
+    [...'...CBRRRRBC.....'],
+    [...'..CCBC..CBC.....'],
+    [...'..CBC....CBC....'],
+    [...'................'],
+    [...'................'],
+    [...'................'],
+    [...'................'],
+  ]
+  const colorMap: Record<string, string> = { C, W, P, B, R }
+  const s = 3
+  return (
+    <svg
+      width={16 * s} height={16 * s}
+      style={{ imageRendering: 'pixelated', display: 'block' }}
+    >
+      {grid.map((row, ry) =>
+        row.map((cell, cx) => {
+          const fill = colorMap[cell]
+          if (!fill) return null
+          return <rect key={`${ry}-${cx}`} x={cx * s} y={ry * s} width={s} height={s} fill={fill} />
+        })
+      )}
+    </svg>
+  )
+}
+
 export default function DataAudit() {
   const { db, loading } = useStrainDb()
   const { transitionTo } = useTransitionNav()
@@ -146,8 +191,11 @@ export default function DataAudit() {
         ...pokeBox, padding: '10px 12px', flexShrink: 0,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>DATA AUDIT</span>
-        <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>[AUDIT]</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>DATA AUDIT</span>
+          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>PORYGON DATA SYSTEMS</span>
+        </div>
+        <PorygonSprite />
       </div>
 
       {/* Section 1: DB Coverage */}

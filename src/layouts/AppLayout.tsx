@@ -204,7 +204,7 @@ function GBCLogo() {
 
 // ── AppLayout ──────────────────────────────────────────────────────────────────
 export default function AppLayout() {
-  const { font } = useVibe()
+  const { font, darkMode } = useVibe()
   const { layoutMode, setLayoutMode } = useLayoutMode()
   const { wipePhase, goBack } = useTransitionNav()
 
@@ -333,7 +333,7 @@ export default function AppLayout() {
             }}>
               {/* Active display */}
               <div className="gbc-active-display" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-                <div style={{
+                <div className={darkMode ? 'sp-mode' : ''} style={{
                   position: 'absolute', inset: 0,
                   overflow: 'hidden',
                   background: '#0e1a0b',

@@ -7,8 +7,10 @@ export type Typography = 'smooth' | 'typewriter'
 interface VibeContextValue {
   texture: Texture
   typography: Typography
+  darkMode: boolean
   setTexture: (t: Texture) => void
   setTypography: (t: Typography) => void
+  setDarkMode: (on: boolean) => void
   // Computed class strings consumed by components
   card: string
   primaryBtn: string
@@ -21,6 +23,14 @@ const VibeContext = createContext<VibeContextValue | null>(null)
 export function VibeProvider({ children }: { children: ReactNode }) {
   const [texture, setTexture] = useState<Texture>('matte')
   const [typography, setTypography] = useState<Typography>('smooth')
+  const [darkMode, setDarkModeState] = useState<boolean>(
+    () => localStorage.getItem('utilhub_darkmode') === '1'
+  )
+
+  const setDarkMode = (on: boolean) => {
+    localStorage.setItem('utilhub_darkmode', on ? '1' : '0')
+    setDarkModeState(on)
+  }
 
   const value = useMemo<VibeContextValue>(() => {
     const isGlow = texture === 'glow'
@@ -29,8 +39,10 @@ export function VibeProvider({ children }: { children: ReactNode }) {
     return {
       texture,
       typography,
+      darkMode,
       setTexture,
       setTypography,
+      setDarkMode,
 
       card: [
         'bg-console border-2 border-[#2a4a08] transition-shadow duration-300',

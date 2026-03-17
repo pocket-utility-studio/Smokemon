@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { exportSaveData, importSaveData } from '../utils/storage'
 import { playSave } from '../utils/sounds'
+import { useVibe } from '../context/VibeContext'
 
 const pokeBox = {
   border: '3px solid #84cc16',
@@ -37,6 +38,7 @@ const dangerBtn: React.CSSProperties = {
 type FeedbackState = 'idle' | 'saved' | 'loaded' | 'error'
 
 export default function SaveState() {
+  const { darkMode, setDarkMode } = useVibe()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [exportFeedback, setExportFeedback] = useState<FeedbackState>('idle')
   const [importFeedback, setImportFeedback] = useState<FeedbackState>('idle')
@@ -240,6 +242,27 @@ export default function SaveState() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* GBA SP Dark Mode toggle */}
+      <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+          DISPLAY
+        </span>
+        <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
+          Toggle GBA SP dark mode. Dims the screen for night use.
+        </p>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          style={{
+            ...btnBase,
+            border: darkMode ? '3px solid #84cc16' : '3px solid #2a4a08',
+            color: darkMode ? '#84cc16' : '#4a7a10',
+            background: darkMode ? 'rgba(132,204,22,0.10)' : 'transparent',
+          }}
+        >
+          {darkMode ? '► SP DARK MODE: ON' : '► SP DARK MODE: OFF'}
+        </button>
       </div>
 
       {/* Danger zone */}

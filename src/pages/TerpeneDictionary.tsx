@@ -158,6 +158,89 @@ const terpenes = [
   },
 ]
 
+// 8×8 pixel art icons (each cell = 2px → 16×16 rendered)
+const TERPENE_PIXELS: Record<string, string[]> = {
+  Myrcene: [
+    '...##...',
+    '..###...',
+    '.#####..',
+    '.#####..',
+    '..###...',
+    '...#....',
+    '...#....',
+    '........',
+  ],
+  Limonene: [
+    '..####..',
+    '.######.',
+    '########',
+    '###.####',
+    '########',
+    '.######.',
+    '..####..',
+    '........',
+  ],
+  Caryophyllene: [
+    '.#.#.#..',
+    '..###...',
+    '.#####..',
+    '########',
+    '.#####..',
+    '..###...',
+    '.#.#.#..',
+    '........',
+  ],
+  Linalool: [
+    '.#.#.#..',
+    '.#####..',
+    '..###...',
+    '...#....',
+    '...#....',
+    '...##...',
+    '..####..',
+    '........',
+  ],
+  Pinene: [
+    '...##...',
+    '..####..',
+    '.######.',
+    '########',
+    '...##...',
+    '...##...',
+    '..####..',
+    '........',
+  ],
+}
+const DEFAULT_PIXELS = [
+  '...##...',
+  '..####..',
+  '.######.',
+  '########',
+  '.######.',
+  '..####..',
+  '...##...',
+  '........',
+]
+
+function TerpeneIcon({ name, color }: { name: string; color: string }) {
+  const rows = TERPENE_PIXELS[name] ?? DEFAULT_PIXELS
+  const s = 2
+  return (
+    <svg
+      width={8 * s} height={8 * s}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0 }}
+    >
+      {rows.map((row, ry) =>
+        [...row].map((cell, cx) =>
+          cell === '#' ? (
+            <rect key={`${ry}-${cx}`} x={cx * s} y={ry * s} width={s} height={s} fill={color} />
+          ) : null
+        )
+      )}
+    </svg>
+  )
+}
+
 type QuizQuestion = {
   question: string
   hint: string
@@ -353,13 +436,16 @@ export default function TerpeneDictionary() {
                 borderBottom: `1px solid #1a3004`,
                 paddingBottom: 8,
               }}>
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 14,
-                  color: t.color,
-                }}>
-                  {t.name.toUpperCase()}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <TerpeneIcon name={t.name} color={t.color} />
+                  <span style={{
+                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                    fontSize: 14,
+                    color: t.color,
+                  }}>
+                    {t.name.toUpperCase()}
+                  </span>
+                </div>
                 <span style={{
                   fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                   fontSize: 8,

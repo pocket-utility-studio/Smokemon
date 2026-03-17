@@ -9,6 +9,7 @@ import { lookupStrainData } from '../services/gemini'
 import type { StrainLookupResult } from '../services/gemini'
 import { BudSprite, ALL_BUD_DESIGNS, getBudDesign } from '../components/BudSprite'
 import type { BudContext } from '../components/BudSprite'
+import BitBudCanvas from '../components/BitBudCanvas'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -83,21 +84,23 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
   const [cbd,      setCbd]      = useState(strain.cbd?.toString() ?? '')
   const [amount,   setAmount]   = useState(strain.amount ?? '')
   const [notes,    setNotes]    = useState(strain.notes ?? '')
-  const [inStock,  setInStock]  = useState(strain.inStock)
-  const [budDesign, setBudDesign] = useState(strain.budDesign ?? '')
+  const [inStock,      setInStock]      = useState(strain.inStock)
+  const [budDesign,    setBudDesign]    = useState(strain.budDesign ?? '')
+  const [imageDataUrl, setImageDataUrl] = useState(strain.imageDataUrl ?? '')
 
   const autoDesign = getBudDesign(strain.name, strain.type, dbContext)
 
   const handleSave = () => {
     onSave({
-      name:      name.trim() || strain.name,
+      name:         name.trim() || strain.name,
       type,
-      thc:       thc  ? parseFloat(thc)  : undefined,
-      cbd:       cbd  ? parseFloat(cbd)  : undefined,
-      amount:    amount.trim()  || undefined,
-      notes:     notes.trim()   || undefined,
+      thc:          thc  ? parseFloat(thc)  : undefined,
+      cbd:          cbd  ? parseFloat(cbd)  : undefined,
+      amount:       amount.trim()  || undefined,
+      notes:        notes.trim()   || undefined,
       inStock,
-      budDesign: budDesign || undefined,
+      budDesign:    budDesign    || undefined,
+      imageDataUrl: imageDataUrl || undefined,
     })
   }
 
@@ -221,6 +224,33 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
         </div>
       </div>
 
+      {/* Bit-Bud photo filter */}
+      <div style={{
+        border: '3px solid #84cc16',
+        boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+        background: '#0a1408',
+        padding: 12,
+      }}>
+        {imageDataUrl && (
+          <div style={{ marginBottom: 8 }}>
+            <img
+              src={imageDataUrl}
+              alt="8-bit bud photo"
+              style={{ width: '100%', imageRendering: 'pixelated', display: 'block', border: '2px solid #2a4a08' }}
+            />
+            <button
+              onClick={() => setImageDataUrl('')}
+              style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                fontSize: 8, marginTop: 6, padding: '6px 10px', cursor: 'pointer',
+                border: '2px solid #2a4a08', color: GBC_MUTED, background: 'transparent', width: '100%',
+              }}
+            >► REMOVE PHOTO</button>
+          </div>
+        )}
+        <BitBudCanvas onCapture={(url) => setImageDataUrl(url)} />
+      </div>
+
       {/* Save / Cancel */}
       <div style={{ display: 'flex', gap: 8 }}>
         <button
@@ -260,6 +290,16 @@ function getItemLabel(amountStr: string): string {
   return `[${item}] (${amountStr})`
 }
 
+// ── THC HP bar color ─────────────────────────────────────────────────────────
+// Caps at 35% (visual max). Color shifts green → yellow → orange → purple.
+function thcHpColor(thc: number | null | undefined): string {
+  if (thc == null) return GBC_GREEN
+  if (thc > 25)  return '#a78bfa'  // purple  — very high potency
+  if (thc > 20)  return '#f97316'  // orange  — high
+  if (thc >= 15) return '#f0e040'  // yellow  — moderate
+  return GBC_GREEN                 // green   — mild
+}
+
 // ── Bill's PC stash list ───────────────────────────────────────────────────────
 
 function StashList({
@@ -287,7 +327,7 @@ function StashList({
         const col = typeColor(s.type)
         const thc = s.thc ?? dbe?.thc
         const cbd = s.cbd ?? dbe?.cbd
-        const fill = thc != null ? Math.min(thc / 40, 1) : 1
+        const fill = thc != null ? Math.min(thc / 35, 1) : 1
 
         const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
 
@@ -356,7 +396,7 @@ function StashList({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
               <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: thcHpColor(thc) }} />
               </div>
               <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_TEXT, flexShrink: 0 }}>
                 {thc != null ? `${thc}%` : '--'}
@@ -412,7 +452,9 @@ function StashList({
   )
 }
 
-// ─── Party View ──────────────────────────────────────────────────────────────
+// ─── Party View — 2×3 grid ────────────────────────────────────────────────────
+
+const PVSF = "'PokemonGb', 'Press Start 2P', monospace"
 
 function PartyView({
   party,
@@ -425,8 +467,8 @@ function PartyView({
   onDelete: (id: string) => void
   onUpdate: (id: string, updates: Partial<StrainEntry>) => void
 }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [selectedId, setSelectedId]       = useState<string | null>(null)
+  const [editingId, setEditingId]         = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const lookupDb = (name: string) => {
@@ -434,12 +476,13 @@ function PartyView({
     return db.find((d) => String(d.Strain).toLowerCase().replace(/[^a-z0-9]/g, '') === norm)
   }
 
+  const slots: (StrainEntry | null)[] = Array.from({ length: 6 }, (_, i) => party[i] ?? null)
+  const selected = selectedId ? (party.find((s) => s.id === selectedId) ?? null) : null
+
   if (party.length === 0) {
     return (
       <div style={{ ...pokeBox, padding: '32px 12px', textAlign: 'center' }}>
-        <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 11, color: GBC_MUTED }}>
-          PARTY EMPTY
-        </p>
+        <p style={{ fontFamily: PVSF, fontSize: 11, color: GBC_MUTED }}>PARTY EMPTY</p>
         <p style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, marginTop: 10, lineHeight: 1.6 }}>
           Mark a strain as IN STOCK to add it to your party.
         </p>
@@ -450,195 +493,203 @@ function PartyView({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-      {/* Party roster rows */}
-      <div style={{ ...pokeBox, overflow: 'hidden' }}>
-        {party.map((s, i) => {
-          const dbe = lookupDb(s.name)
-          const thc = s.thc ?? dbe?.thc
-          const fill = thc != null ? Math.min(thc / 40, 1) : 1
-          const col = typeColor(s.type)
-          const isExpanded = s.id === expandedId
-          const isEditing = s.id === editingId
-          const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
+      {/* ── 2×3 party grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+        {slots.map((s, i) => {
+          if (!s) return (
+            <div key={i} style={{
+              border: '2px dashed #1a3008', background: '#050a04',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: 4, minHeight: 90, opacity: 0.3,
+            }}>
+              <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_DARKEST }}>---</span>
+              <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_DARKEST }}>EMPTY</span>
+            </div>
+          )
+
+          const dbe    = lookupDb(s.name)
+          const thc    = s.thc ?? dbe?.thc
+          const fill   = thc != null ? Math.min(thc / 35, 1) : 0.5
+          const barCol = thcHpColor(thc)
+          const col    = typeColor(s.type)
+          const isSel  = s.id === selectedId
+          const dbCtx: BudContext | undefined = dbe
+            ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor }
+            : undefined
 
           return (
-            <div
+            <button
               key={s.id}
+              onClick={() => {
+                setSelectedId(isSel ? null : s.id)
+                setEditingId(null)
+                setConfirmDeleteId(null)
+              }}
               style={{
-                borderBottom: i < party.length - 1 ? `1px solid ${GBC_DARKEST}` : 'none',
-                background: isExpanded ? 'rgba(132,204,22,0.05)' : 'transparent',
-                borderLeft: isExpanded ? `4px solid ${GBC_GREEN}` : '4px solid transparent',
+                border: `3px solid ${isSel ? GBC_GREEN : '#2a4a08'}`,
+                boxShadow: isSel
+                  ? `inset 0 0 0 1px #0e1a0b, 0 0 8px rgba(132,204,22,0.2)`
+                  : 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+                background: isSel ? 'rgba(132,204,22,0.07)' : '#0a1408',
+                padding: '10px 6px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: 5, cursor: 'pointer', minHeight: 90, textAlign: 'center',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {/* Collapsed row */}
-              <div
-                onClick={() => {
-                  setExpandedId(isExpanded ? null : s.id)
-                  if (isExpanded) setEditingId(null)
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '12px 14px',
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                  <TypeSprite type={s.type} size={32} />
-                  <BudSprite name={s.name} type={s.type} size={24} context={dbCtx} budDesign={s.budDesign} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-                    <div style={{
-                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                      fontSize: 13, color: isExpanded ? GBC_GREEN : col,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
-                    }}>
-                      {s.name.toUpperCase()}
-                    </div>
-                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: isExpanded ? GBC_GREEN : GBC_DARKEST, flexShrink: 0 }}>
-                      {isExpanded ? '▲' : '▼'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 80, height: 6, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
-                    </div>
-                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
-                      {thc != null ? `${thc}%` : '--'}
-                    </span>
-                  </div>
-                </div>
-                {confirmDeleteId === s.id ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={(e) => { e.stopPropagation(); onDelete(s.id); setConfirmDeleteId(null) }}
-                        style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
-                      >YES</button>
-                      <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
-                        style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
-                      >NO</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(s.id) }}
-                    style={{
-                      background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED,
-                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
-                      padding: '8px 10px', cursor: 'pointer', minWidth: 44, minHeight: 44,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      WebkitTapHighlightColor: 'transparent' as unknown as string,
-                    }}
-                  >[x]</button>
-                )}
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <TypeSprite type={s.type} size={20} />
+                <BudSprite name={s.name} type={s.type} size={22} context={dbCtx} budDesign={s.budDesign} />
               </div>
-
-              {/* Expanded detail */}
-              {isExpanded && (
-                <div style={{ padding: '0 14px 14px' }}>
-                  {/* EDIT button */}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-                    <button
-                      onClick={() => setEditingId(isEditing ? null : s.id)}
-                      style={{
-                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
-                        padding: '6px 8px', minWidth: 44, minHeight: 44, cursor: 'pointer',
-                        border: `1px solid ${isEditing ? GBC_GREEN : GBC_DARKEST}`,
-                        background: isEditing ? 'rgba(132,204,22,0.1)' : 'transparent',
-                        color: isEditing ? GBC_GREEN : GBC_MUTED,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >EDIT</button>
-                  </div>
-
-                  {isEditing ? (
-                    <StrainEditForm
-                      strain={s}
-                      dbContext={dbCtx}
-                      onSave={(updates) => { onUpdate(s.id, updates); setEditingId(null) }}
-                      onCancel={() => setEditingId(null)}
-                    />
-                  ) : (<>
-                    {/* Type + amount row */}
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
-                      {s.type && (
-                        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${col}`, color: col, padding: '2px 6px' }}>
-                          {s.type.toUpperCase()}
-                        </span>
-                      )}
-                      {s.amount && (
-                        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED }}>
-                          {getItemLabel(s.amount)}
-                        </span>
-                      )}
-                    </div>
-                    {/* HP bar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
-                      <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
-                      </div>
-                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 11, color: GBC_TEXT, flexShrink: 0 }}>
-                        {thc != null ? `${thc}%` : '--'}
-                      </span>
-                    </div>
-                    {(s.cbd ?? dbe?.cbd) != null && (
-                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 8 }}>
-                        CBD {s.cbd ?? dbe?.cbd}%
-                      </div>
-                    )}
-                    {dbe?.terpenes && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {dbe.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((t) => (
-                            <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {dbe?.Effects && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Effects}</div>
-                      </div>
-                    )}
-                    {dbe?.medical && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_MUTED, lineHeight: 1.5 }}>{dbe.medical}</div>
-                      </div>
-                    )}
-                    {dbe?.Description && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.6 }}>{dbe.Description}</div>
-                      </div>
-                    )}
-                    {dbe?.Flavor && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>FLAVOR</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Flavor}</div>
-                      </div>
-                    )}
-                    {s.notes && (
-                      <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>NOTES</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{s.notes}</div>
-                      </div>
-                    )}
-                  </>)}
-                </div>
-              )}
-            </div>
+              <span style={{
+                fontFamily: PVSF, fontSize: 8,
+                color: isSel ? GBC_GREEN : col,
+                overflow: 'hidden', textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap', width: '100%', maxWidth: 94,
+              }}>
+                {s.name.slice(0, 13).toUpperCase()}
+              </span>
+              <div style={{ width: '100%', height: 5, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: barCol }} />
+              </div>
+              <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>
+                {thc != null ? `THC ${thc}%` : '--'}
+              </span>
+            </button>
           )
         })}
       </div>
 
+      {/* ── Selected strain detail panel ── */}
+      {selected && (() => {
+        const dbe    = lookupDb(selected.name)
+        const thc    = selected.thc ?? dbe?.thc
+        const fill   = thc != null ? Math.min(thc / 35, 1) : 1
+        const barCol = thcHpColor(thc)
+        const col    = typeColor(selected.type)
+        const dbCtx: BudContext | undefined = dbe
+          ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor }
+          : undefined
+        const isEditing = selected.id === editingId
+        const isConfirm = selected.id === confirmDeleteId
+
+        return (
+          <div style={{ ...pokeBox, overflow: 'hidden' }}>
+            {/* Detail header row */}
+            <div style={{
+              padding: '10px 14px', borderBottom: `1px solid ${GBC_DARKEST}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+            }}>
+              <span style={{ fontFamily: PVSF, fontSize: 12, color: col, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selected.name.toUpperCase()}
+              </span>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button
+                  onClick={() => setEditingId(isEditing ? null : selected.id)}
+                  style={{
+                    background: isEditing ? 'rgba(132,204,22,0.1)' : 'transparent',
+                    border: `1px solid ${isEditing ? GBC_GREEN : GBC_DARKEST}`,
+                    color: isEditing ? GBC_GREEN : GBC_MUTED,
+                    fontFamily: PVSF, fontSize: 9,
+                    padding: '6px 8px', cursor: 'pointer', minWidth: 44, minHeight: 44,
+                  }}
+                >EDIT</button>
+                {isConfirm ? (<>
+                  <button
+                    onClick={() => { onDelete(selected.id); setSelectedId(null); setConfirmDeleteId(null) }}
+                    style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: PVSF, fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
+                  >YES</button>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: PVSF, fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
+                  >NO</button>
+                </>) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(selected.id)}
+                    style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: PVSF, fontSize: 9, padding: '6px 8px', cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+                  >[x]</button>
+                )}
+              </div>
+            </div>
+
+            {/* Detail body */}
+            <div style={{ padding: '12px 14px' }}>
+              {isEditing ? (
+                <StrainEditForm
+                  strain={selected}
+                  dbContext={dbCtx}
+                  onSave={(updates) => { onUpdate(selected.id, updates); setEditingId(null) }}
+                  onCancel={() => setEditingId(null)}
+                />
+              ) : (<>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap' }}>
+                  {selected.type && (
+                    <span style={{ fontFamily: PVSF, fontSize: 9, border: `2px solid ${col}`, color: col, padding: '2px 6px' }}>
+                      {selected.type.toUpperCase()}
+                    </span>
+                  )}
+                  {selected.amount && (
+                    <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED }}>{getItemLabel(selected.amount)}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+                  <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: barCol }} />
+                  </div>
+                  <span style={{ fontFamily: PVSF, fontSize: 11, color: GBC_TEXT, flexShrink: 0 }}>{thc != null ? `${thc}%` : '--'}</span>
+                </div>
+                {(selected.cbd ?? dbe?.cbd) != null && (
+                  <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 8 }}>CBD {selected.cbd ?? dbe?.cbd}%</div>
+                )}
+                {dbe?.terpenes && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {dbe.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((t) => (
+                        <span key={t} style={{ fontFamily: PVSF, fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {dbe?.Effects && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Effects}</div>
+                  </div>
+                )}
+                {dbe?.medical && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_MUTED, lineHeight: 1.5 }}>{dbe.medical}</div>
+                  </div>
+                )}
+                {dbe?.Description && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.6 }}>{dbe.Description}</div>
+                  </div>
+                )}
+                {dbe?.Flavor && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>FLAVOR</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Flavor}</div>
+                  </div>
+                )}
+                {selected.notes && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>NOTES</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{selected.notes}</div>
+                  </div>
+                )}
+              </>)}
+            </div>
+          </div>
+        )
+      })()}
+
       {party.length >= 6 && (
-        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_AMBER, textAlign: 'center', padding: '6px 0' }}>
+        <div style={{ fontFamily: PVSF, fontSize: 9, color: GBC_AMBER, textAlign: 'center', padding: '6px 0' }}>
           PARTY FULL (6/6)
         </div>
       )}

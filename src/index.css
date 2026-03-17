@@ -120,6 +120,11 @@ body {
   border-radius: 0 !important;
 }
 
+/* GBA SP dark mode — dims and desaturates like the original SP front-lit screen */
+.sp-mode {
+  filter: brightness(0.55) saturate(0.6) !important;
+}
+
 /* Solid inversion on tap/press inside the screen */
 .gbc-screen-content button:active {
   background: #84cc16 !important;
