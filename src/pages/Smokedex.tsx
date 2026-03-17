@@ -1780,7 +1780,7 @@ export default function Smokedex() {
                       return (
                         <div
                           key={s.Strain}
-                          onMouseDown={() => {
+                          onPointerDown={() => {
                             setForm({
                               ...form,
                               name: displayName(s),
