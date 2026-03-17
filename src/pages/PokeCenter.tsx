@@ -885,8 +885,8 @@ export default function PokeCenter() {
                   style={{
                     flex: 1, fontFamily: FONT, fontSize: 9, padding: '8px 0', cursor: 'pointer',
                     minHeight: 44,
-                    border: `2px solid ${feedbackRating === r ? (r === 'up' ? GBC_GREEN : GBC_RED) : GBC_DARKEST}`,
-                    color: feedbackRating === r ? (r === 'up' ? GBC_GREEN : GBC_RED) : GBC_MUTED,
+                    border: `2px solid ${feedbackRating === r ? (r === 'up' ? GBC_GREEN : '#e84040') : GBC_DARKEST}`,
+                    color: feedbackRating === r ? (r === 'up' ? GBC_GREEN : '#e84040') : GBC_MUTED,
                     background: feedbackRating === r ? (r === 'up' ? 'rgba(132,204,22,0.1)' : 'rgba(232,64,64,0.1)') : 'transparent',
                   }}
                 >{r === 'up' ? '▲ HELPED' : '▼ DIDN\'T HELP'}</button>

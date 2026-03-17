@@ -807,7 +807,7 @@ function PartyView({
               {mixLoading ? '► ANALYZING...' : '► MIX STRAINS'}
             </button>
             {mixError && (
-              <span style={{ fontFamily: PVSF, fontSize: 8, color: GBC_RED }}>
+              <span style={{ fontFamily: PVSF, fontSize: 8, color: '#e84040' }}>
                 {mixError === 'NO_KEY' ? 'NO API KEY — SET ONE IN POKECENTER' : mixError}
               </span>
             )}
@@ -859,28 +859,6 @@ const DEX_CATEGORIES: DexCategory[] = [
 const PAGE_SIZE = 20
 type SortKey = 'az' | 'thc' | 'rating'
 
-function scoreResult(s: StrainRecord, words: string[]): number {
-  if (words.length === 0) return 1
-  const name = displayName(s).toLowerCase()
-  const effects = s.Effects.toLowerCase()
-  const medical = (s.medical || '').toLowerCase()
-  const terpenes = (s.terpenes || '').toLowerCase()
-  const flavor = (s.Flavor || '').toLowerCase()
-  const type = s.Type.toLowerCase()
-  let total = 0
-  for (const word of words) {
-    if (name === word)              total += 100
-    else if (name.startsWith(word)) total += 80
-    else if (name.includes(word))   total += 60
-    else if (type.includes(word))   total += 35
-    else if (effects.includes(word)) total += 30
-    else if (terpenes.includes(word)) total += 25
-    else if (medical.includes(word)) total += 20
-    else if (flavor.includes(word)) total += 15
-    else return 0  // word matched nothing — exclude result
-  }
-  return total
-}
 
 function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => void }) {
   const { strains, addStrain } = useStash()
