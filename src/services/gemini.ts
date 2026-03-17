@@ -79,6 +79,7 @@ export async function askNurseJoy(
   desiredEffect: string,
   party: EnrichedStrain[],
   feedbackHistory?: ConsultationFeedback[],
+  patientNotes?: string,
 ): Promise<string> {
   if (party.length === 0) throw new Error('Party is empty')
 
@@ -99,6 +100,10 @@ export async function askNurseJoy(
     })
     .join('\n')
 
+  const notesBlock = patientNotes?.trim()
+    ? `\n\nPATIENT NOTES (written by the patient — always prioritise this information):\n${patientNotes.trim()}`
+    : ''
+
   const memoryBlock = feedbackHistory && feedbackHistory.length > 0
     ? `\n\nPATIENT HISTORY (past consultations):\n` +
       feedbackHistory.map((f) =>
@@ -107,7 +112,7 @@ export async function askNurseJoy(
       `\n\nUse the patient history to personalise your recommendation. Avoid strains that had negative reactions unless specifically asked. Reference relevant history when appropriate.`
     : ''
 
-  const prompt = `${NURSE_JOY_SYSTEM}${memoryBlock}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
+  const prompt = `${NURSE_JOY_SYSTEM}${notesBlock}${memoryBlock}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
