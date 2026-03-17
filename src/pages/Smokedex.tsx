@@ -281,12 +281,12 @@ function StashList({
             {/* Row 1: sprite + name + edit/delete */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editingId === s.id ? 14 : 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                <TypeSprite type={s.type} size={28} />
-                <BudSprite name={s.name} type={s.type} size={21} context={dbCtx} budDesign={s.budDesign} />
+                <TypeSprite type={s.type} size={36} />
+                <BudSprite name={s.name} type={s.type} size={28} context={dbCtx} budDesign={s.budDesign} />
               </div>
               <span style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 13, color: col, flex: 1, lineHeight: 1.5, wordBreak: 'break-word',
+                fontSize: 16, color: col, flex: 1, lineHeight: 1.5, wordBreak: 'break-word',
               }}>
                 {s.name.toUpperCase()}
               </span>
@@ -468,14 +468,14 @@ function PartyView({
                 }}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                  <TypeSprite type={s.type} size={24} />
-                  <BudSprite name={s.name} type={s.type} size={18} context={dbCtx} budDesign={s.budDesign} />
+                  <TypeSprite type={s.type} size={32} />
+                  <BudSprite name={s.name} type={s.type} size={24} context={dbCtx} budDesign={s.budDesign} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                     <div style={{
                       fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                      fontSize: 11, color: isExpanded ? GBC_GREEN : col,
+                      fontSize: 13, color: isExpanded ? GBC_GREEN : col,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
                     }}>
                       {s.name.toUpperCase()}
@@ -560,22 +560,22 @@ function PartyView({
                     </div>
                     {/* HP bar */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
                       <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
                       </div>
-                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 11, color: GBC_TEXT, flexShrink: 0 }}>
                         {thc != null ? `${thc}%` : '--'}
                       </span>
                     </div>
                     {(s.cbd ?? dbe?.cbd) != null && (
-                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
+                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 8 }}>
                         CBD {s.cbd ?? dbe?.cbd}%
                       </div>
                     )}
                     {dbe?.terpenes && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                           {dbe.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((t) => (
                             <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
@@ -585,32 +585,32 @@ function PartyView({
                     )}
                     {dbe?.Effects && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Effects}</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Effects}</div>
                       </div>
                     )}
                     {dbe?.medical && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5 }}>{dbe.medical}</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_MUTED, lineHeight: 1.5 }}>{dbe.medical}</div>
                       </div>
                     )}
                     {dbe?.Description && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.6 }}>{dbe.Description}</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.6 }}>{dbe.Description}</div>
                       </div>
                     )}
                     {dbe?.Flavor && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>FLAVOR</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Flavor}</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>FLAVOR</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.5 }}>{dbe.Flavor}</div>
                       </div>
                     )}
                     {s.notes && (
                       <div style={{ marginBottom: 8 }}>
-                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, marginBottom: 4 }}>NOTES</div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{s.notes}</div>
+                        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>NOTES</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{s.notes}</div>
                       </div>
                     )}
                   </>)}
@@ -1127,7 +1127,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 12, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 15, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
                   {displayName(s)}
                 </span>
                 <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, border: `2px solid ${col}`, color: col, padding: '3px 6px', flexShrink: 0 }}>

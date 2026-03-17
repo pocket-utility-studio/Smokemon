@@ -280,10 +280,10 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
       {/* Name + sprite row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-          <TypeSprite type={type} size={20} />
-          <BudSprite name={name} type={type} size={15} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
+          <TypeSprite type={type} size={28} />
+          <BudSprite name={name} type={type} size={20} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
         </div>
-        <div style={{ fontFamily: FONT, fontSize: 9, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
+        <div style={{ fontFamily: FONT, fontSize: 11, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
           {name.toUpperCase()}
         </div>
         <button
@@ -306,10 +306,10 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
           </span>
         )}
         {thc != null && (
-          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>THC {thc}%</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>THC {thc}%</span>
         )}
         {cbd != null && (
-          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>CBD {cbd}%</span>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>CBD {cbd}%</span>
         )}
         {!inStock && (
           <span style={{ fontFamily: FONT, fontSize: 7, color: '#e84040' }}>OUT</span>
@@ -325,11 +325,11 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
 
           {terpeneList.length > 0 && (
             <div>
-              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
+              <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {terpeneList.map((t) => (
                   <span key={t} style={{
-                    fontFamily: FONT, fontSize: 7, color: GBC_VIOLET,
+                    fontFamily: FONT, fontSize: 9, color: GBC_VIOLET,
                     border: `1px solid ${GBC_VIOLET}`, padding: '2px 5px',
                   }}>{t.toUpperCase()}</span>
                 ))}
@@ -339,22 +339,22 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
 
           {effects && (
             <div>
-              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.5 }}>{effects}</div>
+              <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.5 }}>{effects}</div>
             </div>
           )}
 
           {medical && (
             <div>
-              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.5 }}>{medical}</div>
+              <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.5 }}>{medical}</div>
             </div>
           )}
 
           {description && (
             <div>
-              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.6 }}>{description}</div>
+              <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.6 }}>{description}</div>
             </div>
           )}
 
