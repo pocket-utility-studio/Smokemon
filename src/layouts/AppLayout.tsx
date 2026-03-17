@@ -6,7 +6,6 @@ import SplashScreen from '../pages/SplashScreen'
 
 import { useTransitionNav } from '../context/NavigationContext'
 import WipeOverlay from '../components/WipeOverlay'
-import GBCBottomBar from '../components/GBCBottomBar'
 
 const KIWI_GRAD = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
 const BEZEL = '#181818'
@@ -371,15 +370,6 @@ export default function AppLayout() {
                       pointerEvents: booting ? 'none' : 'auto',
                     }}>
                       <Outlet />
-                    </div>
-                    {/* Bottom nav bar */}
-                    <div style={{
-                      flexShrink: 0,
-                      opacity: booting ? 0 : 1,
-                      transition: `opacity ${T}`,
-                      pointerEvents: booting ? 'none' : 'auto',
-                    }}>
-                      <GBCBottomBar />
                     </div>
                     {/* Splash — always in DOM, fades out after boot */}
                     <div style={{
