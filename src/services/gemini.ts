@@ -84,7 +84,11 @@ export async function askNurseJoy(
   if (party.length === 0) throw new Error('Party is empty')
 
   const client = getClient()
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: NURSE_JOY_SYSTEM,
+    generationConfig: { temperature: 0.7 },
+  })
 
   const partyList = party
     .map((s) => {
@@ -112,7 +116,7 @@ export async function askNurseJoy(
       `\n\nUse the patient history to personalise your recommendation. Avoid strains that had negative reactions unless specifically asked. Reference relevant history when appropriate.`
     : ''
 
-  const prompt = `${NURSE_JOY_SYSTEM}${notesBlock}${memoryBlock}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
+  const prompt = `My party:\n${partyList}${notesBlock}${memoryBlock}\n\nWhat I want: ${desiredEffect}`
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
@@ -122,7 +126,7 @@ export async function askNurseJoy(
 
 const PROFESSOR_TOKE_SYSTEM = `You are Professor Toke, a Pokémon-style botany expert. The user will give you their 'party' of available cannabis strains and what effect they want. You MUST reply in short, punchy, 8-bit RPG dialogue (e.g., 'Hello there! Welcome to the world of Smokémon!'). Your response MUST include:
 - Which specific strain from their party they should choose.
-- The exact optimal vaping temperature to achieve their desired effect.
+- The exact optimal vaping temperature in Celsius (never Fahrenheit) to achieve their desired effect.
 - The specific dominant terpenes in that strain that will help them.
 - A brief explanation of WHY that temperature activates those specific terpenes.`
 
@@ -140,7 +144,11 @@ export async function askProfessorToke(
   if (party.length === 0) throw new Error('Party is empty')
 
   const client = getClient()
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: PROFESSOR_TOKE_SYSTEM,
+    generationConfig: { temperature: 0.8 },
+  })
 
   const partyList = party
     .map((s) => {
@@ -152,7 +160,7 @@ export async function askProfessorToke(
     })
     .join('\n')
 
-  const prompt = `${PROFESSOR_TOKE_SYSTEM}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
+  const prompt = `My party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
@@ -174,7 +182,7 @@ BEST FOR
 List 3 specific use cases or moments this combination is ideal for. Be practical and concrete (e.g. "Evening wind-down before bed", "Creative work without anxiety", "Social situations where you want to stay present").
 
 MIXING TIP
-One practical suggestion: ideal vaporiser temperature for this blend, a recommended ratio of strain A to strain B, or a timing note. Keep it to 1-2 sentences.
+One practical suggestion: ideal vaporiser temperature for this blend in Celsius (never Fahrenheit), a recommended ratio of strain A to strain B, or a timing note. Keep it to 1-2 sentences.
 
 Keep Professor Oak's warm, enthusiastic tone throughout. Address the trainer directly.`
 
@@ -195,7 +203,10 @@ export async function generateMixSuggestions(
 ): Promise<MixSuggestion[]> {
   if (party.length < 2) throw new Error('Need at least 2 strains')
   const client = getClient()
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: { temperature: 0.4 },
+  })
 
   const partyList = party
     .map((s) => {
@@ -215,6 +226,8 @@ export async function generateMixSuggestions(
 The trainer wants: "${goal}"
 
 From the party below, suggest ${count} DIFFERENT pairings that best match this goal. Rank them from best match to least. Each pairing must use a different combination of strains.
+
+Base your pairings on actual terpene science — consider how the dominant terpenes in each strain interact with each other and with the cannabinoid profiles to produce the desired effect.
 
 Respond with ONLY a valid JSON array, no markdown, no code fences:
 [
@@ -253,7 +266,11 @@ export async function mixStrains(
   strainB: EnrichedStrain,
 ): Promise<string> {
   const client = getClient()
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: MIXED_SALAD_SYSTEM,
+    generationConfig: { temperature: 0.5 },
+  })
 
   const fmt = (s: EnrichedStrain) => {
     const parts = [`${s.name} (${s.type ?? 'hybrid'}`]
@@ -265,15 +282,17 @@ export async function mixStrains(
     return parts[0]
   }
 
-  const prompt = `${MIXED_SALAD_SYSTEM}\n\nStrain A: ${fmt(strainA)}\nStrain B: ${fmt(strainB)}`
+  const prompt = `Strain A: ${fmt(strainA)}\nStrain B: ${fmt(strainB)}`
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
 }
 
 // ── Strain lookup ──────────────────────────────────────────────────────────────
 
+const STRAIN_LOOKUP_SYSTEM = `You are a cannabis strain encyclopedia with expert-level knowledge of genetics, chemotypes, and terpene profiles. Your job is to return accurate, well-researched data. Only state what is genuinely known about the strain — do not fabricate lineage or breeder details. For THC, provide the typical range midpoint based on documented test results.`
+
 const STRAIN_LOOKUP_PROMPT = (name: string) =>
-  `You are a cannabis strain encyclopedia. Provide accurate data for the strain "${name}".
+  `Provide accurate data for the cannabis strain "${name}".
 Respond ONLY with a single valid JSON object. Use null for any unknown fields EXCEPT thc — always provide a best-estimate THC % as a number.
 {
   "thc": <typical THC % as number — required, use best estimate if exact value unknown>,
@@ -286,7 +305,11 @@ Respond ONLY with a single valid JSON object. Use null for any unknown fields EX
 
 export async function lookupStrainData(name: string): Promise<StrainLookupResult> {
   const client = getClient()
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: STRAIN_LOOKUP_SYSTEM,
+    generationConfig: { temperature: 0.1 },
+  })
   const result = await model.generateContent(STRAIN_LOOKUP_PROMPT(name))
   const text = result.response.text().trim()
   const jsonMatch = text.match(/\{[\s\S]*\}/)
