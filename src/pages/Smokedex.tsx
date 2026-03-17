@@ -6,6 +6,8 @@ import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
 import { lookupStrainData } from '../services/gemini'
 import type { StrainLookupResult } from '../services/gemini'
+import { BudSprite, ALL_BUD_DESIGNS, getBudDesign } from '../components/BudSprite'
+import type { BudContext } from '../components/BudSprite'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -41,41 +43,203 @@ function typeColor(type?: StrainEntry['type']): string {
   return GBC_MUTED
 }
 
-const BALL_SPRITES: Record<string, string> = {
-  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
-  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
-  indica: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
+
+// ── Strain edit form ──────────────────────────────────────────────────────────
+
+const EDIT_LABEL: React.CSSProperties = {
+  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+  fontSize: 8, color: GBC_MUTED, marginBottom: 5, display: 'block',
 }
 
-function TypeSprite({ type, size = 24 }: { type?: StrainEntry['type']; size?: number }) {
-  const src = type ? BALL_SPRITES[type] : BALL_SPRITES['hybrid']
+function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
+  strain: StrainEntry
+  dbContext?: BudContext
+  onSave: (updates: Partial<StrainEntry>) => void
+  onCancel: () => void
+}) {
+  const [name,     setName]     = useState(strain.name)
+  const [type,     setType]     = useState<StrainEntry['type']>(strain.type)
+  const [thc,      setThc]      = useState(strain.thc?.toString() ?? '')
+  const [cbd,      setCbd]      = useState(strain.cbd?.toString() ?? '')
+  const [amount,   setAmount]   = useState(strain.amount ?? '')
+  const [notes,    setNotes]    = useState(strain.notes ?? '')
+  const [inStock,  setInStock]  = useState(strain.inStock)
+  const [budDesign, setBudDesign] = useState(strain.budDesign ?? '')
+
+  const autoDesign = getBudDesign(strain.name, strain.type, dbContext)
+
+  const handleSave = () => {
+    onSave({
+      name:      name.trim() || strain.name,
+      type,
+      thc:       thc  ? parseFloat(thc)  : undefined,
+      cbd:       cbd  ? parseFloat(cbd)  : undefined,
+      amount:    amount.trim()  || undefined,
+      notes:     notes.trim()   || undefined,
+      inStock,
+      budDesign: budDesign || undefined,
+    })
+  }
+
+  const typeBtn = (t: StrainEntry['type']) => ({
+    fontFamily: "'PokemonGb', 'Press Start 2P', monospace" as const,
+    fontSize: 9, padding: '8px 10px', cursor: 'pointer', minHeight: 44, flex: 1,
+    border: `2px solid ${type === t ? typeColor(t) : GBC_DARKEST}`,
+    background: type === t ? 'rgba(132,204,22,0.1)' : 'transparent',
+    color: type === t ? typeColor(t) : GBC_MUTED,
+  })
+
   return (
-    <img
-      src={src}
-      alt={type ?? 'unknown'}
-      width={size}
-      height={size}
-      style={{
-        width: size,
-        height: size,
-        imageRendering: 'pixelated',
-        flexShrink: 0,
-        display: 'block',
-      }}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Name */}
+      <div>
+        <span style={EDIT_LABEL}>NAME</span>
+        <input
+          type="text" value={name} onChange={(e) => setName(e.target.value)}
+          style={{ ...inputBase, width: '100%', boxSizing: 'border-box' }}
+        />
+      </div>
+
+      {/* Type */}
+      <div>
+        <span style={EDIT_LABEL}>TYPE</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['sativa', 'indica', 'hybrid'] as const).map((t) => (
+            <button key={t} onClick={() => setType(type === t ? undefined : t)} style={typeBtn(t)}>
+              {t.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* THC + CBD */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <span style={EDIT_LABEL}>THC %</span>
+          <input type="number" min={0} max={100} step={0.1} value={thc}
+            onChange={(e) => setThc(e.target.value)}
+            style={{ ...inputBase, width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={EDIT_LABEL}>CBD %</span>
+          <input type="number" min={0} max={100} step={0.1} value={cbd}
+            onChange={(e) => setCbd(e.target.value)}
+            style={{ ...inputBase, width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+      </div>
+
+      {/* In Stock + Amount */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+        <button
+          onClick={() => setInStock((v) => !v)}
+          style={{
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+            padding: '8px 10px', minHeight: 44, cursor: 'pointer', flexShrink: 0,
+            border: `2px solid ${inStock ? GBC_GREEN : GBC_DARKEST}`,
+            background: inStock ? 'rgba(132,204,22,0.1)' : 'transparent',
+            color: inStock ? GBC_GREEN : GBC_MUTED,
+          }}
+        >
+          {inStock ? '● IN STOCK' : '○ OUT'}
+        </button>
+        <div style={{ flex: 1 }}>
+          <span style={EDIT_LABEL}>AMOUNT</span>
+          <input type="text" value={amount} placeholder="e.g. 3.5g"
+            onChange={(e) => setAmount(e.target.value)}
+            style={{ ...inputBase, width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div>
+        <span style={EDIT_LABEL}>NOTES</span>
+        <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)}
+          style={{ ...inputBase, resize: 'none', width: '100%', boxSizing: 'border-box', lineHeight: 1.6 }}
+        />
+      </div>
+
+      {/* Bud design picker */}
+      <div>
+        <span style={EDIT_LABEL}>BUD DESIGN</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {/* AUTO option */}
+          <button
+            onClick={() => setBudDesign('')}
+            style={{
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7,
+              minWidth: 44, minHeight: 44, padding: '4px 6px', cursor: 'pointer',
+              border: `2px solid ${budDesign === '' ? GBC_GREEN : GBC_DARKEST}`,
+              background: budDesign === '' ? 'rgba(132,204,22,0.15)' : 'transparent',
+              color: budDesign === '' ? GBC_GREEN : GBC_MUTED,
+            }}
+          >AUTO</button>
+          {/* 24 designs */}
+          {ALL_BUD_DESIGNS.map((design) => (
+            <button
+              key={design}
+              onClick={() => setBudDesign(budDesign === design ? '' : design)}
+              title={design.replace(/_/g, ' ')}
+              style={{
+                minWidth: 44, minHeight: 44, padding: 4, cursor: 'pointer',
+                border: `2px solid ${budDesign === design ? GBC_GREEN : GBC_DARKEST}`,
+                background: budDesign === design ? 'rgba(132,204,22,0.15)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <BudSprite name={strain.name} type={type} size={28} budDesign={design} />
+            </button>
+          ))}
+        </div>
+        <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginTop: 6 }}>
+          {budDesign
+            ? budDesign.replace(/_/g, ' ').toUpperCase()
+            : `AUTO: ${autoDesign.replace(/_/g, ' ').toUpperCase()}`}
+        </div>
+      </div>
+
+      {/* Save / Cancel */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={handleSave}
+          style={{
+            flex: 1, fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+            fontSize: 11, padding: '12px 0', minHeight: 44, cursor: 'pointer',
+            border: `3px solid ${GBC_GREEN}`, background: GBC_GREEN, color: GBC_BG,
+            boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+          }}
+        >SAVE</button>
+        <button
+          onClick={onCancel}
+          style={{
+            flex: 1, fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+            fontSize: 11, padding: '12px 0', minHeight: 44, cursor: 'pointer',
+            border: `3px solid ${GBC_DARKEST}`, background: 'transparent', color: GBC_MUTED,
+          }}
+        >CANCEL</button>
+      </div>
+    </div>
   )
 }
+
+// ── PC stash list ──────────────────────────────────────────────────────────────
 
 function StashList({
   strains,
   db,
   onDelete,
+  onUpdate,
 }: {
   strains: StrainEntry[]
   db: StrainRecord[]
   onDelete: (id: string) => void
+  onUpdate: (id: string, updates: Partial<StrainEntry>) => void
 }) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
     return db.find((d) => String(d.Strain).toLowerCase().replace(/[^a-z0-9]/g, '') === norm)
@@ -90,19 +254,17 @@ function StashList({
         const cbd = s.cbd ?? dbe?.cbd
         const fill = thc != null ? Math.min(thc / 40, 1) : 1
 
+        const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
+
         return (
           <div key={s.id} style={{ ...pokeBox, padding: '14px' }}>
 
-            {/* Row 1: sprite + name + delete */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <TypeSprite type={s.type} />
+            {/* Row 1: sprite + name + edit/delete */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editingId === s.id ? 14 : 10 }}>
+              <BudSprite name={s.name} type={s.type} size={28} context={dbCtx} budDesign={s.budDesign} />
               <span style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 13,
-                color: col,
-                flex: 1,
-                lineHeight: 1.5,
-                wordBreak: 'break-word',
+                fontSize: 13, color: col, flex: 1, lineHeight: 1.5, wordBreak: 'break-word',
               }}>
                 {s.name.toUpperCase()}
               </span>
@@ -110,39 +272,47 @@ function StashList({
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                   <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button
-                      onClick={() => { onDelete(s.id); setConfirmDeleteId(null) }}
-                      style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
-                    >YES</button>
-                    <button
-                      onClick={() => setConfirmDeleteId(null)}
-                      style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}
-                    >NO</button>
+                    <button onClick={() => { onDelete(s.id); setConfirmDeleteId(null) }}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}>YES</button>
+                    <button onClick={() => setConfirmDeleteId(null)}
+                      style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}>NO</button>
                   </div>
                 </div>
               ) : (
-                <button
-                  onClick={() => setConfirmDeleteId(s.id)}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${GBC_DARKEST}`,
-                    color: GBC_MUTED,
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 9,
-                    padding: '6px 8px',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    minWidth: 44,
-                    minHeight: 44,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  [x]
-                </button>
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                  <button
+                    onClick={() => setEditingId(editingId === s.id ? null : s.id)}
+                    style={{
+                      background: editingId === s.id ? 'rgba(132,204,22,0.1)' : 'transparent',
+                      border: `1px solid ${editingId === s.id ? GBC_GREEN : GBC_DARKEST}`,
+                      color: editingId === s.id ? GBC_GREEN : GBC_MUTED,
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+                      padding: '6px 8px', cursor: 'pointer', minWidth: 44, minHeight: 44,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >EDIT</button>
+                  <button onClick={() => setConfirmDeleteId(s.id)}
+                    style={{
+                      background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED,
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+                      padding: '6px 8px', cursor: 'pointer', minWidth: 44, minHeight: 44,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>[x]</button>
+                </div>
               )}
             </div>
+
+            {/* Inline edit form */}
+            {editingId === s.id && (
+              <StrainEditForm
+                strain={s}
+                dbContext={dbCtx}
+                onSave={(updates) => { onUpdate(s.id, updates); setEditingId(null) }}
+                onCancel={() => setEditingId(null)}
+              />
+            )}
+
+            {editingId !== s.id && (<>
 
             {/* Row 2: HP bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -196,6 +366,7 @@ function StashList({
                 {s.notes}
               </div>
             )}
+            </>)}
           </div>
         )
       })}
@@ -209,13 +380,16 @@ function PartyView({
   party,
   db,
   onDelete,
+  onUpdate,
 }: {
   party: StrainEntry[]
   db: StrainRecord[]
   onDelete: (id: string) => void
+  onUpdate: (id: string, updates: Partial<StrainEntry>) => void
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(party[0]?.id ?? null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
 
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -224,6 +398,7 @@ function PartyView({
 
   const selected = party.find((s) => s.id === selectedId) ?? party[0] ?? null
   const selDb = selected ? lookupDb(selected.name) : undefined
+  const selDbCtx: BudContext | undefined = selDb ? { description: selDb.Description, effects: selDb.Effects, terpenes: selDb.terpenes, flavor: selDb.Flavor } : undefined
 
   if (party.length === 0) {
     return (
@@ -244,76 +419,79 @@ function PartyView({
       {/* Selected strain — expanded card */}
       {selected && (
         <div style={{ ...pokeBox, padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <TypeSprite type={selected.type} />
+          {/* Header row: sprite + name + EDIT button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editing ? 14 : 10 }}>
+            <BudSprite name={selected.name} type={selected.type} size={36} context={selDbCtx} budDesign={selected.budDesign} />
             <div style={{ flex: 1 }}>
-              <div style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 14,
-                color: typeColor(selected.type),
-                lineHeight: 1.5,
-                wordBreak: 'break-word',
-              }}>
+              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: typeColor(selected.type), lineHeight: 1.5, wordBreak: 'break-word' }}>
                 {selected.name.toUpperCase()}
               </div>
-              {selected.type && (
-                <span style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 9,
-                  border: `2px solid ${typeColor(selected.type)}`,
-                  color: typeColor(selected.type),
-                  padding: '2px 6px',
-                  display: 'inline-block',
-                  marginTop: 6,
-                }}>
+              {selected.type && !editing && (
+                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${typeColor(selected.type)}`, color: typeColor(selected.type), padding: '2px 6px', display: 'inline-block', marginTop: 6 }}>
                   {selected.type.toUpperCase()}
                 </span>
               )}
             </div>
+            <button
+              onClick={() => setEditing((v) => !v)}
+              style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+                padding: '6px 8px', minWidth: 44, minHeight: 44, cursor: 'pointer', flexShrink: 0,
+                border: `1px solid ${editing ? GBC_GREEN : GBC_DARKEST}`,
+                background: editing ? 'rgba(132,204,22,0.1)' : 'transparent',
+                color: editing ? GBC_GREEN : GBC_MUTED,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >EDIT</button>
           </div>
 
-          {/* HP bar */}
-          {(() => {
-            const thc = selected.thc ?? selDb?.thc
-            const fill = thc != null ? Math.min(thc / 40, 1) : 1
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
-                <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
-                </div>
-                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
-                  {thc != null ? `${thc}%` : '--'}
-                </span>
-              </div>
-            )
-          })()}
+          {/* Edit form */}
+          {editing && selected && (
+            <StrainEditForm
+              strain={selected}
+              dbContext={selDbCtx}
+              onSave={(updates) => { onUpdate(selected.id, updates); setEditing(false) }}
+              onCancel={() => setEditing(false)}
+            />
+          )}
 
-          {/* CBD / medical / terpenes */}
-          {(selected.cbd ?? selDb?.cbd) != null && (
-            <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
-              CBD {selected.cbd ?? selDb?.cbd}%
-            </div>
-          )}
-          {selDb?.medical && (
-            <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5, marginBottom: 6 }}>
-              RX: {selDb.medical}
-            </div>
-          )}
-          {selDb?.terpenes && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
-              {selDb.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
-                <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>
-                  {t.toUpperCase()}
-                </span>
-              ))}
-            </div>
-          )}
-          {selected.notes && (
-            <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>
-              {selected.notes}
-            </div>
-          )}
+          {/* Normal detail view */}
+          {!editing && (<>
+            {/* HP bar */}
+            {(() => {
+              const thc = selected.thc ?? selDb?.thc
+              const fill = thc != null ? Math.min(thc / 40, 1) : 1
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+                  <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
+                  </div>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
+                    {thc != null ? `${thc}%` : '--'}
+                  </span>
+                </div>
+              )
+            })()}
+            {(selected.cbd ?? selDb?.cbd) != null && (
+              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
+                CBD {selected.cbd ?? selDb?.cbd}%
+              </div>
+            )}
+            {selDb?.medical && (
+              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5, marginBottom: 6 }}>RX: {selDb.medical}</div>
+            )}
+            {selDb?.terpenes && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                {selDb.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
+                  <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
+                ))}
+              </div>
+            )}
+            {selected.notes && (
+              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{selected.notes}</div>
+            )}
+          </>)}
         </div>
       )}
 
@@ -340,7 +518,7 @@ function PartyView({
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <TypeSprite type={s.type} />
+              <BudSprite name={s.name} type={s.type} size={24} context={dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined} budDesign={s.budDesign} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -993,7 +1171,7 @@ const emptyForm = {
 }
 
 export default function Smokedex() {
-  const { strains, addStrain, deleteStrain } = useStash()
+  const { strains, addStrain, updateStrain, deleteStrain } = useStash()
   const { db } = useStrainDb()
   const [tab, setTab] = useState<'party' | 'pc' | 'dex' | 'add'>('party')
   const [confirmPurge, setConfirmPurge] = useState(false)
@@ -1213,6 +1391,7 @@ export default function Smokedex() {
           party={party}
           db={db}
           onDelete={deleteStrain}
+          onUpdate={updateStrain}
         />
       )}
 
@@ -1260,7 +1439,7 @@ export default function Smokedex() {
                 </div>
               )
             })()}
-            <StashList strains={strains} db={db} onDelete={deleteStrain} />
+            <StashList strains={strains} db={db} onDelete={deleteStrain} onUpdate={updateStrain} />
           </>
         )
       )}

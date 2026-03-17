@@ -28,23 +28,48 @@ function getClient(): GoogleGenerativeAI {
 
 // ── Nurse Joy ──────────────────────────────────────────────────────────────────
 
-const NURSE_JOY_SYSTEM = `You are Nurse Joy from the Pokémon games — warm, caring, and professional. The user will give you their 'party' of available cannabis strains and what effect they want. You MUST reply in the style of Nurse Joy's in-game dialogue: calm, reassuring, and knowledgeable, as if treating a patient at the Pokémon Center. Use her signature phrases ("Welcome to the Pokémon Center!", "We hope to see you again!", "Your party has been healed!") adapted to the context. Your response MUST include:
-- Which specific strain from their party you recommend and why.
-- The exact optimal vaping temperature to achieve their desired effect.
-- The specific dominant terpenes in that strain that will help them.
-- A brief caring explanation of WHY that temperature activates those terpenes.
-Keep the tone gentle, reassuring, and in-character as Nurse Joy throughout.`
+export interface EnrichedStrain {
+  name: string
+  type?: string
+  thc?: number
+  cbd?: number
+  terpenes?: string
+  effects?: string
+  medical?: string
+  notes?: string
+}
+
+const NURSE_JOY_SYSTEM = `You are Nurse Joy from the Pokémon games — warm, caring, and highly knowledgeable. The user gives you their party of cannabis strains with detailed botanical data. Reply in Nurse Joy's signature style (calm, reassuring, professional) BUT provide rich, substantive information. Use her phrases adapted to context ("Welcome!", "Your party is in good hands!", etc.).
+
+Structure your response with these exact section headers followed by the content:
+
+RECOMMENDATION
+Which strain you recommend and precisely why it matches their request. Reference the specific THC/CBD ratio and how it fits their needs.
+
+TERPENE SCIENCE
+For each of the 2-3 dominant terpenes in the recommended strain: name, its aroma, how it binds in the body, and exactly why it contributes to the desired effect. Explain the entourage effect between terpenes and cannabinoids.
+
+TEMPERATURE GUIDE
+The optimal vaporisation temperature in Celsius. Explain what activates at that temperature and why — which terpenes boil off, which cannabinoids decarboxylate, and what the user will experience as a result.
+
+STRAIN HISTORY
+The origin story: genetics and lineage, who bred it and where, how it got its name, and what makes it distinctive. 2-4 sentences.
+
+WHAT TO EXPECT
+Vaping onset (typically 1-3 min), how effects develop, peak duration, and any cautions. What makes this strain's experience unique.
+
+Keep Nurse Joy's tone warm and caring throughout. Be genuinely informative — this is a patient asking for healthcare guidance.`
 
 /**
  * Ask Nurse Joy to recommend a strain from the user's party.
  *
  * @param desiredEffect - what the user wants to feel / do
- * @param party         - the user's in-stock stash strains
- * @returns Nurse Joy's RPG-style dialogue string
+ * @param party         - enriched strain data including terpenes, effects, medical
+ * @returns Nurse Joy's detailed dialogue string
  */
 export async function askNurseJoy(
   desiredEffect: string,
-  party: StrainEntry[],
+  party: EnrichedStrain[],
 ): Promise<string> {
   if (party.length === 0) throw new Error('Party is empty')
 
@@ -53,11 +78,15 @@ export async function askNurseJoy(
 
   const partyList = party
     .map((s) => {
-      const parts = [`- ${s.name}`, `(${s.type ?? 'unknown type'}`]
-      if (s.thc != null) parts.push(`THC: ${s.thc}%`)
-      if (s.cbd != null) parts.push(`CBD: ${s.cbd}%`)
-      if (s.notes)       parts.push(`notes: "${s.notes}"`)
-      return parts[0] + ' ' + parts.slice(1).join(', ') + ')'
+      const parts: string[] = [`- ${s.name} (${s.type ?? 'unknown type'}`]
+      if (s.thc != null)    parts[0] += `, THC: ${s.thc}%`
+      if (s.cbd != null)    parts[0] += `, CBD: ${s.cbd}%`
+      if (s.terpenes)       parts[0] += `, terpenes: ${s.terpenes}`
+      if (s.effects)        parts[0] += `, effects: ${s.effects}`
+      if (s.medical)        parts[0] += `, medical uses: ${s.medical}`
+      if (s.notes)          parts[0] += `, notes: "${s.notes}"`
+      parts[0] += ')'
+      return parts[0]
     })
     .join('\n')
 

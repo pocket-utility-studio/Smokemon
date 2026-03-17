@@ -3,7 +3,11 @@ import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
+import { useStrainDb } from '../hooks/useStrainDb'
+import type { StrainRecord } from '../hooks/useStrainDb'
 import { askNurseJoy } from '../services/gemini'
+import type { EnrichedStrain } from '../services/gemini'
+import { BudSprite } from '../components/BudSprite'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -225,20 +229,41 @@ function NurseJoyDialogue({ text }: { text: string }) {
 
 // ── Party card ────────────────────────────────────────────────────────────────
 
-function PartyCard({ name, type, thc, inStock }: {
-  name: string; type?: string; thc?: number; inStock: boolean
+function PartyCard({ name, type, thc, inStock, dbMatch }: {
+  name: string; type?: string; thc?: number; inStock: boolean; dbMatch?: StrainRecord
 }) {
+  const [expanded, setExpanded] = useState(false)
   const col = type === 'sativa' ? GBC_GREEN : type === 'indica' ? GBC_VIOLET : GBC_AMBER
+
+  const terpenes = dbMatch?.terpenes
+  const effects = dbMatch?.Effects
+  const medical = dbMatch?.medical
+  const cbd = dbMatch?.cbd
+  const description = dbMatch?.Description
+
+  const terpeneList = terpenes
+    ? terpenes.split(',').map((t) => t.trim()).filter(Boolean)
+    : []
+
   return (
-    <div style={{
-      ...pokeBox,
-      padding: '8px 10px',
-      opacity: inStock ? 1 : 0.4,
-      flex: '1 1 calc(50% - 4px)',
-      minWidth: 0,
-    }}>
-      <div style={{ fontFamily: FONT, fontSize: 9, color: col, marginBottom: 4, wordBreak: 'break-word', lineHeight: 1.5 }}>
-        {name.toUpperCase()}
+    <div
+      onClick={() => setExpanded((v) => !v)}
+      style={{
+        ...pokeBox,
+        padding: '10px 10px',
+        opacity: inStock ? 1 : 0.4,
+        flex: expanded ? '1 1 100%' : '1 1 calc(50% - 4px)',
+        minWidth: 0,
+        cursor: 'pointer',
+        transition: 'flex 0.15s',
+      }}
+    >
+      {/* Name + sprite row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <BudSprite name={name} type={type} size={20} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
+        <div style={{ fontFamily: FONT, fontSize: 9, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
+          {name.toUpperCase()}
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
         {type && (
@@ -249,18 +274,78 @@ function PartyCard({ name, type, thc, inStock }: {
         {thc != null && (
           <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>THC {thc}%</span>
         )}
+        {cbd != null && (
+          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>CBD {cbd}%</span>
+        )}
         {!inStock && (
           <span style={{ fontFamily: FONT, fontSize: 7, color: '#e84040' }}>OUT</span>
         )}
+        <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_DARKEST, marginLeft: 'auto' }}>
+          {expanded ? '▲' : '▼'}
+        </span>
       </div>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div style={{ marginTop: 10, borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+          {terpeneList.length > 0 && (
+            <div>
+              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>TERPENES</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {terpeneList.map((t) => (
+                  <span key={t} style={{
+                    fontFamily: FONT, fontSize: 7, color: GBC_VIOLET,
+                    border: `1px solid ${GBC_VIOLET}`, padding: '2px 5px',
+                  }}>{t.toUpperCase()}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {effects && (
+            <div>
+              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.5 }}>{effects}</div>
+            </div>
+          )}
+
+          {medical && (
+            <div>
+              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>MEDICAL</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.5 }}>{medical}</div>
+            </div>
+          )}
+
+          {description && (
+            <div>
+              <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, marginBottom: 4 }}>ABOUT</div>
+              <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.6 }}>{description}</div>
+            </div>
+          )}
+
+          {!terpenes && !effects && !medical && !description && (
+            <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_DARKEST }}>
+              No database entry found for this strain.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
+function findDbMatch(name: string, db: StrainRecord[]): StrainRecord | undefined {
+  const norm = (s: string) => s.toLowerCase().replace(/[-_\s]+/g, '')
+  const target = norm(name)
+  return db.find((r) => norm(String(r.Strain)) === target)
+}
+
 export default function PokeCenter() {
   const { strains } = useStash()
+  const { db } = useStrainDb()
   const [entered, setEntered] = useState(false)
   const [desiredEffect, setDesiredEffect] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -295,7 +380,20 @@ export default function PokeCenter() {
     setResponse('')
     setError('')
     try {
-      const result = await askNurseJoy(fullQuery, party)
+      const enriched: EnrichedStrain[] = party.map((s) => {
+        const match = findDbMatch(s.name, db)
+        return {
+          name: s.name,
+          type: s.type ?? match?.Type,
+          thc: s.thc ?? match?.thc,
+          cbd: s.cbd ?? match?.cbd,
+          terpenes: match?.terpenes,
+          effects: match?.Effects,
+          medical: match?.medical,
+          notes: s.notes,
+        }
+      })
+      const result = await askNurseJoy(fullQuery, enriched)
       setResponse(result)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong.'
@@ -376,8 +474,13 @@ export default function PokeCenter() {
 
         {/* Party */}
         <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
-          <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
-            YOUR PARTY ({party.length} IN STOCK)
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
+            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>
+              YOUR PARTY ({party.length} IN STOCK)
+            </span>
+            {party.length > 0 && (
+              <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_DARKEST }}>TAP TO EXPAND</span>
+            )}
           </div>
           {party.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 9, color: GBC_DARKEST, lineHeight: 1.8 }}>
@@ -386,7 +489,7 @@ export default function PokeCenter() {
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {party.map((s) => (
-                <PartyCard key={s.id} name={s.name} type={s.type} thc={s.thc} inStock={s.inStock} />
+                <PartyCard key={s.id} name={s.name} type={s.type} thc={s.thc} inStock={s.inStock} dbMatch={findDbMatch(s.name, db)} />
               ))}
             </div>
           )}

@@ -18,6 +18,7 @@ export interface StrainEntry {
   dateAdded: string
   inStock: boolean
   amount?: string
+  budDesign?: string
 }
 
 const STORAGE_KEY = 'utilhub_stash'
