@@ -247,14 +247,14 @@ function parseResponse(text: string): { header: string; body: string }[] {
 // ── Nurse Joy dialogue box ────────────────────────────────────────────────────
 
 function NurseJoyDialogue({ text }: { text: string }) {
-  const { displayed, done } = useTypewriter(text)
+  const allSections = parseResponse(text)
+  const firstBody = allSections[0]?.body ?? ''
+  const { displayed, done } = useTypewriter(firstBody)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [displayed])
-
-  const sections = parseResponse(displayed)
+    if (done) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [done])
 
   return (
     <div style={{ ...pokeBox, padding: '14px' }}>
@@ -269,9 +269,11 @@ function NurseJoyDialogue({ text }: { text: string }) {
 
       {/* Sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {sections.map((sec, i) => {
-          const isLast = i === sections.length - 1
+        {allSections.map((sec, i) => {
           const col = sec.header ? (SECTION_COLORS[sec.header] ?? GBC_GREEN) : GBC_TEXT
+          // First section gets typewriter; rest appear instantly
+          const body = i === 0 ? displayed : sec.body
+          const showCursor = i === 0 && !done
           return (
             <div key={i}>
               {sec.header && (
@@ -288,8 +290,8 @@ function NurseJoyDialogue({ text }: { text: string }) {
                 fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT,
                 lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap',
               }}>
-                {sec.body}
-                {isLast && !done && (
+                {body}
+                {showCursor && (
                   <span className="gbc-blink" style={{ color: GBC_GREEN }}>█</span>
                 )}
               </p>

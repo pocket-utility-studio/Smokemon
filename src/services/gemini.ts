@@ -50,7 +50,7 @@ TERPENE SCIENCE
 For each of the 2-3 dominant terpenes in the recommended strain: name, its aroma, how it binds in the body, and exactly why it contributes to the desired effect. Explain the entourage effect between terpenes and cannabinoids.
 
 TEMPERATURE GUIDE
-The optimal vaporisation temperature in Celsius. Explain what activates at that temperature and why — which terpenes boil off, which cannabinoids decarboxylate, and what the user will experience as a result.
+The optimal vaporisation temperature in Celsius ONLY (never Fahrenheit). Explain what activates at that temperature and why — which terpenes boil off, which cannabinoids decarboxylate, and what the user will experience as a result.
 
 STRAIN HISTORY
 The origin story: genetics and lineage, who bred it and where, how it got its name, and what makes it distinctive. 2-4 sentences.
