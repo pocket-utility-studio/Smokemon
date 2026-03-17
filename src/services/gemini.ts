@@ -274,9 +274,9 @@ export async function mixStrains(
 
 const STRAIN_LOOKUP_PROMPT = (name: string) =>
   `You are a cannabis strain encyclopedia. Provide accurate data for the strain "${name}".
-Respond ONLY with a single valid JSON object. Use null for any unknown fields.
+Respond ONLY with a single valid JSON object. Use null for any unknown fields EXCEPT thc — always provide a best-estimate THC % as a number.
 {
-  "thc": <typical THC % as number|null>,
+  "thc": <typical THC % as number — required, use best estimate if exact value unknown>,
   "cbd": <typical CBD % as number|null>,
   "type": <"sativa"|"indica"|"hybrid"|null>,
   "terpenes": <"comma-separated dominant terpenes, e.g. Myrcene, Limonene, Caryophyllene"|null>,
@@ -293,7 +293,7 @@ export async function lookupStrainData(name: string): Promise<StrainLookupResult
   if (!jsonMatch) throw new Error('Unexpected response from AI')
   const data = JSON.parse(jsonMatch[0])
   const out: StrainLookupResult = {}
-  if (typeof data.thc === 'number')   out.thc = data.thc
+  out.thc = typeof data.thc === 'number' ? data.thc : 15
   if (typeof data.cbd === 'number')   out.cbd = data.cbd
   if (data.type === 'sativa' || data.type === 'indica' || data.type === 'hybrid') out.type = data.type
   if (typeof data.terpenes === 'string' && data.terpenes) out.terpenes = data.terpenes
