@@ -409,18 +409,14 @@ function PartyView({
   onDelete: (id: string) => void
   onUpdate: (id: string, updates: Partial<StrainEntry>) => void
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(party[0]?.id ?? null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [editing, setEditing] = useState(false)
 
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
     return db.find((d) => String(d.Strain).toLowerCase().replace(/[^a-z0-9]/g, '') === norm)
   }
-
-  const selected = party.find((s) => s.id === selectedId) ?? party[0] ?? null
-  const selDb = selected ? lookupDb(selected.name) : undefined
-  const selDbCtx: BudContext | undefined = selDb ? { description: selDb.Description, effects: selDb.Effects, terpenes: selDb.terpenes, flavor: selDb.Flavor } : undefined
 
   if (party.length === 0) {
     return (
@@ -438,88 +434,6 @@ function PartyView({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-      {/* Selected strain — expanded card */}
-      {selected && (
-        <div style={{ ...pokeBox, padding: '14px' }}>
-          {/* Header row: sprite + name + EDIT button */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editing ? 14 : 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              <TypeSprite type={selected.type} size={36} />
-              <BudSprite name={selected.name} type={selected.type} size={27} context={selDbCtx} budDesign={selected.budDesign} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: typeColor(selected.type), lineHeight: 1.5, wordBreak: 'break-word' }}>
-                {selected.name.toUpperCase()}
-              </div>
-              {selected.type && !editing && (
-                <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${typeColor(selected.type)}`, color: typeColor(selected.type), padding: '2px 6px', display: 'inline-block', marginTop: 6 }}>
-                  {selected.type.toUpperCase()}
-                </span>
-              )}
-            </div>
-            <button
-              onClick={() => setEditing((v) => !v)}
-              style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
-                padding: '6px 8px', minWidth: 44, minHeight: 44, cursor: 'pointer', flexShrink: 0,
-                border: `1px solid ${editing ? GBC_GREEN : GBC_DARKEST}`,
-                background: editing ? 'rgba(132,204,22,0.1)' : 'transparent',
-                color: editing ? GBC_GREEN : GBC_MUTED,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >EDIT</button>
-          </div>
-
-          {/* Edit form */}
-          {editing && selected && (
-            <StrainEditForm
-              strain={selected}
-              dbContext={selDbCtx}
-              onSave={(updates) => { onUpdate(selected.id, updates); setEditing(false) }}
-              onCancel={() => setEditing(false)}
-            />
-          )}
-
-          {/* Normal detail view */}
-          {!editing && (<>
-            {/* HP bar */}
-            {(() => {
-              const thc = selected.thc ?? selDb?.thc
-              const fill = thc != null ? Math.min(thc / 40, 1) : 1
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
-                  <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
-                  </div>
-                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
-                    {thc != null ? `${thc}%` : '--'}
-                  </span>
-                </div>
-              )
-            })()}
-            {(selected.cbd ?? selDb?.cbd) != null && (
-              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
-                CBD {selected.cbd ?? selDb?.cbd}%
-              </div>
-            )}
-            {selDb?.medical && (
-              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5, marginBottom: 6 }}>RX: {selDb.medical}</div>
-            )}
-            {selDb?.terpenes && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
-                {selDb.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
-                  <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
-                ))}
-              </div>
-            )}
-            {selected.notes && (
-              <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{selected.notes}</div>
-            )}
-          </>)}
-        </div>
-      )}
-
       {/* Party roster rows */}
       <div style={{ ...pokeBox, overflow: 'hidden' }}>
         {party.map((s, i) => {
@@ -527,82 +441,135 @@ function PartyView({
           const thc = s.thc ?? dbe?.thc
           const fill = thc != null ? Math.min(thc / 40, 1) : 1
           const col = typeColor(s.type)
-          const isSelected = s.id === selected?.id
+          const isExpanded = s.id === expandedId
+          const isEditing = s.id === editingId
+          const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
+
           return (
             <div
               key={s.id}
-              onClick={() => setSelectedId(s.id)}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '12px 14px',
                 borderBottom: i < party.length - 1 ? `1px solid ${GBC_DARKEST}` : 'none',
-                background: isSelected ? 'rgba(132,204,22,0.1)' : 'transparent',
-                borderLeft: isSelected ? `4px solid ${GBC_GREEN}` : '4px solid transparent',
-                WebkitTapHighlightColor: 'transparent',
+                background: isExpanded ? 'rgba(132,204,22,0.05)' : 'transparent',
+                borderLeft: isExpanded ? `4px solid ${GBC_GREEN}` : '4px solid transparent',
               }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                <TypeSprite type={s.type} size={24} />
-                <BudSprite name={s.name} type={s.type} size={18} context={dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined} budDesign={s.budDesign} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 11,
-                  color: isSelected ? GBC_GREEN : col,
-                  marginBottom: 5,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {isSelected ? '► ' : ''}{s.name.toUpperCase()}
+              {/* Collapsed row */}
+              <div
+                onClick={() => {
+                  setExpandedId(isExpanded ? null : s.id)
+                  if (isExpanded) setEditingId(null)
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                  <TypeSprite type={s.type} size={24} />
+                  <BudSprite name={s.name} type={s.type} size={18} context={dbCtx} budDesign={s.budDesign} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 80, height: 6, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
-                  </div>
-                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
-                    {thc != null ? `${thc}%` : '--'}
-                  </span>
-                </div>
-              </div>
-              {confirmDeleteId === s.id ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDelete(s.id); setConfirmDeleteId(null) }}
-                      style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
-                    >YES</button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
-                      style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
-                    >NO</button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(s.id) }}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${GBC_DARKEST}`,
-                    color: GBC_MUTED,
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
                     fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 9,
-                    padding: '8px 10px',
-                    cursor: 'pointer',
-                    minWidth: 44,
-                    minHeight: 44,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    WebkitTapHighlightColor: 'transparent' as unknown as string,
-                  }}
-                >
-                  [x]
-                </button>
+                    fontSize: 11, color: isExpanded ? GBC_GREEN : col,
+                    marginBottom: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {isExpanded ? '► ' : ''}{s.name.toUpperCase()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 80, height: 6, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
+                    </div>
+                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
+                      {thc != null ? `${thc}%` : '--'}
+                    </span>
+                  </div>
+                </div>
+                {confirmDeleteId === s.id ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={(e) => { e.stopPropagation(); onDelete(s.id); setConfirmDeleteId(null) }}
+                        style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
+                      >YES</button>
+                      <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                        style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44, WebkitTapHighlightColor: 'transparent' as unknown as string }}
+                      >NO</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(s.id) }}
+                    style={{
+                      background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED,
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+                      padding: '8px 10px', cursor: 'pointer', minWidth: 44, minHeight: 44,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      WebkitTapHighlightColor: 'transparent' as unknown as string,
+                    }}
+                  >[x]</button>
+                )}
+              </div>
+
+              {/* Expanded detail */}
+              {isExpanded && (
+                <div style={{ padding: '0 14px 14px' }}>
+                  {/* EDIT button */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+                    <button
+                      onClick={() => setEditingId(isEditing ? null : s.id)}
+                      style={{
+                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+                        padding: '6px 8px', minWidth: 44, minHeight: 44, cursor: 'pointer',
+                        border: `1px solid ${isEditing ? GBC_GREEN : GBC_DARKEST}`,
+                        background: isEditing ? 'rgba(132,204,22,0.1)' : 'transparent',
+                        color: isEditing ? GBC_GREEN : GBC_MUTED,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >EDIT</button>
+                  </div>
+
+                  {isEditing ? (
+                    <StrainEditForm
+                      strain={s}
+                      dbContext={dbCtx}
+                      onSave={(updates) => { onUpdate(s.id, updates); setEditingId(null) }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  ) : (<>
+                    {/* HP bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
+                      <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: GBC_GREEN }} />
+                      </div>
+                      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_TEXT, flexShrink: 0 }}>
+                        {thc != null ? `${thc}%` : '--'}
+                      </span>
+                    </div>
+                    {(s.cbd ?? dbe?.cbd) != null && (
+                      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, marginBottom: 6 }}>
+                        CBD {s.cbd ?? dbe?.cbd}%
+                      </div>
+                    )}
+                    {dbe?.medical && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_MUTED, lineHeight: 1.5, marginBottom: 6 }}>RX: {dbe.medical}</div>
+                    )}
+                    {dbe?.terpenes && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                        {dbe.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 4).map((t) => (
+                          <span key={t} style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, padding: '2px 5px', border: '1px solid #1e4a08', color: '#5a9a18' }}>{t.toUpperCase()}</span>
+                        ))}
+                      </div>
+                    )}
+                    {s.notes && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, opacity: 0.7, lineHeight: 1.5 }}>{s.notes}</div>
+                    )}
+                  </>)}
+                </div>
               )}
             </div>
           )
