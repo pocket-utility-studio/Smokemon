@@ -2,9 +2,8 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import Tesseract from 'tesseract.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
-import { useStrainDb, displayName } from '../hooks/useStrainDb'
+import { useStrainDb, displayName, fetchLiveStrain } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { lookupStrainData } from '../services/gemini'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -867,31 +866,28 @@ export default function Smokedex() {
   const [autoFillMsg, setAutoFillMsg] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const geminiKey = localStorage.getItem('gemini_api_key') ?? ''
-  const hasGeminiKey = geminiKey.length > 0
-
   const applyAutoFill = async (name: string) => {
     if (!name.trim() || autoFilling) return
     setAutoFilling(true)
     setAutoFillMsg('')
     try {
-      const data = await lookupStrainData(name.trim())
+      const data = await fetchLiveStrain(name.trim())
+      if (!data) { setAutoFillMsg('NOT IN DATABASE'); return }
       setForm((prev) => {
-        const noteParts: string[] = []
-        if (data.terpenes) noteParts.push(`Terpenes: ${data.terpenes}`)
-        if (data.effects)  noteParts.push(`Effects: ${data.effects}`)
-        const mergedNotes = [prev.notes.trim(), ...noteParts].filter(Boolean).join('\n')
+        const mergedNotes = [
+          prev.notes.trim(),
+          data.terpenes ? `Terpenes: ${data.terpenes}` : '',
+        ].filter(Boolean).join('\n')
         return {
           ...prev,
-          type:  prev.type  ?? data.type,
-          thc:   prev.thc   !== '' ? prev.thc  : data.thc  != null ? String(data.thc)  : prev.thc,
-          cbd:   prev.cbd   !== '' ? prev.cbd   : data.cbd  != null ? String(data.cbd)  : prev.cbd,
+          thc:   prev.thc !== '' ? prev.thc : data.thc  != null ? String(data.thc)  : prev.thc,
+          cbd:   prev.cbd !== '' ? prev.cbd : data.cbd  != null ? String(data.cbd)  : prev.cbd,
           notes: mergedNotes,
         }
       })
       setAutoFillMsg('FILLED!')
     } catch {
-      setAutoFillMsg('NO DATA FOUND')
+      setAutoFillMsg('ERROR')
     } finally {
       setAutoFilling(false)
       setTimeout(() => setAutoFillMsg(''), 3000)
@@ -957,8 +953,8 @@ export default function Smokedex() {
           cbd: ocrCbd || prev.cbd,
         }
       })
-      // Auto-fill from AI if we got a name but no THC/CBD from the label
-      if (parsedName && !ocrThc && !ocrCbd && hasGeminiKey) {
+      // Auto-fill from API if we got a name but no THC/CBD from the label
+      if (parsedName && !ocrThc && !ocrCbd) {
         await applyAutoFill(parsedName)
       }
     } catch {
@@ -1241,25 +1237,25 @@ export default function Smokedex() {
               </div>
             </div>
 
-            {/* Auto-fill from AI */}
+            {/* Auto-fill from API */}
             {form.name.trim().length >= 2 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button
                   onClick={() => applyAutoFill(form.name)}
-                  disabled={autoFilling || !hasGeminiKey}
+                  disabled={autoFilling}
                   style={{
                     fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
                     fontSize: 9,
                     padding: '8px 12px',
                     minHeight: 44,
                     flex: 1,
-                    border: `2px solid ${hasGeminiKey ? GBC_VIOLET : GBC_DARKEST}`,
-                    background: autoFilling ? 'rgba(167,139,250,0.1)' : 'transparent',
-                    color: hasGeminiKey ? GBC_VIOLET : GBC_DARKEST,
-                    cursor: hasGeminiKey && !autoFilling ? 'pointer' : 'not-allowed',
+                    border: `2px solid ${autoFilling ? GBC_DARKEST : GBC_MUTED}`,
+                    background: autoFilling ? 'rgba(74,122,16,0.1)' : 'transparent',
+                    color: autoFilling ? GBC_DARKEST : GBC_MUTED,
+                    cursor: autoFilling ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {autoFilling ? '► FILLING...' : '► AUTO-FILL FROM AI'}
+                  {autoFilling ? '► FETCHING...' : '► FETCH LAB DATA'}
                 </button>
                 {autoFillMsg && (
                   <span style={{
@@ -1269,14 +1265,6 @@ export default function Smokedex() {
                     flexShrink: 0,
                   }}>
                     {autoFillMsg}
-                  </span>
-                )}
-                {!hasGeminiKey && (
-                  <span style={{
-                    fontFamily: 'monospace', fontSize: 10,
-                    color: GBC_MUTED, lineHeight: 1.4, flex: 1,
-                  }}>
-                    Set API key in Smoké Center to enable
                   </span>
                 )}
               </div>
@@ -1405,7 +1393,7 @@ export default function Smokedex() {
               margin: 0,
               lineHeight: 1.6,
             }}>
-              Take a photo of your label to auto-fill the form. If THC/CBD aren't on the label, AI will look them up automatically.
+              Take a photo of your label to auto-fill the form. If THC/CBD aren't on the label, a lab database lookup runs automatically.
             </p>
 
             <input
