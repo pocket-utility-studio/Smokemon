@@ -276,20 +276,6 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
   )
 }
 
-// ── Item label helper ─────────────────────────────────────────────────────────
-// Maps a gram amount string to the closest Pokémon item name
-function getItemLabel(amountStr: string): string {
-  const g = parseFloat(amountStr)
-  if (isNaN(g)) return amountStr.toUpperCase()
-  let item: string
-  if (g <= 0)   item = 'ANTIDOTE'
-  else if (g <= 1)   item = 'POTION'
-  else if (g <= 3.5) item = 'SUPER POTION'
-  else if (g <= 7)   item = 'HYPER POTION'
-  else if (g <= 14)  item = 'MAX POTION'
-  else               item = 'FULL RESTORE'
-  return `[${item}] (${amountStr})`
-}
 
 // ── THC HP bar color ─────────────────────────────────────────────────────────
 // Caps at 35% (visual max). Color shifts green → yellow → orange → purple.
@@ -328,7 +314,6 @@ function StashList({
         const col = typeColor(s.type)
         const thc = s.thc ?? dbe?.thc
         const cbd = s.cbd ?? dbe?.cbd
-        const fill = thc != null ? Math.min(thc / 35, 1) : 1
 
         const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
 
@@ -393,18 +378,7 @@ function StashList({
 
             {editingId !== s.id && (<>
 
-            {/* Row 2: HP bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
-              <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: thcHpColor(thc) }} />
-              </div>
-              <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_TEXT, flexShrink: 0 }}>
-                {thc != null ? `${thc}%` : '--'}
-              </span>
-            </div>
-
-            {/* Row 3: type badge + stock + CBD */}
+            {/* Row 2: type badge + stock + CBD */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
               {s.type && (
                 <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, border: `2px solid ${col}`, color: col, padding: '3px 6px' }}>
@@ -472,6 +446,11 @@ function PartyView({
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [mixSlots, setMixSlots]           = useState<[string | null, string | null]>([null, null])
+  const [mixModes, setMixModes]           = useState<['party'|'search', 'party'|'search']>(['party', 'party'])
+  const [searchQueries, setSearchQueries] = useState<[string, string]>(['', ''])
+  const [searchResults, setSearchResults] = useState<[StrainRecord[], StrainRecord[]]>([[], []])
+  const [customStrains, setCustomStrains] = useState<[import('../services/gemini').EnrichedStrain|null, import('../services/gemini').EnrichedStrain|null]>([null, null])
+  const [lookupLoading, setLookupLoading] = useState<[boolean, boolean]>([false, false])
   const [mixResult, setMixResult]         = useState<string | null>(null)
   const [mixLoading, setMixLoading]       = useState(false)
   const [mixError, setMixError]           = useState<string | null>(null)
@@ -589,8 +568,6 @@ function PartyView({
       {selected && (() => {
         const dbe    = lookupDb(selected.name)
         const thc    = selected.thc ?? dbe?.thc
-        const fill   = thc != null ? Math.min(thc / 35, 1) : 1
-        const barCol = thcHpColor(thc)
         const col    = typeColor(selected.type)
         const dbCtx: BudContext | undefined = dbe
           ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor }
@@ -654,15 +631,8 @@ function PartyView({
                     </span>
                   )}
                   {selected.amount && (
-                    <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED }}>{getItemLabel(selected.amount)}</span>
+                    <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED }}>{selected.amount.toUpperCase()}</span>
                   )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, flexShrink: 0 }}>HP</span>
-                  <div style={{ flex: 1, height: 8, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: barCol }} />
-                  </div>
-                  <span style={{ fontFamily: PVSF, fontSize: 11, color: GBC_TEXT, flexShrink: 0 }}>{thc != null ? `${thc}%` : '--'}</span>
                 </div>
                 {(selected.cbd ?? dbe?.cbd) != null && (
                   <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 8 }}>CBD {selected.cbd ?? dbe?.cbd}%</div>
@@ -734,26 +704,58 @@ function PartyView({
         const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
         const findDb = (name: string) => db.find((d) => normName(String(d.Strain)) === normName(name))
 
+        const getSlotStrain = (slot: 0 | 1): import('../services/gemini').EnrichedStrain | null => {
+          if (mixModes[slot] === 'search') return customStrains[slot]
+          const id = mixSlots[slot]
+          const s = party.find((p) => p.id === id)
+          if (!s) return null
+          const d = findDb(s.name)
+          return { name: s.name, type: s.type ?? d?.Type, thc: s.thc ?? d?.thc, cbd: s.cbd ?? d?.cbd, terpenes: d?.terpenes, effects: d?.Effects }
+        }
+
         const handleMix = async () => {
-          const [idA, idB] = mixSlots
-          const sA = party.find((p) => p.id === idA)
-          const sB = party.find((p) => p.id === idB)
-          if (!sA || !sB) return
-          const dbA = findDb(sA.name)
-          const dbB = findDb(sB.name)
+          const eA = getSlotStrain(0)
+          const eB = getSlotStrain(1)
+          if (!eA || !eB) return
           setMixLoading(true)
           setMixResult(null)
           setMixError(null)
           try {
-            const r = await mixStrains(
-              { name: sA.name, type: sA.type ?? dbA?.Type, thc: sA.thc ?? dbA?.thc, cbd: sA.cbd ?? dbA?.cbd, terpenes: dbA?.terpenes, effects: dbA?.Effects },
-              { name: sB.name, type: sB.type ?? dbB?.Type, thc: sB.thc ?? dbB?.thc, cbd: sB.cbd ?? dbB?.cbd, terpenes: dbB?.terpenes, effects: dbB?.Effects },
-            )
+            const r = await mixStrains(eA, eB)
             setMixResult(r)
           } catch (e) {
             setMixError(e instanceof Error ? e.message : 'Error')
           } finally {
             setMixLoading(false)
+          }
+        }
+
+        const handleLookup = async (slot: 0 | 1) => {
+          const q = searchQueries[slot].trim()
+          if (!q) return
+          const next: [boolean, boolean] = [...lookupLoading]
+          next[slot] = true
+          setLookupLoading(next)
+          setMixError(null)
+          try {
+            const data = await lookupStrainData(q)
+            const enriched: import('../services/gemini').EnrichedStrain = {
+              name: q,
+              type: data.type,
+              thc: data.thc,
+              cbd: data.cbd,
+              terpenes: data.terpenes,
+              effects: data.effects,
+            }
+            const nc: typeof customStrains = [...customStrains]
+            nc[slot] = enriched
+            setCustomStrains(nc)
+          } catch {
+            setMixError('AI lookup failed — check your API key')
+          } finally {
+            const nd: [boolean, boolean] = [...lookupLoading]
+            nd[slot] = false
+            setLookupLoading(nd)
           }
         }
 
@@ -780,7 +782,10 @@ function PartyView({
           }
         }
 
-        const canMix = !!mixSlots[0] && !!mixSlots[1] && mixSlots[0] !== mixSlots[1]
+        const slotReady = (slot: 0 | 1) =>
+          mixModes[slot] === 'search' ? !!customStrains[slot] : !!mixSlots[slot]
+        const canMix = slotReady(0) && slotReady(1) &&
+          !(mixModes[0] === 'party' && mixModes[1] === 'party' && mixSlots[0] === mixSlots[1])
 
         return (
           <div style={{
@@ -831,31 +836,151 @@ function PartyView({
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 6 }}>
-              {([0, 1] as const).map((slot) => (
-                <select
-                  key={slot}
-                  value={mixSlots[slot] ?? ''}
-                  onChange={(e) => {
-                    const next: [string | null, string | null] = [...mixSlots]
-                    next[slot] = e.target.value || null
-                    setMixSlots(next)
-                    setMixResult(null)
-                    setSuggestion(null)
-                  }}
-                  style={{
-                    flex: 1, fontFamily: PVSF, fontSize: 8, padding: '8px 6px',
-                    background: '#0a1408', color: GBC_TEXT,
-                    border: mixSlots[slot] ? '2px solid #84cc16' : '2px solid #2a4a08',
-                    outline: 'none', cursor: 'pointer',
-                  }}
-                >
-                  <option value="">-- SLOT {slot + 1} --</option>
-                  {party.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
-                  ))}
-                </select>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {([0, 1] as const).map((slot) => {
+                const isSearch = mixModes[slot] === 'search'
+                const custom = customStrains[slot]
+                return (
+                  <div key={slot} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {/* Mode toggle */}
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {(['party', 'search'] as const).map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => {
+                            const nm: typeof mixModes = [...mixModes]
+                            nm[slot] = m
+                            setMixModes(nm)
+                            setMixResult(null)
+                            setSuggestion(null)
+                          }}
+                          style={{
+                            fontFamily: PVSF, fontSize: 7, padding: '3px 8px', cursor: 'pointer',
+                            border: `1px solid ${mixModes[slot] === m ? GBC_GREEN : GBC_DARKEST}`,
+                            color: mixModes[slot] === m ? GBC_GREEN : GBC_MUTED,
+                            background: mixModes[slot] === m ? 'rgba(132,204,22,0.08)' : 'transparent',
+                          }}
+                        >{m === 'party' ? 'MY PARTY' : 'ANY STRAIN'}</button>
+                      ))}
+                      <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_DARKEST, marginLeft: 'auto', alignSelf: 'center' }}>
+                        SLOT {slot + 1}
+                      </span>
+                    </div>
+
+                    {/* Party mode: dropdown */}
+                    {!isSearch && (
+                      <select
+                        value={mixSlots[slot] ?? ''}
+                        onChange={(e) => {
+                          const next: [string | null, string | null] = [...mixSlots]
+                          next[slot] = e.target.value || null
+                          setMixSlots(next)
+                          setMixResult(null)
+                          setSuggestion(null)
+                        }}
+                        style={{
+                          fontFamily: PVSF, fontSize: 8, padding: '8px 6px',
+                          background: '#0a1408', color: GBC_TEXT,
+                          border: mixSlots[slot] ? '2px solid #84cc16' : '2px solid #2a4a08',
+                          outline: 'none', cursor: 'pointer', width: '100%',
+                        }}
+                      >
+                        <option value="">-- SELECT STRAIN --</option>
+                        {party.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* Search mode: text input + db autocomplete + AI lookup */}
+                    {isSearch && (
+                      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <input
+                            type="text"
+                            value={searchQueries[slot]}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              const nq: [string, string] = [...searchQueries]
+                              nq[slot] = val
+                              setSearchQueries(nq)
+                              const nc: typeof customStrains = [...customStrains]
+                              nc[slot] = null
+                              setCustomStrains(nc)
+                              setMixResult(null)
+                              if (val.length >= 2) {
+                                const nr: typeof searchResults = [...searchResults]
+                                nr[slot] = db.filter((r) => displayName(r).toLowerCase().includes(val.toLowerCase())).slice(0, 5)
+                                setSearchResults(nr)
+                              } else {
+                                const nr: typeof searchResults = [...searchResults]
+                                nr[slot] = []
+                                setSearchResults(nr)
+                              }
+                            }}
+                            placeholder="Type any strain name..."
+                            style={{
+                              flex: 1, fontFamily: 'monospace', fontSize: 12, padding: '7px 8px',
+                              background: '#0a1408', color: GBC_TEXT,
+                              border: `2px solid ${custom ? GBC_GREEN : GBC_DARKEST}`,
+                              outline: 'none',
+                            }}
+                          />
+                          <button
+                            onClick={() => handleLookup(slot)}
+                            disabled={!searchQueries[slot].trim() || lookupLoading[slot]}
+                            style={{
+                              fontFamily: PVSF, fontSize: 7, padding: '6px 8px', flexShrink: 0, cursor: 'pointer',
+                              border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER,
+                              background: 'rgba(245,158,11,0.08)',
+                              opacity: !searchQueries[slot].trim() ? 0.4 : 1,
+                            }}
+                          >{lookupLoading[slot] ? '...' : 'AI LOOKUP'}</button>
+                        </div>
+
+                        {/* DB suggestions dropdown */}
+                        {searchResults[slot].length > 0 && !custom && (
+                          <div style={{ background: '#0a1408', border: '2px solid #2a4a08', position: 'absolute', top: 38, left: 0, right: 0, zIndex: 20 }}>
+                            {searchResults[slot].map((r) => (
+                              <div
+                                key={r.Strain}
+                                onPointerDown={() => {
+                                  const nq: [string, string] = [...searchQueries]
+                                  nq[slot] = displayName(r)
+                                  setSearchQueries(nq)
+                                  const nc: typeof customStrains = [...customStrains]
+                                  nc[slot] = { name: displayName(r), type: r.Type, thc: r.thc, cbd: r.cbd, terpenes: r.terpenes, effects: r.Effects }
+                                  setCustomStrains(nc)
+                                  const nr: typeof searchResults = [...searchResults]
+                                  nr[slot] = []
+                                  setSearchResults(nr)
+                                  setMixResult(null)
+                                }}
+                                style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+                              >
+                                <span>{displayName(r)}</span>
+                                <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(r.Type) }}>{r.Type}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Confirmed strain badge */}
+                        {custom && (
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_GREEN, border: `1px solid ${GBC_GREEN}`, padding: '1px 5px' }}>
+                              {custom.name.toUpperCase()}
+                            </span>
+                            {custom.type && <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(custom.type) }}>{custom.type.toUpperCase()}</span>}
+                            {custom.thc != null && <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>THC {custom.thc}%</span>}
+                            {custom.terpenes && <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED }}>{custom.terpenes}</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
             <button
               onClick={handleMix}
