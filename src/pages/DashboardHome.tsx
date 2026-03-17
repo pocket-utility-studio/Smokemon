@@ -257,12 +257,19 @@ export default function DashboardHome() {
 
       {/* ── Footer hint ── */}
       <div style={{
-        ...pokeBox, padding: '10px 12px', flexShrink: 0,
+        ...pokeBox, padding: '6px 12px', flexShrink: 0,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ fontFamily: FONT, fontSize: 10, color: '#84cc16' }}>
+        <button
+          onClick={() => isSubMenu ? activate({ kind: 'back' }) : activate(items[cursor])}
+          style={{
+            fontFamily: FONT, fontSize: 10, color: '#84cc16',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            padding: '6px 0', minHeight: 44, minWidth: 80, textAlign: 'left',
+          }}
+        >
           {isSubMenu ? '[B] BACK' : '[A] OPEN'}
-        </span>
+        </button>
         <span style={{ fontFamily: FONT, fontSize: 9, color: '#4a9a20' }}>▲▼ SCROLL</span>
       </div>
     </div>

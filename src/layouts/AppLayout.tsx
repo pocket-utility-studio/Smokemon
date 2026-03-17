@@ -5,6 +5,7 @@ import { useLayoutMode } from '../context/LayoutModeContext'
 import SplashScreen from '../pages/SplashScreen'
 
 import { useTransitionNav } from '../context/NavigationContext'
+import { haptic } from '../utils/haptic'
 import WipeOverlay from '../components/WipeOverlay'
 
 const KIWI_GRAD = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
@@ -198,11 +199,13 @@ function GBCLogo() {
 export default function AppLayout() {
   const { font } = useVibe()
   const { layoutMode, setLayoutMode } = useLayoutMode()
-  const { wipePhase } = useTransitionNav()
+  const { wipePhase, goBack } = useTransitionNav()
 
   const location = useLocation()
   const LAB_ROUTES = ['/castform', '/avb', '/abv-guide']
   const isInLab = LAB_ROUTES.some((r) => location.pathname === r || location.pathname.startsWith(r + '/'))
+
+  const isHome = location.pathname === '/'
 
   const emu = layoutMode === 'emulator'
   // Separate from emu — only true during the initial splash boot sequence
@@ -371,6 +374,34 @@ export default function AppLayout() {
                     }}>
                       <Outlet />
                     </div>
+                    {/* Footer hint — non-home pages */}
+                    {!isHome && (
+                      <div style={{
+                        flexShrink: 0,
+                        border: '4px solid #84cc16',
+                        background: '#050e04',
+                        padding: '6px 12px',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        opacity: booting ? 0 : 1,
+                        transition: `opacity ${T}`,
+                        pointerEvents: booting ? 'none' : 'auto',
+                      }}>
+                        <button
+                          onClick={() => { haptic(20); goBack() }}
+                          style={{
+                            fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                            fontSize: 10, color: '#84cc16',
+                            background: 'transparent', border: 'none', cursor: 'pointer',
+                            padding: '6px 0', minHeight: 44, minWidth: 80, textAlign: 'left',
+                          }}
+                        >
+                          [◄] BACK
+                        </button>
+                        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: '#4a9a20' }}>
+                          ▲▼ SCROLL
+                        </span>
+                      </div>
+                    )}
                     {/* Splash — always in DOM, fades out after boot */}
                     <div style={{
                       position: 'absolute', inset: 0, zIndex: 2,
