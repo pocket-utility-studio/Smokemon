@@ -18,6 +18,7 @@ import FactCartridge from './pages/FactCartridge'
 import LawGuide from './pages/LawGuide'
 import SaveState from './pages/SaveState'
 import AbvPage from './pages/AbvPage'
+import DataAudit from './pages/DataAudit'
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
                 <Route path="law" element={<LawGuide />} />
                 <Route path="save" element={<SaveState />} />
                 <Route path="avb" element={<AbvPage />} />
+                <Route path="data-audit" element={<DataAudit />} />
               </Route>
             </Routes>
             </LayoutModeProvider>
