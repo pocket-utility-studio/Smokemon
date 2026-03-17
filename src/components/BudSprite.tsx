@@ -680,7 +680,7 @@ export function BudSprite({
       viewBox={`0 0 ${naturalW} ${naturalH}`}
       width={displayW}
       height={size}
-      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0 }}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, transform: 'scaleY(-1)' }}
     >
       {rects}
     </svg>

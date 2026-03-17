@@ -36,6 +36,25 @@ const inputBase = {
   boxSizing: 'border-box' as const,
 }
 
+const BALL_SPRITES: Record<string, string> = {
+  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
+  indica: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
+}
+
+function TypeSprite({ type, size = 24 }: { type?: StrainEntry['type']; size?: number }) {
+  const src = BALL_SPRITES[type ?? 'hybrid'] ?? BALL_SPRITES.hybrid
+  return (
+    <img
+      src={src}
+      width={size}
+      height={size}
+      alt={type ?? 'hybrid'}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0 }}
+    />
+  )
+}
+
 function typeColor(type?: StrainEntry['type']): string {
   if (type === 'sativa') return GBC_GREEN
   if (type === 'indica') return GBC_VIOLET
@@ -261,6 +280,7 @@ function StashList({
 
             {/* Row 1: sprite + name + edit/delete */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editingId === s.id ? 14 : 10 }}>
+              <TypeSprite type={s.type} size={28} />
               <BudSprite name={s.name} type={s.type} size={28} context={dbCtx} budDesign={s.budDesign} />
               <span style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -421,6 +441,7 @@ function PartyView({
         <div style={{ ...pokeBox, padding: '14px' }}>
           {/* Header row: sprite + name + EDIT button */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editing ? 14 : 10 }}>
+            <TypeSprite type={selected.type} size={36} />
             <BudSprite name={selected.name} type={selected.type} size={36} context={selDbCtx} budDesign={selected.budDesign} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 14, color: typeColor(selected.type), lineHeight: 1.5, wordBreak: 'break-word' }}>
@@ -518,6 +539,7 @@ function PartyView({
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
+              <TypeSprite type={s.type} size={24} />
               <BudSprite name={s.name} type={s.type} size={24} context={dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined} budDesign={s.budDesign} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{

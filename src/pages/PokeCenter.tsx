@@ -22,6 +22,25 @@ const GBC_AMBER   = '#f59e0b'
 const FONT        = "'PokemonGb', 'Press Start 2P', monospace"
 const TOTAL_BOXES = 10
 
+const BALL_SPRITES: Record<string, string> = {
+  sativa: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+  hybrid: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
+  indica: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
+}
+
+function TypeSprite({ type, size = 20 }: { type?: string; size?: number }) {
+  const src = BALL_SPRITES[type ?? 'hybrid'] ?? BALL_SPRITES.hybrid
+  return (
+    <img
+      src={src}
+      width={size}
+      height={size}
+      alt={type ?? 'hybrid'}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0 }}
+    />
+  )
+}
+
 const pokeBox = {
   border: '3px solid #84cc16',
   boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
@@ -260,6 +279,7 @@ function PartyCard({ name, type, thc, inStock, dbMatch }: {
     >
       {/* Name + sprite row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <TypeSprite type={type} size={20} />
         <BudSprite name={name} type={type} size={20} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
         <div style={{ fontFamily: FONT, fontSize: 9, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
           {name.toUpperCase()}
