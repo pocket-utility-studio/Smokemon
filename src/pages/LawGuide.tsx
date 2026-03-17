@@ -127,32 +127,13 @@ const ES_SECTIONS: Section[] = [
 function OfficerJenny() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{ position: 'relative', width: 48, height: 64, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Cap */}
-        <div style={{ width: 40, height: 14, background: '#2040c0', border: '1px solid #1030a0', position: 'relative', zIndex: 2 }}>
-          <div style={{ position: 'absolute', bottom: -3, left: -2, right: -2, height: 3, background: '#1030a0' }} />
-        </div>
-        {/* Head */}
-        <div style={{ width: 32, height: 20, background: '#d4a870', border: '1px solid #b08850', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <div style={{ width: 4, height: 4, background: '#301808' }} />
-          <div style={{ width: 4, height: 4, background: '#301808' }} />
-        </div>
-        {/* Uniform */}
-        <div style={{ width: 40, height: 28, background: '#1a30a0', border: '1px solid #102080', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 12, height: 10, background: '#f0d020', border: '1px solid #c0a010', position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)' }} />
-          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 2, height: 10, background: '#0e1a70' }} />
-        </div>
-        {/* Legs */}
-        <div style={{ display: 'flex', gap: 4 }}>
-          <div style={{ width: 14, height: 8, background: '#1a30a0', border: '1px solid #102080' }} />
-          <div style={{ width: 14, height: 8, background: '#1a30a0', border: '1px solid #102080' }} />
-        </div>
-        {/* Boots */}
-        <div style={{ display: 'flex', gap: 4 }}>
-          <div style={{ width: 14, height: 6, background: '#181818', border: '1px solid #080808' }} />
-          <div style={{ width: 14, height: 6, background: '#181818', border: '1px solid #080808' }} />
-        </div>
-      </div>
+      <img
+        src={`${import.meta.env.BASE_URL}officer-jenny.png`}
+        alt="Officer Jenny"
+        width={96}
+        height={96}
+        style={{ imageRendering: 'pixelated', display: 'block', objectFit: 'contain' }}
+      />
       <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, letterSpacing: 0.5 }}>
         OFFICER JENNY
       </span>
@@ -203,6 +184,8 @@ export default function LawGuide() {
 
       {tab === 'uk' ? (
         <>
+          <OfficerJenny />
+
           {/* Officer Jenny disclaimer */}
           <div style={{ border: '3px solid #e84040', boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a0808', background: '#0a0808', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED, letterSpacing: 0.5 }}>▲ OFFICER JENNY SAYS</span>

@@ -45,8 +45,8 @@ const R  = 34
 const FONT = "'PokemonGb','Press Start 2P',monospace"
 
 // ViewBox gives generous padding for labels on all sides
-// Width 152, Height 126 → the SVG renders wider than tall (pentagon shape)
-const VB_X = -26, VB_Y = -14, VB_W = 152, VB_H = 126
+// Width 164, Height 128 → the SVG renders wider than tall (pentagon shape)
+const VB_X = -34, VB_Y = -14, VB_W = 164, VB_H = 128
 
 function polar(angle: number, r: number): [number, number] {
   return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
@@ -65,7 +65,7 @@ interface StatPentagonProps {
 export default function StatPentagon({
   scores,
   color = '#84cc16',
-  size = 140,
+  size = 160,
 }: StatPentagonProps) {
   const angles = axisAngles()
   const labelOffset = R + 13

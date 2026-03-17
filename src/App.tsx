@@ -19,6 +19,8 @@ import LawGuide from './pages/LawGuide'
 import SaveState from './pages/SaveState'
 import AbvPage from './pages/AbvPage'
 import DataAudit from './pages/DataAudit'
+import LegendaryStrains from './pages/LegendaryStrains'
+import AvbEdibles from './pages/AvbEdibles'
 
 export default function App() {
   return (
@@ -44,6 +46,8 @@ export default function App() {
                 <Route path="save" element={<SaveState />} />
                 <Route path="avb" element={<AbvPage />} />
                 <Route path="data-audit" element={<DataAudit />} />
+                <Route path="legendary" element={<LegendaryStrains />} />
+                <Route path="edibles" element={<AvbEdibles />} />
               </Route>
             </Routes>
             </LayoutModeProvider>

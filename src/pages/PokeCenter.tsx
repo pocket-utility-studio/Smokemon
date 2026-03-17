@@ -448,17 +448,6 @@ export default function PokeCenter() {
   const [keyInput, setKeyInput] = useState('')
   const [showKeyInput, setShowKeyInput] = useState(false)
 
-  // Persistent patient notes
-  const [patientNotes, setPatientNotes] = useState(() => localStorage.getItem('utilhub_patient_notes') ?? '')
-  const [editingNotes, setEditingNotes] = useState(false)
-  const [notesDraft, setNotesDraft]     = useState('')
-
-  const savePatientNotes = () => {
-    localStorage.setItem('utilhub_patient_notes', notesDraft)
-    setPatientNotes(notesDraft)
-    setEditingNotes(false)
-  }
-
   // Consultation feedback memory
   const [feedbackHistory, setFeedbackHistory] = useState<ConsultationFeedback[]>(() => {
     try { return JSON.parse(localStorage.getItem('utilhub_consult_log') ?? '[]') } catch { return [] }
@@ -524,7 +513,7 @@ export default function PokeCenter() {
           notes: s.notes,
         }
       })
-      const result = await askNurseJoy(fullQuery, enriched, feedbackHistory, patientNotes)
+      const result = await askNurseJoy(fullQuery, enriched, feedbackHistory)
       // Best-effort: find the first party strain name mentioned in the response
       const mentioned = party.find((s) => result.toLowerCase().includes(s.name.toLowerCase()))
       if (mentioned) setLastRecommended(mentioned.name)
@@ -658,54 +647,6 @@ export default function PokeCenter() {
             </div>
           </div>
         )}
-
-        {/* Patient notes */}
-        <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>PATIENT NOTES</span>
-            <button
-              onClick={() => { setNotesDraft(patientNotes); setEditingNotes((v) => !v) }}
-              style={{
-                fontFamily: FONT, fontSize: 7, padding: '3px 8px', cursor: 'pointer',
-                border: `1px solid ${editingNotes ? GBC_GREEN : GBC_DARKEST}`,
-                color: editingNotes ? GBC_GREEN : GBC_MUTED, background: 'transparent',
-              }}
-            >{editingNotes ? 'CANCEL' : patientNotes ? 'EDIT' : 'ADD'}</button>
-          </div>
-          {editingNotes ? (
-            <>
-              <textarea
-                rows={3}
-                value={notesDraft}
-                onChange={(e) => setNotesDraft(e.target.value)}
-                placeholder="e.g. I have anxiety. I prefer CBD-heavy strains. High THC makes me paranoid..."
-                style={{
-                  width: '100%', background: '#060e05', color: '#e8f8c0',
-                  border: '2px solid #84cc16', padding: '10px',
-                  resize: 'none', outline: 'none', boxSizing: 'border-box',
-                  fontFamily: 'monospace', fontSize: 12, lineHeight: 1.7,
-                }}
-              />
-              <button
-                onClick={savePatientNotes}
-                style={{
-                  marginTop: 8, width: '100%', fontFamily: FONT, fontSize: 9,
-                  padding: '10px 0', cursor: 'pointer',
-                  border: '2px solid #84cc16', color: '#84cc16',
-                  background: 'rgba(132,204,22,0.08)',
-                }}
-              >► SAVE NOTES</button>
-            </>
-          ) : patientNotes ? (
-            <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>
-              {patientNotes}
-            </p>
-          ) : (
-            <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, lineHeight: 1.7, margin: 0 }}>
-              Add notes Nurse Joy should always know — conditions, preferences, sensitivities.
-            </p>
-          )}
-        </div>
 
         {/* Ask Nurse Joy */}
         <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
