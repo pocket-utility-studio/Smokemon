@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useStrainDb, displayName, fetchLiveStrain } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
+import { lookupStrainData } from '../services/gemini'
+import type { StrainLookupResult } from '../services/gemini'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
@@ -52,6 +54,19 @@ export default function DataAudit() {
   const [liveData, setLiveData] = useState<Record<string, { thc?: number; cbd?: number; terpenes?: string } | null>>({})
   const [fetching, setFetching] = useState(false)
   const [fetchDone, setFetchDone] = useState(false)
+  const [geminiData, setGeminiData] = useState<Record<string, StrainLookupResult | 'loading' | 'error'>>({})
+
+  async function fetchGemini(s: StrainRecord) {
+    const key = s.Strain
+    if (geminiData[key]) return
+    setGeminiData((prev) => ({ ...prev, [key]: 'loading' }))
+    try {
+      const result = await lookupStrainData(displayName(s))
+      setGeminiData((prev) => ({ ...prev, [key]: result }))
+    } catch {
+      setGeminiData((prev) => ({ ...prev, [key]: 'error' }))
+    }
+  }
 
   const stats = useMemo(() => {
     const total = db.length
@@ -73,6 +88,7 @@ export default function DataAudit() {
     setSample(picked)
     setLiveData({})
     setFetchDone(false)
+    setGeminiData({})
   }
 
   async function fetchLive() {
@@ -335,6 +351,78 @@ export default function DataAudit() {
                       NO LIVE DATA
                     </div>
                   )}
+
+                  {/* Gemini section */}
+                  {(() => {
+                    const gd = geminiData[s.Strain]
+                    if (!gd) {
+                      return (
+                        <button
+                          onClick={() => fetchGemini(s)}
+                          style={{
+                            marginTop: 8, width: '100%', minHeight: 36,
+                            fontFamily: FONT, fontSize: 8, padding: '6px 0',
+                            border: `1px solid ${GBC_VIOLET}`, background: 'transparent',
+                            color: GBC_VIOLET, cursor: 'pointer',
+                          }}
+                        >
+                          ► ASK GEMINI
+                        </button>
+                      )
+                    }
+                    if (gd === 'loading') {
+                      return (
+                        <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_VIOLET, marginTop: 8 }}>
+                          ASKING GEMINI...
+                        </div>
+                      )
+                    }
+                    if (gd === 'error') {
+                      return (
+                        <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED, marginTop: 8 }}>
+                          GEMINI ERROR
+                        </div>
+                      )
+                    }
+                    return (
+                      <div style={{ marginTop: 8, borderTop: `1px solid ${GBC_VIOLET}33`, paddingTop: 8 }}>
+                        <div style={{ fontFamily: FONT, fontSize: 7, color: GBC_VIOLET, marginBottom: 6 }}>
+                          GEMINI
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: gd.terpenes || gd.effects || gd.history ? 6 : 0 }}>
+                          {gd.type && (
+                            <span style={{ fontFamily: FONT, fontSize: 7, color: typeColor(gd.type), border: `1px solid ${typeColor(gd.type)}`, padding: '1px 4px' }}>
+                              {gd.type.toUpperCase()}
+                            </span>
+                          )}
+                          <span style={{ fontFamily: FONT, fontSize: 8, color: gd.thc != null ? GBC_GREEN : GBC_DARKEST }}>
+                            THC: {gd.thc != null ? `${gd.thc}%` : 'N/A'}
+                            {gd.thc != null && s.thc != null && (
+                              <span style={{ color: deltaColor(s.thc, gd.thc), marginLeft: 4 }}>({delta(s.thc, gd.thc)})</span>
+                            )}
+                          </span>
+                          <span style={{ fontFamily: FONT, fontSize: 8, color: gd.cbd != null ? GBC_MUTED : GBC_DARKEST }}>
+                            CBD: {gd.cbd != null ? `${gd.cbd}%` : 'N/A'}
+                          </span>
+                        </div>
+                        {gd.terpenes && (
+                          <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, marginBottom: 4 }}>
+                            {gd.terpenes}
+                          </div>
+                        )}
+                        {gd.effects && (
+                          <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, opacity: 0.7, marginBottom: 4, lineHeight: 1.5 }}>
+                            {gd.effects}
+                          </div>
+                        )}
+                        {gd.history && (
+                          <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, opacity: 0.6, lineHeight: 1.6, borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 6, marginTop: 4 }}>
+                            {gd.history}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}
