@@ -1662,6 +1662,18 @@ const emptyForm = {
 export default function Smokedex() {
   const { strains, addStrain, updateStrain, deleteStrain } = useStash()
   const { db } = useStrainDb()
+  const addFuse = useMemo(() => new Fuse(db, {
+    keys: [
+      { name: 'Strain',   weight: 3 },
+      { name: 'Effects',  weight: 1.5 },
+      { name: 'terpenes', weight: 1.2 },
+      { name: 'Flavor',   weight: 1 },
+      { name: 'Type',     weight: 0.5 },
+    ],
+    threshold: 0.4,
+    distance: 200,
+    includeScore: true,
+  }), [db])
   const [tab, setTab] = useState<'party' | 'pc' | 'dex' | 'add'>('party')
   const [confirmPurge, setConfirmPurge] = useState(false)
   const [form, setForm] = useState({ ...emptyForm })
@@ -1970,10 +1982,8 @@ export default function Smokedex() {
                     const value = e.target.value
                     setForm({ ...form, name: value })
                     if (value.length >= 2) {
-                      const filtered = db
-                        .filter((s) => displayName(s).toLowerCase().includes(value.toLowerCase()))
-                        .slice(0, 6)
-                      setSuggestions(filtered)
+                      const results = addFuse.search(value).slice(0, 6).map((r) => r.item)
+                      setSuggestions(results)
                       setShowSuggestions(true)
                     } else {
                       setSuggestions([])
@@ -1989,7 +1999,7 @@ export default function Smokedex() {
                     setFocusedField(null)
                     setTimeout(() => setShowSuggestions(false), 150)
                   }}
-                  placeholder="e.g. Blue Dream"
+                  placeholder="OG Kush, sleepy, myrcene..."
                 />
                 {showSuggestions && suggestions.length > 0 && (
                   <div style={{
@@ -2026,12 +2036,18 @@ export default function Smokedex() {
                             cursor: 'pointer',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center',
+                            alignItems: 'flex-start',
+                            gap: 8,
                           }}
-                          onMouseEnter={undefined}
-                          onMouseLeave={undefined}
                         >
-                          <span>{displayName(s)}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div>{displayName(s)}</div>
+                            {s.Effects && (
+                              <div style={{ fontFamily: 'monospace', fontSize: 10, color: GBC_MUTED, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {s.Effects.split(',').slice(0, 3).map((e) => e.trim()).join(', ')}
+                              </div>
+                            )}
+                          </div>
                           <span style={{
                             fontFamily: 'monospace',
                             fontSize: 10,
@@ -2039,6 +2055,7 @@ export default function Smokedex() {
                             border: `1px solid ${col}`,
                             padding: '1px 4px',
                             flexShrink: 0,
+                            marginTop: 1,
                           }}>
                             {s.Type}
                           </span>
