@@ -186,10 +186,13 @@ export interface MixSuggestion {
 }
 
 /**
- * Ask Professor T-Oak to suggest the most interesting pairing from the party,
- * based on terpene synergy and flavour compatibility.
+ * Generate up to 5 mix suggestions from the party that best match the trainer's goal.
+ * Each suggestion includes flavour and terpene reasoning.
  */
-export async function suggestMix(party: EnrichedStrain[]): Promise<MixSuggestion> {
+export async function generateMixSuggestions(
+  goal: string,
+  party: EnrichedStrain[],
+): Promise<MixSuggestion[]> {
   if (party.length < 2) throw new Error('Need at least 2 strains')
   const client = getClient()
   const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
@@ -205,33 +208,41 @@ export async function suggestMix(party: EnrichedStrain[]): Promise<MixSuggestion
     })
     .join('\n')
 
-  const prompt = `You are Professor T-Oak, cannabis terpene expert with the enthusiasm of Professor Oak from Pokémon.
+  const count = Math.min(party.length * (party.length - 1) / 2, 5)
 
-From the trainer's party below, choose the TWO strains that would create the most interesting combination — the pair with the best terpene synergy AND most complementary flavour profiles.
+  const prompt = `You are Professor T-Oak, cannabis terpene expert with the warm enthusiasm of Professor Oak from Pokémon.
 
-Respond with ONLY a valid JSON object, no markdown, no code fences, exactly this structure:
-{
-  "strainA": "<exact name from the list>",
-  "strainB": "<exact name from the list>",
-  "flavourReason": "<2 sentences: which terpenes create which flavours in each strain, and why they complement each other on the palate>",
-  "terpeneReason": "<2 sentences: which specific terpenes interact synergistically between the two strains and what therapeutic or experiential benefit that synergy produces>"
-}
+The trainer wants: "${goal}"
+
+From the party below, suggest ${count} DIFFERENT pairings that best match this goal. Rank them from best match to least. Each pairing must use a different combination of strains.
+
+Respond with ONLY a valid JSON array, no markdown, no code fences:
+[
+  {
+    "strainA": "<exact name from the list>",
+    "strainB": "<exact name from the list>",
+    "flavourReason": "<1-2 sentences: describe the combined taste/aroma and why it suits the goal>",
+    "terpeneReason": "<1-2 sentences: name the key terpenes and how their synergy delivers the desired effect>"
+  }
+]
 
 Party:
 ${partyList}`
 
   const result = await model.generateContent(prompt)
   const text = result.response.text().trim()
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  const jsonMatch = text.match(/\[[\s\S]*\]/)
   if (!jsonMatch) throw new Error('Unexpected response from AI')
-  const data = JSON.parse(jsonMatch[0])
-  if (!data.strainA || !data.strainB) throw new Error('Missing strain names in suggestion')
-  return {
-    strainA:       data.strainA,
-    strainB:       data.strainB,
-    flavourReason: data.flavourReason ?? '',
-    terpeneReason: data.terpeneReason ?? '',
-  }
+  const data: Array<Record<string, string>> = JSON.parse(jsonMatch[0])
+  return data
+    .filter((d) => d.strainA && d.strainB)
+    .map((d) => ({
+      strainA:       d.strainA,
+      strainB:       d.strainB,
+      flavourReason: d.flavourReason ?? '',
+      terpeneReason: d.terpeneReason ?? '',
+    }))
+    .slice(0, 5)
 }
 
 /**
