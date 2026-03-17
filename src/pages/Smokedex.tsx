@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import Tesseract from 'tesseract.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
@@ -436,7 +436,35 @@ const DEX_CATEGORIES: DexCategory[] = [
 
 // ── Strain detail view ────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 20
+type SortKey = 'az' | 'thc' | 'rating'
+
+function scoreResult(s: StrainRecord, words: string[]): number {
+  if (words.length === 0) return 1
+  const name = displayName(s).toLowerCase()
+  const effects = s.Effects.toLowerCase()
+  const medical = (s.medical || '').toLowerCase()
+  const terpenes = (s.terpenes || '').toLowerCase()
+  const flavor = (s.Flavor || '').toLowerCase()
+  const type = s.Type.toLowerCase()
+  let total = 0
+  for (const word of words) {
+    if (name === word)              total += 100
+    else if (name.startsWith(word)) total += 80
+    else if (name.includes(word))   total += 60
+    else if (type.includes(word))   total += 35
+    else if (effects.includes(word)) total += 30
+    else if (terpenes.includes(word)) total += 25
+    else if (medical.includes(word)) total += 20
+    else if (flavor.includes(word)) total += 15
+    else return 0  // word matched nothing — exclude result
+  }
+  return total
+}
+
 function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => void }) {
+  const { strains, addStrain } = useStash()
+  const [added, setAdded] = useState(false)
   const col = strain.Type === 'sativa' ? GBC_GREEN : strain.Type === 'indica' ? GBC_VIOLET : GBC_AMBER
   const LABEL: React.CSSProperties = { fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED, display: 'block', marginBottom: 4 }
   const VALUE: React.CSSProperties = { fontFamily: 'monospace', fontSize: 14, color: GBC_TEXT, lineHeight: 1.6 }
@@ -444,6 +472,20 @@ function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => 
   const effects = strain.Effects ? strain.Effects.split(',').map((e) => e.trim()).filter(Boolean) : []
   const flavors = strain.Flavor ? strain.Flavor.split(',').map((f) => f.trim()).filter(Boolean) : []
   const terpenes = strain.terpenes ? strain.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean) : []
+
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const alreadyInStash = strains.some((s) => norm(s.name) === norm(displayName(strain)))
+
+  const handleAdd = () => {
+    addStrain({
+      name: displayName(strain),
+      type: strain.Type as StrainEntry['type'],
+      thc: strain.thc ?? undefined,
+      cbd: strain.cbd ?? undefined,
+      inStock: true,
+    })
+    setAdded(true)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -456,7 +498,7 @@ function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => 
         >
           ◄ BACK
         </button>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
           <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 13, color: col, flex: 1, lineHeight: 1.6, wordBreak: 'break-word' }}>
             {displayName(strain)}
           </span>
@@ -465,9 +507,28 @@ function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => 
           </span>
         </div>
         {strain.Rating != null && (
-          <div style={{ marginTop: 6, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>
+          <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER, marginBottom: 10 }}>
             {'★'.repeat(Math.round(strain.Rating))}{'☆'.repeat(5 - Math.round(strain.Rating))} {strain.Rating}/5
           </div>
+        )}
+        {/* Add to stash */}
+        {alreadyInStash || added ? (
+          <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_GREEN, padding: '8px 0' }}>
+            [{added && !alreadyInStash ? 'ADDED!' : 'IN STASH'}]
+          </div>
+        ) : (
+          <button
+            onClick={handleAdd}
+            style={{
+              width: '100%', fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10,
+              padding: '12px 0', cursor: 'pointer',
+              background: GBC_GREEN, color: GBC_BG,
+              border: `3px solid ${GBC_GREEN}`,
+              boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+            }}
+          >
+            + ADD TO STASH
+          </button>
         )}
       </div>
 
@@ -560,25 +621,45 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
   const [focused, setFocused] = useState(false)
   const [category, setCategory] = useState<DexCategory>(DEX_CATEGORIES[0])
   const [selected, setSelected] = useState<StrainRecord | null>(null)
+  const [sort, setSort] = useState<SortKey>('az')
+  const [page, setPage] = useState(0)
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase()
+  // Reset to page 0 whenever search/filter/sort changes
+  useEffect(() => { setPage(0) }, [query, category, sort])
+
+  const { pageResults, total, totalPages } = useMemo(() => {
+    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
     let pool = db.filter(category.filter)
-    if (q) {
-      pool = pool.filter((s) =>
-        String(s.Strain).toLowerCase().includes(q) ||
-        displayName(s).toLowerCase().includes(q) ||
-        s.Effects.toLowerCase().includes(q) ||
-        (s.medical || '').toLowerCase().includes(q) ||
-        (s.terpenes || '').toLowerCase().includes(q)
-      )
+
+    if (words.length > 0) {
+      // Score and sort by relevance
+      const scored = pool
+        .map((s) => ({ s, score: scoreResult(s, words) }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+      pool = scored.map(({ s }) => s)
+    } else {
+      pool = [...pool]
+      if (sort === 'az')     pool.sort((a, b) => displayName(a).localeCompare(displayName(b)))
+      if (sort === 'thc')    pool.sort((a, b) => (b.thc ?? 0) - (a.thc ?? 0))
+      if (sort === 'rating') pool.sort((a, b) => (b.Rating ?? 0) - (a.Rating ?? 0))
     }
-    return pool.slice(0, 60)
-  }, [db, query, category])
+
+    const total = pool.length
+    const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+    const pageResults = pool.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+    return { pageResults, total, totalPages }
+  }, [db, query, category, sort, page])
 
   if (selected) {
     return <StrainDetail strain={selected} onBack={() => setSelected(null)} />
   }
+
+  const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'az',     label: 'A-Z' },
+    { key: 'thc',    label: 'THC' },
+    { key: 'rating', label: 'RATING' },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -588,7 +669,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="OG Kush, sleepy, pain..."
+        placeholder="OG Kush, sleepy, myrcene..."
         style={{
           background: '#050a04',
           border: `2px solid ${focused ? '#4a8a10' : GBC_DARKEST}`,
@@ -604,11 +685,33 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         onBlur={() => setFocused(false)}
       />
 
+      {/* Sort — hidden when actively searching (results sorted by relevance) */}
+      {!query.trim() && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, flexShrink: 0 }}>
+            SORT:
+          </span>
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setSort(opt.key)}
+              style={{
+                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                fontSize: 8, padding: '6px 10px', minHeight: 36,
+                border: `2px solid ${sort === opt.key ? GBC_GREEN : GBC_DARKEST}`,
+                background: sort === opt.key ? 'rgba(132,204,22,0.12)' : 'transparent',
+                color: sort === opt.key ? GBC_GREEN : GBC_MUTED,
+                cursor: 'pointer',
+              }}
+            >
+              {opt.label}{sort === opt.key && opt.key !== 'az' ? ' ▼' : ''}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Category chips */}
-      <div style={{
-        display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4,
-        WebkitOverflowScrolling: 'touch' as const,
-      }}>
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as const }}>
         {DEX_CATEGORIES.map((cat) => {
           const active = cat.label === category.label
           return (
@@ -631,15 +734,29 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         })}
       </div>
 
-      {/* Count */}
-      <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
-        {results.length}{results.length === 60 ? '+' : ''} STRAINS
-        {category.label !== 'ALL' ? ` · ${category.label}` : ''}
+      {/* Count + page indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
+          {total} STRAINS{category.label !== 'ALL' ? ` · ${category.label}` : ''}
+          {query.trim() ? ' · BY MATCH' : ''}
+        </span>
+        {totalPages > 1 && (
+          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_MUTED }}>
+            PG {page + 1}/{totalPages}
+          </span>
+        )}
       </div>
 
       {/* Results */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {results.map((s) => {
+        {pageResults.length === 0 && (
+          <div style={{ ...pokeBox, padding: '24px 12px', textAlign: 'center' }}>
+            <p style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 10, color: GBC_MUTED }}>
+              NO RESULTS
+            </p>
+          </div>
+        )}
+        {pageResults.map((s) => {
           const col = s.Type === 'sativa' ? GBC_GREEN : s.Type === 'indica' ? GBC_VIOLET : GBC_AMBER
           return (
             <button
@@ -664,6 +781,11 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
                   {s.thc != null ? `THC ${s.thc}%` : ''}{s.thc != null && s.cbd != null ? '  ·  ' : ''}{s.cbd != null ? `CBD ${s.cbd}%` : ''}
                 </div>
               )}
+              {s.Rating != null && (
+                <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER, marginBottom: 6 }}>
+                  {'★'.repeat(Math.round(s.Rating))}{'☆'.repeat(5 - Math.round(s.Rating))}
+                </div>
+              )}
               {s.terpenes && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
                   {s.terpenes.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).slice(0, 3).map((t) => (
@@ -683,6 +805,38 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
           )
         })}
       </div>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', paddingTop: 4 }}>
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            style={{
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+              padding: '10px 16px', minHeight: 44, cursor: page === 0 ? 'not-allowed' : 'pointer',
+              border: `2px solid ${page === 0 ? GBC_DARKEST : GBC_MUTED}`,
+              background: 'transparent',
+              color: page === 0 ? GBC_DARKEST : GBC_MUTED,
+            }}
+          >
+            ◄ PREV
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page === totalPages - 1}
+            style={{
+              fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9,
+              padding: '10px 16px', minHeight: 44, cursor: page === totalPages - 1 ? 'not-allowed' : 'pointer',
+              border: `2px solid ${page === totalPages - 1 ? GBC_DARKEST : GBC_MUTED}`,
+              background: 'transparent',
+              color: page === totalPages - 1 ? GBC_DARKEST : GBC_MUTED,
+            }}
+          >
+            NEXT ►
+          </button>
+        </div>
+      )}
     </div>
   )
 }

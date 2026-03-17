@@ -379,13 +379,13 @@ export default function PokeCenter() {
           <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
             YOUR PARTY ({party.length} IN STOCK)
           </div>
-          {strains.length === 0 ? (
+          {party.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 9, color: GBC_DARKEST, lineHeight: 1.8 }}>
-              NO STRAINS IN STASH.{'\n'}ADD SOME IN SMOKÉDEX FIRST.
+              {strains.length === 0 ? 'NO STRAINS IN STASH.\nADD SOME IN SMOKÉDEX FIRST.' : 'NO STRAINS IN STOCK.\nMARK A STRAIN AS IN STOCK IN SMOKÉDEX.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {strains.map((s) => (
+              {party.map((s) => (
                 <PartyCard key={s.id} name={s.name} type={s.type} thc={s.thc} inStock={s.inStock} />
               ))}
             </div>
