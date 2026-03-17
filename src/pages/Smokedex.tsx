@@ -5,11 +5,12 @@ import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { lookupStrainData } from '../services/gemini'
+import { lookupStrainData, mixStrains } from '../services/gemini'
 import type { StrainLookupResult } from '../services/gemini'
 import { BudSprite, ALL_BUD_DESIGNS, getBudDesign } from '../components/BudSprite'
 import type { BudContext } from '../components/BudSprite'
 import BitBudCanvas from '../components/BitBudCanvas'
+import StatPentagon, { deriveEffectScores } from '../components/StatPentagon'
 
 const GBC_GREEN = '#84cc16'
 const GBC_TEXT = '#c8e890'
@@ -470,6 +471,10 @@ function PartyView({
   const [selectedId, setSelectedId]       = useState<string | null>(null)
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [mixSlots, setMixSlots]           = useState<[string | null, string | null]>([null, null])
+  const [mixResult, setMixResult]         = useState<string | null>(null)
+  const [mixLoading, setMixLoading]       = useState(false)
+  const [mixError, setMixError]           = useState<string | null>(null)
 
   const handleSurpriseMe = () => {
     if (party.length === 0) return
@@ -670,6 +675,16 @@ function PartyView({
                     </div>
                   </div>
                 )}
+                {/* Stat Pentagon */}
+                <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED }}>STAT PENTAGON</div>
+                  <StatPentagon
+                    scores={deriveEffectScores(dbe?.Effects, selected.type)}
+                    color={typeColor(selected.type)}
+                    size={130}
+                  />
+                </div>
+
                 {dbe?.Effects && (
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ fontFamily: PVSF, fontSize: 10, color: GBC_MUTED, marginBottom: 4 }}>EFFECTS</div>
@@ -711,6 +726,106 @@ function PartyView({
           PARTY FULL (6/6)
         </div>
       )}
+
+      {/* ── Mixed Salad / Entourage Calculator ────────────────────────────── */}
+      {party.length >= 2 && (() => {
+        const handleMix = async () => {
+          const [idA, idB] = mixSlots
+          const sA = party.find((p) => p.id === idA)
+          const sB = party.find((p) => p.id === idB)
+          if (!sA || !sB) return
+          setMixLoading(true)
+          setMixResult(null)
+          setMixError(null)
+          try {
+            const r = await mixStrains(
+              { name: sA.name, type: sA.type, thc: sA.thc, cbd: sA.cbd, terpenes: '', effects: '' },
+              { name: sB.name, type: sB.type, thc: sB.thc, cbd: sB.cbd, terpenes: '', effects: '' },
+            )
+            setMixResult(r)
+          } catch (e) {
+            setMixError(e instanceof Error ? e.message : 'Error')
+          } finally {
+            setMixLoading(false)
+          }
+        }
+
+        const canMix = !!mixSlots[0] && !!mixSlots[1] && mixSlots[0] !== mixSlots[1]
+
+        return (
+          <div style={{
+            border: '3px solid #4a7a10',
+            boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #1a3008',
+            background: '#060e05',
+            padding: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}>
+            <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED, letterSpacing: 0.5 }}>
+              MIXED SALAD — ENTOURAGE CALC
+            </span>
+            <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.6, margin: 0 }}>
+              Select 2 strains to mix. Prof T-Oak predicts the combined effect.
+            </p>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([0, 1] as const).map((slot) => (
+                <select
+                  key={slot}
+                  value={mixSlots[slot] ?? ''}
+                  onChange={(e) => {
+                    const next: [string | null, string | null] = [...mixSlots]
+                    next[slot] = e.target.value || null
+                    setMixSlots(next)
+                    setMixResult(null)
+                  }}
+                  style={{
+                    flex: 1, fontFamily: PVSF, fontSize: 8, padding: '8px 6px',
+                    background: '#0a1408', color: GBC_TEXT,
+                    border: mixSlots[slot] ? '2px solid #84cc16' : '2px solid #2a4a08',
+                    outline: 'none', cursor: 'pointer',
+                  }}
+                >
+                  <option value="">-- SLOT {slot + 1} --</option>
+                  {party.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
+                  ))}
+                </select>
+              ))}
+            </div>
+            <button
+              onClick={handleMix}
+              disabled={!canMix || mixLoading}
+              style={{
+                fontFamily: PVSF, fontSize: 9, padding: '10px 0', cursor: canMix && !mixLoading ? 'pointer' : 'not-allowed',
+                border: `3px solid ${canMix ? GBC_AMBER : '#2a4a08'}`,
+                color: canMix ? GBC_AMBER : GBC_MUTED,
+                background: canMix ? 'rgba(245,158,11,0.08)' : 'transparent',
+                width: '100%', boxSizing: 'border-box',
+              }}
+            >
+              {mixLoading ? '► ANALYZING...' : '► MIX STRAINS'}
+            </button>
+            {mixError && (
+              <span style={{ fontFamily: PVSF, fontSize: 8, color: GBC_RED }}>
+                {mixError === 'NO_KEY' ? 'NO API KEY — SET ONE IN POKECENTER' : mixError}
+              </span>
+            )}
+            {mixResult && (
+              <div style={{
+                border: '2px solid #2a4a08', background: '#060e05', padding: 10,
+                display: 'flex', flexDirection: 'column', gap: 8,
+              }}>
+                <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>PROF T-OAK SAYS:</span>
+                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {mixResult}
+                </p>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
     </div>
   )
 }

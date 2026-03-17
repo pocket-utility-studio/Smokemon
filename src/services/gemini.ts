@@ -60,16 +60,25 @@ Vaping onset (typically 1-3 min), how effects develop, peak duration, and any ca
 
 Keep Nurse Joy's tone warm and caring throughout. Be genuinely informative — this is a patient asking for healthcare guidance.`
 
+export interface ConsultationFeedback {
+  strainName: string
+  rating: 'up' | 'down'
+  note: string
+  date: string
+}
+
 /**
  * Ask Nurse Joy to recommend a strain from the user's party.
  *
- * @param desiredEffect - what the user wants to feel / do
- * @param party         - enriched strain data including terpenes, effects, medical
+ * @param desiredEffect  - what the user wants to feel / do
+ * @param party          - enriched strain data including terpenes, effects, medical
+ * @param feedbackHistory - past consultation notes injected as context
  * @returns Nurse Joy's detailed dialogue string
  */
 export async function askNurseJoy(
   desiredEffect: string,
   party: EnrichedStrain[],
+  feedbackHistory?: ConsultationFeedback[],
 ): Promise<string> {
   if (party.length === 0) throw new Error('Party is empty')
 
@@ -90,7 +99,15 @@ export async function askNurseJoy(
     })
     .join('\n')
 
-  const prompt = `${NURSE_JOY_SYSTEM}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
+  const memoryBlock = feedbackHistory && feedbackHistory.length > 0
+    ? `\n\nPATIENT HISTORY (past consultations):\n` +
+      feedbackHistory.map((f) =>
+        `- ${f.strainName}: ${f.rating === 'up' ? 'POSITIVE' : 'NEGATIVE'} — "${f.note}"`
+      ).join('\n') +
+      `\n\nUse the patient history to personalise your recommendation. Avoid strains that had negative reactions unless specifically asked. Reference relevant history when appropriate.`
+    : ''
+
+  const prompt = `${NURSE_JOY_SYSTEM}${memoryBlock}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
@@ -132,6 +149,43 @@ export async function askProfessorToke(
 
   const prompt = `${PROFESSOR_TOKE_SYSTEM}\n\nMy party:\n${partyList}\n\nWhat I want: ${desiredEffect}`
 
+  const result = await model.generateContent(prompt)
+  return result.response.text().trim()
+}
+
+// ── Mixed Salad / Entourage Calculator ────────────────────────────────────────
+
+const MIXED_SALAD_SYSTEM = `You are Professor T-Oak — the world's leading botanist specialising in cannabis terpene science, spoken in the warm, enthusiastic tone of Professor Oak from Pokémon. A trainer is combining two strains in a vaporiser. You must predict the combined Entourage Effect of their terpene and cannabinoid profiles working together.
+
+Write exactly TWO paragraphs:
+
+Paragraph 1 — THE ENTOURAGE EFFECT: Describe how the cannabinoid and terpene profiles of the two strains combine. Identify 2-3 key interactions by name (e.g., "Myrcene from Strain A amplifies the THC in Strain B..."). Explain the predicted onset, peak character, and overall therapeutic outcome. Use Professor Oak's enthusiastic tone.
+
+Paragraph 2 — FLAVOUR PROFILE: Describe the combined tasting experience. Reference the specific terpenes driving the flavour, how they interact, and what the trainer should expect on the inhale and exhale. Keep it sensory and vivid — this is terpene science meets gastronomy.
+
+Keep the science accurate. Keep the tone warm, curious, and encouraging. Address the trainer directly.`
+
+/**
+ * Mix two strains and predict their combined entourage effect.
+ */
+export async function mixStrains(
+  strainA: EnrichedStrain,
+  strainB: EnrichedStrain,
+): Promise<string> {
+  const client = getClient()
+  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+  const fmt = (s: EnrichedStrain) => {
+    const parts = [`${s.name} (${s.type ?? 'hybrid'}`]
+    if (s.thc != null)  parts[0] += `, THC ${s.thc}%`
+    if (s.cbd != null)  parts[0] += `, CBD ${s.cbd}%`
+    if (s.terpenes)     parts[0] += `, terpenes: ${s.terpenes}`
+    if (s.effects)      parts[0] += `, effects: ${s.effects}`
+    parts[0] += ')'
+    return parts[0]
+  }
+
+  const prompt = `${MIXED_SALAD_SYSTEM}\n\nStrain A: ${fmt(strainA)}\nStrain B: ${fmt(strainB)}`
   const result = await model.generateContent(prompt)
   return result.response.text().trim()
 }

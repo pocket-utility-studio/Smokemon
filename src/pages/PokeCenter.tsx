@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocalWeather } from '../hooks/useLocalWeather'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
@@ -7,7 +7,7 @@ import { useStash } from '../context/StashContext'
 import { useStrainDb } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
 import { askNurseJoy } from '../services/gemini'
-import type { EnrichedStrain } from '../services/gemini'
+import type { EnrichedStrain, ConsultationFeedback } from '../services/gemini'
 import { BudSprite } from '../components/BudSprite'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -517,6 +517,31 @@ export default function PokeCenter() {
   const [keyInput, setKeyInput] = useState('')
   const [showKeyInput, setShowKeyInput] = useState(false)
 
+  // Consultation feedback memory
+  const [feedbackHistory, setFeedbackHistory] = useState<ConsultationFeedback[]>(() => {
+    try { return JSON.parse(localStorage.getItem('utilhub_consult_log') ?? '[]') } catch { return [] }
+  })
+  const [feedbackRating, setFeedbackRating] = useState<'up' | 'down' | null>(null)
+  const [feedbackNote, setFeedbackNote]     = useState('')
+  const [feedbackSaved, setFeedbackSaved]   = useState(false)
+  const [lastRecommended, setLastRecommended] = useState<string | null>(null)
+
+  const saveFeedback = () => {
+    if (!feedbackRating || !lastRecommended) return
+    const entry: ConsultationFeedback = {
+      strainName: lastRecommended,
+      rating:     feedbackRating,
+      note:       feedbackNote.trim(),
+      date:       new Date().toISOString().slice(0, 10),
+    }
+    const next = [...feedbackHistory, entry]
+    setFeedbackHistory(next)
+    localStorage.setItem('utilhub_consult_log', JSON.stringify(next))
+    setFeedbackSaved(true)
+    setFeedbackNote('')
+    setFeedbackRating(null)
+  }
+
   const hasKey = apiKey.length > 0
   const party = strains.filter((s) => s.inStock)
   const fullQuery = [desiredEffect.trim(), ...selectedTags].filter(Boolean).join(', ')
@@ -539,6 +564,10 @@ export default function PokeCenter() {
     setLoading(true)
     setResponse('')
     setError('')
+    setFeedbackRating(null)
+    setFeedbackNote('')
+    setFeedbackSaved(false)
+    setLastRecommended(null)
     try {
       const enriched: EnrichedStrain[] = party.map((s) => {
         const match = findDbMatch(s.name, db)
@@ -553,7 +582,10 @@ export default function PokeCenter() {
           notes: s.notes,
         }
       })
-      const result = await askNurseJoy(fullQuery, enriched)
+      const result = await askNurseJoy(fullQuery, enriched, feedbackHistory)
+      // Best-effort: find the first party strain name mentioned in the response
+      const mentioned = party.find((s) => result.toLowerCase().includes(s.name.toLowerCase()))
+      if (mentioned) setLastRecommended(mentioned.name)
       setResponse(result)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong.'
@@ -768,6 +800,71 @@ export default function PokeCenter() {
 
         {/* Nurse Joy response */}
         {response && <NurseJoyDialogue text={response} />}
+
+        {/* Review consultation form */}
+        {response && !feedbackSaved && (
+          <div style={{
+            ...pokeBox,
+            padding: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}>
+            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>
+              REVIEW CONSULTATION
+            </span>
+            {lastRecommended && (
+              <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>
+                RE: {lastRecommended.toUpperCase()}
+              </span>
+            )}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['up', 'down'] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setFeedbackRating(feedbackRating === r ? null : r)}
+                  style={{
+                    flex: 1, fontFamily: FONT, fontSize: 9, padding: '8px 0', cursor: 'pointer',
+                    minHeight: 44,
+                    border: `2px solid ${feedbackRating === r ? (r === 'up' ? GBC_GREEN : GBC_RED) : GBC_DARKEST}`,
+                    color: feedbackRating === r ? (r === 'up' ? GBC_GREEN : GBC_RED) : GBC_MUTED,
+                    background: feedbackRating === r ? (r === 'up' ? 'rgba(132,204,22,0.1)' : 'rgba(232,64,64,0.1)') : 'transparent',
+                  }}
+                >{r === 'up' ? '▲ HELPED' : '▼ DIDN\'T HELP'}</button>
+              ))}
+            </div>
+            <textarea
+              rows={2}
+              value={feedbackNote}
+              onChange={(e) => setFeedbackNote(e.target.value)}
+              placeholder="How did it actually make you feel? (optional)"
+              style={{
+                fontFamily: 'monospace', fontSize: 12,
+                background: '#060e05', color: '#e8f8c0',
+                border: '2px solid #2a4a08', padding: '8px',
+                resize: 'none', width: '100%', boxSizing: 'border-box', lineHeight: 1.6, outline: 'none',
+              }}
+            />
+            <button
+              onClick={saveFeedback}
+              disabled={!feedbackRating}
+              style={{
+                fontFamily: FONT, fontSize: 9, padding: '10px 0', cursor: feedbackRating ? 'pointer' : 'not-allowed',
+                border: `2px solid ${feedbackRating ? GBC_GREEN : GBC_DARKEST}`,
+                color: feedbackRating ? GBC_GREEN : GBC_MUTED,
+                background: feedbackRating ? 'rgba(132,204,22,0.08)' : 'transparent',
+                width: '100%',
+              }}
+            >► SAVE FEEDBACK</button>
+          </div>
+        )}
+        {response && feedbackSaved && (
+          <div style={{ textAlign: 'center', padding: '6px 0' }}>
+            <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED }}>
+              FEEDBACK SAVED TO PATIENT HISTORY
+            </span>
+          </div>
+        )}
 
         {/* Waiting state */}
         {!loading && !response && !error && (
