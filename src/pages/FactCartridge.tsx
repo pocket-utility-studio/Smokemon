@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 
@@ -98,6 +98,24 @@ const TRIVIA_POOL: Fact[] = [
   { category: '[CANNA]', color: '#c8e890', text: 'Epidiolex (plant-derived CBD) was approved by the FDA in 2018 for two forms of severe childhood epilepsy — the first plant-derived cannabis medicine to receive FDA approval.' },
 ]
 
+// ── Daily loot helpers ─────────────────────────────────────────────────────────
+function getTodayDateString(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+}
+
+function getDailyLootState(): { claimed: boolean; fact: Fact | null } {
+  try {
+    const raw = localStorage.getItem('utilhub_daily_loot')
+    if (!raw) return { claimed: false, fact: null }
+    const parsed = JSON.parse(raw)
+    if (parsed.date !== getTodayDateString()) return { claimed: false, fact: null }
+    return { claimed: true, fact: parsed.fact }
+  } catch {
+    return { claimed: false, fact: null }
+  }
+}
+
 function getTodayKey(): string {
   const now = new Date()
   const mm = String(now.getMonth() + 1).padStart(2, '0')
@@ -115,6 +133,34 @@ function formatDate(): string {
 
 export default function FactCartridge() {
   const [triviaIndex, setTriviaIndex] = useState(() => Math.floor(Math.random() * TRIVIA_POOL.length))
+
+  // Daily Loot
+  const [lootState, setLootState] = useState(() => getDailyLootState())
+  const claimLoot = useCallback(() => {
+    if (lootState.claimed) return
+    const fact = TRIVIA_POOL[Math.floor(Math.random() * TRIVIA_POOL.length)]
+    localStorage.setItem('utilhub_daily_loot', JSON.stringify({ date: getTodayDateString(), fact }))
+    setLootState({ claimed: true, fact })
+  }, [lootState.claimed])
+
+  // Wanted posters
+  const [wantedInput, setWantedInput] = useState('')
+  const [wanted, setWanted] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('utilhub_wanted') ?? '[]') } catch { return [] }
+  })
+  const addWanted = () => {
+    const name = wantedInput.trim().toUpperCase()
+    if (!name || wanted.includes(name)) return
+    const next = [...wanted, name]
+    setWanted(next)
+    localStorage.setItem('utilhub_wanted', JSON.stringify(next))
+    setWantedInput('')
+  }
+  const removeWanted = (name: string) => {
+    const next = wanted.filter((w) => w !== name)
+    setWanted(next)
+    localStorage.setItem('utilhub_wanted', JSON.stringify(next))
+  }
 
   const todayKey = getTodayKey()
   const dateFact = DATE_FACTS[todayKey]
@@ -311,6 +357,147 @@ export default function FactCartridge() {
       >
         ► NEXT FACT
       </button>
+
+      {/* ── Daily Loot ─────────────────────────────────────────────────────── */}
+      <div style={{
+        ...pokeBox,
+        padding: 14,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: FONT, fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+            DAILY NUGGET
+          </span>
+          <span style={{
+            fontFamily: FONT, fontSize: 7, color: lootState.claimed ? '#84cc16' : '#4a7a10',
+            border: `2px solid ${lootState.claimed ? '#84cc16' : '#2a4a08'}`, padding: '2px 6px',
+          }}>
+            {lootState.claimed ? '[CLAIMED]' : '[UNCLAIMED]'}
+          </span>
+        </div>
+
+        {lootState.claimed && lootState.fact ? (
+          <div>
+            <span style={{
+              fontFamily: FONT, fontSize: 8, color: lootState.fact.color,
+              border: `1px solid ${lootState.fact.color}`, padding: '2px 6px',
+              display: 'inline-block', marginBottom: 8,
+            }}>
+              {lootState.fact.category}
+            </span>
+            <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
+              {lootState.fact.text}
+            </p>
+          </div>
+        ) : (
+          <>
+            <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
+              Claim your daily knowledge nugget. Resets at midnight.
+            </p>
+            <button
+              onClick={claimLoot}
+              style={{
+                fontFamily: FONT, fontSize: 10, padding: '11px 14px', cursor: 'pointer',
+                border: '3px solid #f59e0b', color: '#f59e0b', background: 'rgba(245,158,11,0.08)',
+                width: '100%', boxSizing: 'border-box', letterSpacing: 0.5,
+              }}
+            >
+              ★ COLLECT NUGGET
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Wanted Posters ──────────────────────────────────────────────────── */}
+      <div style={{
+        border: '3px solid #e84040',
+        boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a0808',
+        background: '#0a0808',
+        padding: 14,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+        <span style={{ fontFamily: FONT, fontSize: 9, color: '#e84040', letterSpacing: 0.5 }}>
+          TEAM ROCKET WANTED
+        </span>
+        <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
+          Strains you are hunting. Add them to your wanted list.
+        </p>
+
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input
+            type="text"
+            value={wantedInput}
+            onChange={(e) => setWantedInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addWanted()}
+            placeholder="STRAIN NAME..."
+            style={{
+              flex: 1,
+              fontFamily: FONT,
+              fontSize: 9,
+              background: '#060e05',
+              color: '#e8f8c0',
+              border: '2px solid #2a4a08',
+              padding: '8px 10px',
+              outline: 'none',
+              minHeight: 44,
+              boxSizing: 'border-box',
+            }}
+          />
+          <button
+            onClick={addWanted}
+            style={{
+              fontFamily: FONT, fontSize: 9, padding: '8px 12px', cursor: 'pointer',
+              border: '2px solid #e84040', color: '#e84040', background: 'rgba(232,64,64,0.08)',
+              minHeight: 44, flexShrink: 0,
+            }}
+          >+</button>
+        </div>
+
+        {wanted.length === 0 ? (
+          <span style={{ fontFamily: FONT, fontSize: 8, color: '#4a0a0a', textAlign: 'center' }}>
+            NO ACTIVE WARRANTS
+          </span>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {wanted.map((name) => (
+              <div
+                key={name}
+                style={{
+                  border: '2px solid #e84040',
+                  background: '#080404',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <span style={{ fontFamily: FONT, fontSize: 7, color: '#e84040' }}>
+                    WANTED
+                  </span>
+                  <span style={{ fontFamily: FONT, fontSize: 10, color: '#c8e890' }}>
+                    {name}
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeWanted(name)}
+                  style={{
+                    fontFamily: FONT, fontSize: 8, padding: '6px 10px', cursor: 'pointer',
+                    border: '2px solid #e84040', color: '#e84040', background: 'transparent',
+                    flexShrink: 0, minHeight: 36,
+                  }}
+                >✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

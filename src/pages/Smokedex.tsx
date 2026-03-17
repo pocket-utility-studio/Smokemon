@@ -471,6 +471,13 @@ function PartyView({
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
+  const handleSurpriseMe = () => {
+    if (party.length === 0) return
+    const pick = party[Math.floor(Math.random() * party.length)]
+    setSelectedId(pick.id)
+    setEditingId(null)
+  }
+
   const lookupDb = (name: string) => {
     const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '')
     return db.find((d) => String(d.Strain).toLowerCase().replace(/[^a-z0-9]/g, '') === norm)
@@ -492,6 +499,17 @@ function PartyView({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+      {/* SURPRISE ME */}
+      <button
+        onClick={handleSurpriseMe}
+        style={{
+          fontFamily: PVSF, fontSize: 9, padding: '10px 0', cursor: 'pointer',
+          border: '3px solid #84cc16', color: '#84cc16',
+          background: 'rgba(132,204,22,0.08)', width: '100%',
+          boxSizing: 'border-box', letterSpacing: 0.5,
+        }}
+      >★ SURPRISE ME</button>
 
       {/* ── 2×3 party grid ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>

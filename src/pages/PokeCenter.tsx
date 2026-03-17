@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useLocalWeather } from '../hooks/useLocalWeather'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
@@ -433,6 +434,75 @@ function findDbMatch(name: string, db: StrainRecord[]): StrainRecord | undefined
   return db.find((r) => norm(String(r.Strain)) === target)
 }
 
+// ── Weather window ─────────────────────────────────────────────────────────────
+const WEATHER_CSS = `
+@keyframes pc-rain { from{background-position:0 0} to{background-position:6px 18px} }
+@keyframes pc-snow { from{background-position:0 0,8px 8px} to{background-position:4px 24px,12px 32px} }
+.pc-weather-rain {
+  background-image: repeating-linear-gradient(
+    168deg, transparent 0px, transparent 2px,
+    rgba(132,204,22,0.35) 2px, rgba(132,204,22,0.35) 3px,
+    transparent 3px, transparent 6px
+  );
+  background-size: 6px 6px;
+  animation: pc-rain 0.15s linear infinite;
+}
+.pc-weather-snow {
+  background-image:
+    radial-gradient(circle, rgba(200,232,144,0.8) 1px, transparent 1px),
+    radial-gradient(circle, rgba(200,232,144,0.4) 1px, transparent 1px);
+  background-size: 14px 14px, 20px 20px;
+  animation: pc-snow 2.8s linear infinite;
+}
+`
+
+const WEATHER_BG: Record<string, string> = {
+  clear: 'linear-gradient(180deg, #0a1a2e 0%, #0e1a0b 100%)',
+  rain:  'linear-gradient(180deg, #1a1e24 0%, #0a1408 100%)',
+  snow:  'linear-gradient(180deg, #12182a 0%, #0a1420 100%)',
+}
+const WEATHER_LABEL: Record<string, string> = { clear: 'CLEAR', rain: 'RAINING', snow: 'SNOWING' }
+
+function WeatherWindow() {
+  const { weather, loading } = useLocalWeather()
+  return (
+    <>
+      <style>{WEATHER_CSS}</style>
+      <div style={{
+        position: 'relative', height: 48, overflow: 'hidden',
+        background: WEATHER_BG[weather],
+        border: '3px solid #2a4a08',
+        transition: 'background 1.5s ease',
+        flexShrink: 0,
+      }}>
+        {/* Pixel window frame */}
+        <div style={{
+          position: 'absolute', top: 6, right: 12, width: 40, height: 32,
+          border: '2px solid #2a4a08', background: WEATHER_BG[weather],
+          overflow: 'hidden', transition: 'background 1.5s ease',
+        }}>
+          {!loading && weather !== 'clear' && (
+            <div className={`pc-weather-${weather}`} style={{ position: 'absolute', inset: 0 }} />
+          )}
+          {/* Crossbar */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '100%', height: 1, background: '#2a4a08', opacity: 0.6 }} />
+          </div>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ height: '100%', width: 1, background: '#2a4a08', opacity: 0.6 }} />
+          </div>
+        </div>
+        {/* Weather label */}
+        <div style={{ position: 'absolute', bottom: 5, left: 10 }}>
+          <span style={{ fontFamily: "'PokemonGb','Press Start 2P',monospace", fontSize: 6, color: '#4a7a10' }}>
+            {loading ? 'CHECKING...' : WEATHER_LABEL[weather]}
+          </span>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function PokeCenter() {
   const { strains, updateStrain } = useStash()
   const { db } = useStrainDb()
@@ -524,6 +594,9 @@ export default function PokeCenter() {
             {hasKey ? 'API KEY ✓' : 'SET KEY'}
           </button>
         </div>
+
+        {/* Weather window */}
+        <WeatherWindow />
 
         {/* API key input */}
         {showKeyInput && (
