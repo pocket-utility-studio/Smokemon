@@ -472,12 +472,17 @@ function PartyView({
                   <BudSprite name={s.name} type={s.type} size={18} context={dbCtx} budDesign={s.budDesign} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 11, color: isExpanded ? GBC_GREEN : col,
-                    marginBottom: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {isExpanded ? '► ' : ''}{s.name.toUpperCase()}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+                    <div style={{
+                      fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
+                      fontSize: 11, color: isExpanded ? GBC_GREEN : col,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                    }}>
+                      {s.name.toUpperCase()}
+                    </div>
+                    <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: isExpanded ? GBC_GREEN : GBC_DARKEST, flexShrink: 0 }}>
+                      {isExpanded ? '▲' : '▼'}
+                    </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 80, height: 6, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>

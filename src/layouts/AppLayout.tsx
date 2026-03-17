@@ -318,8 +318,8 @@ export default function AppLayout() {
               flex: 1,
               minHeight: 0,
               background: BEZEL_INNER,
-              borderRadius: 6,
-              padding: 5,
+              borderRadius: 0,
+              padding: 0,
               boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.95)',
               display: 'flex',
               flexDirection: 'column',
@@ -328,7 +328,6 @@ export default function AppLayout() {
               <div className="gbc-active-display" style={{ flex: 1, minHeight: 0, position: 'relative' }}>
                 <div style={{
                   position: 'absolute', inset: 0,
-                  borderRadius: 3,
                   overflow: 'hidden',
                   background: '#0e1a0b',
                   boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.8)',
@@ -378,10 +377,10 @@ export default function AppLayout() {
                     {!isHome && (
                       <div style={{
                         flexShrink: 0,
-                        border: '4px solid #84cc16',
+                        borderTop: '2px solid #1a4008',
                         background: '#050e04',
-                        padding: '6px 12px',
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '0 10px',
+                        display: 'flex', alignItems: 'center',
                         opacity: booting ? 0 : 1,
                         transition: `opacity ${T}`,
                         pointerEvents: booting ? 'none' : 'auto',
@@ -390,16 +389,13 @@ export default function AppLayout() {
                           onClick={() => { haptic(20); goBack() }}
                           style={{
                             fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                            fontSize: 10, color: '#84cc16',
+                            fontSize: 9, color: '#84cc16',
                             background: 'transparent', border: 'none', cursor: 'pointer',
-                            padding: '6px 0', minHeight: 44, minWidth: 80, textAlign: 'left',
+                            padding: '8px 0', minHeight: 36, minWidth: 70, textAlign: 'left',
                           }}
                         >
                           [◄] BACK
                         </button>
-                        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: '#4a9a20' }}>
-                          ▲▼ SCROLL
-                        </span>
                       </div>
                     )}
                     {/* Splash — always in DOM, fades out after boot */}
