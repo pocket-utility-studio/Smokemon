@@ -5,8 +5,8 @@ import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
 import { useStrainDb } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { askNurseJoy } from '../services/gemini'
-import type { EnrichedStrain, ConsultationFeedback } from '../services/gemini'
+import { askNurseJoy, generateMixSuggestions } from '../services/gemini'
+import type { EnrichedStrain, ConsultationFeedback, MixSuggestion } from '../services/gemini'
 import { BudSprite } from '../components/BudSprite'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -427,6 +427,45 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
   )
 }
 
+// ── Spinning square loader ────────────────────────────────────────────────────
+
+// 8 positions clockwise: TL T TR R BR B BL L
+const SPIN_POS: [number, number][] = [
+  [0,0],[1,0],[2,0],
+  [2,1],
+  [2,2],[1,2],[0,2],
+  [0,1],
+]
+
+function SpinningSquare() {
+  const [frame, setFrame] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setFrame((f) => (f + 1) % 8), 100)
+    return () => clearInterval(id)
+  }, [])
+  const DOT = 6, GAP = 5
+  const SIZE = DOT * 3 + GAP * 2
+  return (
+    <div style={{ position: 'relative', width: SIZE, height: SIZE, flexShrink: 0 }}>
+      {SPIN_POS.map(([col, row], i) => {
+        const age = (frame - i + 8) % 8
+        const color = age <= 2 ? GBC_GREEN : GBC_DARKEST
+        const opacity = age === 0 ? 1 : age === 1 ? 0.55 : age === 2 ? 0.25 : 0.1
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: col * (DOT + GAP),
+            top: row * (DOT + GAP),
+            width: DOT, height: DOT,
+            background: color,
+            opacity,
+          }} />
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function findDbMatch(name: string, db: StrainRecord[]): StrainRecord | undefined {
@@ -458,6 +497,40 @@ export default function PokeCenter() {
   const [feedbackNote, setFeedbackNote]     = useState('')
   const [feedbackSaved, setFeedbackSaved]   = useState(false)
   const [lastRecommended, setLastRecommended] = useState<string | null>(null)
+
+  // Blend suggestion
+  const [blendGoal, setBlendGoal]       = useState('')
+  const [blendLoading, setBlendLoading] = useState(false)
+  const [blendResults, setBlendResults] = useState<MixSuggestion[]>([])
+  const [blendError, setBlendError]     = useState('')
+
+  const handleBlend = async () => {
+    if (party.length < 2 || !hasKey || blendLoading) return
+    setBlendLoading(true)
+    setBlendResults([])
+    setBlendError('')
+    try {
+      const enriched: EnrichedStrain[] = party.map((s) => {
+        const match = findDbMatch(s.name, db)
+        return {
+          name: s.name,
+          type: s.type ?? match?.Type,
+          thc: s.thc ?? match?.thc,
+          cbd: s.cbd ?? match?.cbd,
+          terpenes: match?.terpenes,
+          effects: match?.Effects,
+          medical: match?.medical,
+          notes: s.notes,
+        }
+      })
+      const results = await generateMixSuggestions(blendGoal.trim() || 'balanced relaxation', enriched)
+      setBlendResults(results)
+    } catch (e) {
+      setBlendError(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
+      setBlendLoading(false)
+    }
+  }
 
   const saveFeedback = () => {
     if (!feedbackRating || !lastRecommended) return
@@ -628,6 +701,64 @@ export default function PokeCenter() {
             </div>
           )}
         </div>
+
+        {/* Blend suggestion */}
+        {party.length >= 2 && hasKey && (
+          <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
+            <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
+              BLEND SUGGESTION
+            </div>
+            <input
+              type="text"
+              value={blendGoal}
+              onChange={(e) => setBlendGoal(e.target.value)}
+              placeholder="e.g. sleep, focus, creativity..."
+              style={{
+                width: '100%', background: GBC_BG, border: `2px solid ${GBC_DARKEST}`,
+                color: GBC_TEXT, fontFamily: 'monospace', fontSize: 13,
+                padding: '8px', outline: 'none', boxSizing: 'border-box', marginBottom: 8,
+              }}
+            />
+            <button
+              onClick={handleBlend}
+              disabled={blendLoading}
+              style={{
+                width: '100%', fontFamily: FONT, fontSize: 10, padding: '10px 0',
+                border: `2px solid ${blendLoading ? GBC_DARKEST : GBC_GREEN}`,
+                background: blendLoading ? 'transparent' : 'rgba(132,204,22,0.1)',
+                color: blendLoading ? GBC_MUTED : GBC_GREEN,
+                cursor: blendLoading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              }}
+            >
+              {blendLoading ? <><SpinningSquare /><span>ANALYSING...</span></> : '► GET BLEND'}
+            </button>
+
+            {blendError && (
+              <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#e84040', margin: '8px 0 0', lineHeight: 1.5 }}>
+                {blendError}
+              </p>
+            )}
+
+            {blendResults.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                {blendResults.map((mix, i) => (
+                  <div key={i} style={{ border: `1px solid ${GBC_DARKEST}`, background: GBC_BG, padding: '10px' }}>
+                    <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN, marginBottom: 6 }}>
+                      {mix.strainA.toUpperCase()} + {mix.strainB.toUpperCase()}
+                    </div>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_AMBER, lineHeight: 1.6, margin: '0 0 6px' }}>
+                      {mix.flavourReason}
+                    </p>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.6, margin: 0, opacity: 0.8 }}>
+                      {mix.terpeneReason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stash — add to party */}
         {strains.filter((s) => !s.inStock).length > 0 && (
