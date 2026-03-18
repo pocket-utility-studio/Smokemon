@@ -41,11 +41,6 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function pickRandom<T>(arr: T[], exclude?: Set<T>): T | null {
-  const pool = exclude ? arr.filter((x) => !exclude.has(x)) : arr
-  if (pool.length === 0) return null
-  return pool[Math.floor(Math.random() * pool.length)]
-}
 
 function generateQuestions(db: StrainRecord[], count = 10): Question[] {
   if (db.length < 4) return []

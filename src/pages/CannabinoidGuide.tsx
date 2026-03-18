@@ -7,7 +7,6 @@ const GBC_BG     = '#050a04'
 const GBC_BOX    = '#0a1408'
 const GBC_VIOLET = '#a78bfa'
 const GBC_AMBER  = '#f59e0b'
-const GBC_RED    = '#e84040'
 
 interface Cannabinoid {
   id: string

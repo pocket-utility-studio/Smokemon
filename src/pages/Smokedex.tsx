@@ -312,7 +312,6 @@ function StashList({
       {strains.map((s) => {
         const dbe = lookupDb(s.name)
         const col = typeColor(s.type)
-        const thc = s.thc ?? dbe?.thc
         const cbd = s.cbd ?? dbe?.cbd
 
         const dbCtx: BudContext | undefined = dbe ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor } : undefined
@@ -568,7 +567,6 @@ function PartyView({
       {/* ── Selected strain detail panel ── */}
       {selected && (() => {
         const dbe    = lookupDb(selected.name)
-        const thc    = selected.thc ?? dbe?.thc
         const col    = typeColor(selected.type)
         const dbCtx: BudContext | undefined = dbe
           ? { description: dbe.Description, effects: dbe.Effects, terpenes: dbe.terpenes, flavor: dbe.Flavor }
@@ -919,7 +917,7 @@ function PartyView({
                           next[slot] = e.target.value || null
                           setMixSlots(next)
                           setMixResult(null)
-                          setSuggestion(null)
+                          setSuggestions([])
                         }}
                         style={{
                           fontFamily: PVSF, fontSize: 8, padding: '8px 6px',
@@ -1014,7 +1012,7 @@ function PartyView({
                             <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_GREEN, border: `1px solid ${GBC_GREEN}`, padding: '1px 5px' }}>
                               {custom.name.toUpperCase()}
                             </span>
-                            {custom.type && <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(custom.type) }}>{custom.type.toUpperCase()}</span>}
+                            {custom.type && <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(custom.type as 'sativa' | 'indica' | 'hybrid') }}>{custom.type.toUpperCase()}</span>}
                             {custom.thc != null && <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>THC {custom.thc}%</span>}
                             {custom.terpenes && <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED }}>{custom.terpenes}</span>}
                           </div>

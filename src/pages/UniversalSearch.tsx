@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
 import Fuse from 'fuse.js'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
+import type { StrainRecord } from '../hooks/useStrainDb'
 import { useStash } from '../context/StashContext'
+import type { StrainEntry } from '../context/StashContext'
 import { useTransitionNav } from '../context/NavigationContext'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
@@ -47,7 +49,7 @@ const MAX_PER_CAT = 5
 export default function UniversalSearch() {
   const [query, setQuery] = useState('')
   const { db: strains } = useStrainDb()
-  const { entries: stash } = useStash()
+  const { strains: stash } = useStash()
   const { transitionTo } = useTransitionNav()
 
   const sessions = useMemo<SessionRecord[]>(() => {
@@ -68,7 +70,7 @@ export default function UniversalSearch() {
 
   const strainFuse = useMemo(
     () =>
-      new Fuse(strains, {
+      new Fuse<StrainRecord>(strains, {
         keys: [
           { name: 'Strain', weight: 3 },
           { name: 'Effects', weight: 1 },
@@ -82,7 +84,7 @@ export default function UniversalSearch() {
 
   const stashFuse = useMemo(
     () =>
-      new Fuse(stash, {
+      new Fuse<StrainEntry>(stash, {
         keys: [
           { name: 'name', weight: 3 },
           { name: 'notes', weight: 1 },
@@ -94,7 +96,7 @@ export default function UniversalSearch() {
 
   const sessionFuse = useMemo(
     () =>
-      new Fuse(sessions, {
+      new Fuse<SessionRecord>(sessions, {
         keys: [
           { name: 'strainName', weight: 3 },
           { name: 'notes', weight: 1 },
@@ -106,7 +108,7 @@ export default function UniversalSearch() {
 
   const wantedFuse = useMemo(
     () =>
-      new Fuse(wanted, {
+      new Fuse<WantedRecord>(wanted, {
         keys: [
           { name: 'name', weight: 3 },
           { name: 'notes', weight: 1 },

@@ -143,24 +143,6 @@ export default function FactCartridge() {
     setLootState({ claimed: true, fact })
   }, [lootState.claimed])
 
-  // Wanted posters
-  const [wantedInput, setWantedInput] = useState('')
-  const [wanted, setWanted] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('utilhub_wanted') ?? '[]') } catch { return [] }
-  })
-  const addWanted = () => {
-    const name = wantedInput.trim().toUpperCase()
-    if (!name || wanted.includes(name)) return
-    const next = [...wanted, name]
-    setWanted(next)
-    localStorage.setItem('utilhub_wanted', JSON.stringify(next))
-    setWantedInput('')
-  }
-  const removeWanted = (name: string) => {
-    const next = wanted.filter((w) => w !== name)
-    setWanted(next)
-    localStorage.setItem('utilhub_wanted', JSON.stringify(next))
-  }
 
   const todayKey = getTodayKey()
   const dateFact = DATE_FACTS[todayKey]
