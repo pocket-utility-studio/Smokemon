@@ -4,8 +4,8 @@ import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { lookupStrainData, mixStrains, generateMixSuggestions } from '../services/gemini'
-import type { StrainLookupResult, MixSuggestion } from '../services/gemini'
+import { lookupStrainData, generateFourBlends } from '../services/gemini'
+import type { StrainLookupResult, FourBlendResult } from '../services/gemini'
 import { BudSprite, ALL_BUD_DESIGNS, getBudDesign } from '../components/BudSprite'
 import type { BudContext } from '../components/BudSprite'
 import BitBudCanvas from '../components/BitBudCanvas'
@@ -443,18 +443,6 @@ function PartyView({
   const [selectedId, setSelectedId]       = useState<string | null>(null)
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [mixSlots, setMixSlots]           = useState<[string | null, string | null]>([null, null])
-  const [mixModes, setMixModes]           = useState<['party'|'search', 'party'|'search']>(['party', 'party'])
-  const [searchQueries, setSearchQueries] = useState<[string, string]>(['', ''])
-  const [searchResults, setSearchResults] = useState<[StrainRecord[], StrainRecord[]]>([[], []])
-  const [customStrains, setCustomStrains] = useState<[import('../services/gemini').EnrichedStrain|null, import('../services/gemini').EnrichedStrain|null]>([null, null])
-  const [lookupLoading, setLookupLoading] = useState<[boolean, boolean]>([false, false])
-  const [mixResult, setMixResult]         = useState<string | null>(null)
-  const [mixLoading, setMixLoading]       = useState(false)
-  const [mixError, setMixError]           = useState<string | null>(null)
-  const [suggestGoal, setSuggestGoal]       = useState('')
-  const [suggestions, setSuggestions]       = useState<MixSuggestion[]>([])
-  const [suggestLoading, setSuggestLoading] = useState(false)
 
   const handleSurpriseMe = () => {
     if (party.length === 0) return
@@ -697,388 +685,143 @@ function PartyView({
         </div>
       )}
 
-      {/* ── Mixed Salad / Entourage Calculator ────────────────────────────── */}
-      {party.length >= 2 && (() => {
-        const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const findDb = (name: string) => db.find((d) => normName(String(d.Strain)) === normName(name))
+      {party.length >= 2 && <StrainMixer party={party} db={db} />}
 
-        const getSlotStrain = (slot: 0 | 1): import('../services/gemini').EnrichedStrain | null => {
-          if (mixModes[slot] === 'search') return customStrains[slot]
-          const id = mixSlots[slot]
-          const s = party.find((p) => p.id === id)
-          if (!s) return null
-          const d = findDb(s.name)
-          return { name: s.name, type: s.type ?? d?.Type, thc: s.thc ?? d?.thc, cbd: s.cbd ?? d?.cbd, terpenes: d?.terpenes, effects: d?.Effects }
-        }
+    </div>
+  )
+}
 
-        const handleMix = async () => {
-          const eA = getSlotStrain(0)
-          const eB = getSlotStrain(1)
-          if (!eA || !eB) return
-          setMixLoading(true)
-          setMixResult(null)
-          setMixError(null)
-          try {
-            const r = await mixStrains(eA, eB)
-            setMixResult(r)
-          } catch (e) {
-            setMixError(e instanceof Error ? e.message : 'Error')
-          } finally {
-            setMixLoading(false)
-          }
-        }
+// ─── Strain Mixer ─────────────────────────────────────────────────────────────
 
-        const handleLookup = async (slot: 0 | 1) => {
-          const q = searchQueries[slot].trim()
-          if (!q) return
-          const next: [boolean, boolean] = [...lookupLoading]
-          next[slot] = true
-          setLookupLoading(next)
-          setMixError(null)
-          try {
-            const data = await lookupStrainData(q)
-            const enriched: import('../services/gemini').EnrichedStrain = {
-              name: q,
-              type: data.type,
-              thc: data.thc,
-              cbd: data.cbd,
-              terpenes: data.terpenes,
-              effects: data.effects,
-            }
-            const nc: typeof customStrains = [...customStrains]
-            nc[slot] = enriched
-            setCustomStrains(nc)
-          } catch {
-            setMixError('AI lookup failed — check your API key')
-          } finally {
-            const nd: [boolean, boolean] = [...lookupLoading]
-            nd[slot] = false
-            setLookupLoading(nd)
-          }
-        }
+const SPINNER_COUNT = 12
 
-        const handleSuggest = async () => {
-          if (!suggestGoal.trim()) return
-          setSuggestLoading(true)
-          setSuggestions([])
-          setMixResult(null)
-          setMixError(null)
-          try {
-            const enrichedParty = party.map((s) => {
-              const d = findDb(s.name)
-              return { name: s.name, type: s.type ?? d?.Type, thc: s.thc ?? d?.thc, cbd: s.cbd ?? d?.cbd, terpenes: d?.terpenes, effects: d?.Effects }
-            })
-            const results = await generateMixSuggestions(suggestGoal.trim(), enrichedParty)
-            setSuggestions(results)
-          } catch (e) {
-            setMixError(e instanceof Error ? e.message : 'Error')
-          } finally {
-            setSuggestLoading(false)
-          }
-        }
+function CircleSpinner() {
+  const [frame, setFrame] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setFrame((f) => (f + 1) % SPINNER_COUNT), 80)
+    return () => clearInterval(id)
+  }, [])
 
-        const loadSuggestion = (sugg: MixSuggestion) => {
-          // Switch both slots to party mode and auto-fill if strains exist in party
-          const idA = party.find((p) => p.name.toLowerCase() === sugg.strainA.toLowerCase())?.id ?? null
-          const idB = party.find((p) => p.name.toLowerCase() === sugg.strainB.toLowerCase())?.id ?? null
-          setMixModes(['party', 'party'])
-          setMixSlots([idA, idB])
-          setMixResult(null)
-        }
+  const SIZE = 56   // outer container px
+  const R    = 22   // radius from centre to dot centre
+  const DOT  = 7    // dot square size
 
-        const slotReady = (slot: 0 | 1) =>
-          mixModes[slot] === 'search' ? !!customStrains[slot] : !!mixSlots[slot]
-        const canMix = slotReady(0) && slotReady(1) &&
-          !(mixModes[0] === 'party' && mixModes[1] === 'party' && mixSlots[0] === mixSlots[1])
-
+  return (
+    <div style={{ position: 'relative', width: SIZE, height: SIZE, flexShrink: 0 }}>
+      {Array.from({ length: SPINNER_COUNT }, (_, i) => {
+        const angle = (i / SPINNER_COUNT) * 2 * Math.PI - Math.PI / 2
+        const cx = SIZE / 2 + R * Math.cos(angle) - DOT / 2
+        const cy = SIZE / 2 + R * Math.sin(angle) - DOT / 2
+        const deg = (i / SPINNER_COUNT) * 360
+        // age: how far behind the head this dot is (0 = head, 11 = tail)
+        const age = (frame - i + SPINNER_COUNT) % SPINNER_COUNT
+        const opacity = age === 0 ? 1
+          : age === 1 ? 0.75
+          : age === 2 ? 0.55
+          : age === 3 ? 0.38
+          : age === 4 ? 0.24
+          : 0.1
         return (
-          <div style={{
-            border: '3px solid #4a7a10',
-            boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #1a3008',
-            background: '#060e05',
-            padding: 12,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}>
-            <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_MUTED, letterSpacing: 0.5 }}>
-              MIXED SALAD — ENTOURAGE CALC
-            </span>
-
-            {/* Suggestion generator */}
-            <div style={{ border: `2px solid ${GBC_VIOLET}`, background: '#080a10', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontFamily: PVSF, fontSize: 8, color: GBC_VIOLET }}>GET BLEND SUGGESTIONS</span>
-              <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, lineHeight: 1.6, margin: 0 }}>
-                Describe what you want — taste, effect, or occasion. Prof T-Oak will suggest 5 blends from your party.
-              </p>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  type="text"
-                  value={suggestGoal}
-                  onChange={(e) => setSuggestGoal(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSuggest() }}
-                  placeholder="e.g. relaxing, citrus taste, creative..."
-                  style={{
-                    flex: 1, fontFamily: 'monospace', fontSize: 12, padding: '8px 10px',
-                    background: '#0a1408', color: GBC_TEXT,
-                    border: `2px solid ${suggestGoal ? GBC_VIOLET : GBC_DARKEST}`,
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  onClick={handleSuggest}
-                  disabled={!suggestGoal.trim() || suggestLoading || mixLoading}
-                  style={{
-                    fontFamily: PVSF, fontSize: 7, padding: '8px 10px', flexShrink: 0, cursor: 'pointer',
-                    border: `2px solid ${GBC_VIOLET}`,
-                    color: suggestLoading ? GBC_MUTED : GBC_VIOLET,
-                    background: 'rgba(167,139,250,0.08)',
-                    opacity: !suggestGoal.trim() ? 0.4 : 1,
-                  }}
-                >
-                  {suggestLoading ? <span className="gbc-dots" /> : '► GO'}
-                </button>
-              </div>
-
-              {/* 5 suggestion cards */}
-              {suggestions.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>TAP A BLEND TO LOAD IT INTO THE SLOTS:</span>
-                  {suggestions.map((sugg, i) => (
-                    <button
-                      key={i}
-                      onClick={() => loadSuggestion(sugg)}
-                      style={{
-                        textAlign: 'left', cursor: 'pointer', padding: '10px',
-                        border: `2px solid ${GBC_DARKEST}`,
-                        background: '#0a1408',
-                        display: 'flex', flexDirection: 'column', gap: 6,
-                        width: '100%',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_VIOLET, flexShrink: 0 }}>#{i + 1}</span>
-                        <span style={{ fontFamily: PVSF, fontSize: 8, color: GBC_TEXT, lineHeight: 1.5 }}>
-                          {sugg.strainA.toUpperCase()} + {sugg.strainB.toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_AMBER, display: 'block', marginBottom: 2 }}>FLAVOUR</span>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.6 }}>{sugg.flavourReason}</span>
-                      </div>
-                      <div>
-                        <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_VIOLET, display: 'block', marginBottom: 2 }}>TERPENE SYNERGY</span>
-                        <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_TEXT, lineHeight: 1.6 }}>{sugg.terpeneReason}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {([0, 1] as const).map((slot) => {
-                const isSearch = mixModes[slot] === 'search'
-                const custom = customStrains[slot]
-                return (
-                  <div key={slot} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {/* Mode toggle */}
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      {(['party', 'search'] as const).map((m) => (
-                        <button
-                          key={m}
-                          onClick={() => {
-                            const nm: typeof mixModes = [...mixModes]
-                            nm[slot] = m
-                            setMixModes(nm)
-                            setMixResult(null)
-                            setSuggestions([])
-                          }}
-                          style={{
-                            fontFamily: PVSF, fontSize: 7, padding: '3px 8px', cursor: 'pointer',
-                            border: `1px solid ${mixModes[slot] === m ? GBC_GREEN : GBC_DARKEST}`,
-                            color: mixModes[slot] === m ? GBC_GREEN : GBC_MUTED,
-                            background: mixModes[slot] === m ? 'rgba(132,204,22,0.08)' : 'transparent',
-                          }}
-                        >{m === 'party' ? 'MY PARTY' : 'ANY STRAIN'}</button>
-                      ))}
-                      <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_DARKEST, marginLeft: 'auto', alignSelf: 'center' }}>
-                        SLOT {slot + 1}
-                      </span>
-                    </div>
-
-                    {/* Party mode: dropdown */}
-                    {!isSearch && (
-                      <select
-                        value={mixSlots[slot] ?? ''}
-                        onChange={(e) => {
-                          const next: [string | null, string | null] = [...mixSlots]
-                          next[slot] = e.target.value || null
-                          setMixSlots(next)
-                          setMixResult(null)
-                          setSuggestions([])
-                        }}
-                        style={{
-                          fontFamily: PVSF, fontSize: 8, padding: '8px 6px',
-                          background: '#0a1408', color: GBC_TEXT,
-                          border: mixSlots[slot] ? '2px solid #84cc16' : '2px solid #2a4a08',
-                          outline: 'none', cursor: 'pointer', width: '100%',
-                        }}
-                      >
-                        <option value="">-- SELECT STRAIN --</option>
-                        {party.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
-                        ))}
-                      </select>
-                    )}
-
-                    {/* Search mode: text input + db autocomplete + AI lookup */}
-                    {isSearch && (
-                      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <input
-                            type="text"
-                            value={searchQueries[slot]}
-                            onChange={(e) => {
-                              const val = e.target.value
-                              const nq: [string, string] = [...searchQueries]
-                              nq[slot] = val
-                              setSearchQueries(nq)
-                              const nc: typeof customStrains = [...customStrains]
-                              nc[slot] = null
-                              setCustomStrains(nc)
-                              setMixResult(null)
-                              if (val.length >= 2) {
-                                const nr: typeof searchResults = [...searchResults]
-                                nr[slot] = db.filter((r) => displayName(r).toLowerCase().includes(val.toLowerCase())).slice(0, 5)
-                                setSearchResults(nr)
-                              } else {
-                                const nr: typeof searchResults = [...searchResults]
-                                nr[slot] = []
-                                setSearchResults(nr)
-                              }
-                            }}
-                            placeholder="Type any strain name..."
-                            style={{
-                              flex: 1, fontFamily: 'monospace', fontSize: 12, padding: '7px 8px',
-                              background: '#0a1408', color: GBC_TEXT,
-                              border: `2px solid ${custom ? GBC_GREEN : GBC_DARKEST}`,
-                              outline: 'none',
-                            }}
-                          />
-                          <button
-                            onClick={() => handleLookup(slot)}
-                            disabled={!searchQueries[slot].trim() || lookupLoading[slot]}
-                            style={{
-                              fontFamily: PVSF, fontSize: 7, padding: '6px 8px', flexShrink: 0, cursor: 'pointer',
-                              border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER,
-                              background: 'rgba(245,158,11,0.08)',
-                              opacity: !searchQueries[slot].trim() ? 0.4 : 1,
-                            }}
-                          >{lookupLoading[slot] ? <span className="gbc-dots" /> : 'AI LOOKUP'}</button>
-                        </div>
-
-                        {/* DB suggestions dropdown */}
-                        {searchResults[slot].length > 0 && !custom && (
-                          <div style={{ background: '#0a1408', border: '2px solid #2a4a08', position: 'absolute', top: 38, left: 0, right: 0, zIndex: 20 }}>
-                            {searchResults[slot].map((r) => (
-                              <div
-                                key={r.Strain}
-                                onPointerDown={() => {
-                                  const nq: [string, string] = [...searchQueries]
-                                  nq[slot] = displayName(r)
-                                  setSearchQueries(nq)
-                                  const nc: typeof customStrains = [...customStrains]
-                                  nc[slot] = { name: displayName(r), type: r.Type, thc: r.thc, cbd: r.cbd, terpenes: r.terpenes, effects: r.Effects }
-                                  setCustomStrains(nc)
-                                  const nr: typeof searchResults = [...searchResults]
-                                  nr[slot] = []
-                                  setSearchResults(nr)
-                                  setMixResult(null)
-                                }}
-                                style={{ padding: '7px 10px', fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
-                              >
-                                <span>{displayName(r)}</span>
-                                <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(r.Type) }}>{r.Type}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Confirmed strain badge */}
-                        {custom && (
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_GREEN, border: `1px solid ${GBC_GREEN}`, padding: '1px 5px' }}>
-                              {custom.name.toUpperCase()}
-                            </span>
-                            {custom.type && <span style={{ fontFamily: PVSF, fontSize: 7, color: typeColor(custom.type as 'sativa' | 'indica' | 'hybrid') }}>{custom.type.toUpperCase()}</span>}
-                            {custom.thc != null && <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>THC {custom.thc}%</span>}
-                            {custom.terpenes && <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED }}>{custom.terpenes}</span>}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-            <button
-              onClick={handleMix}
-              disabled={!canMix || mixLoading}
-              style={{
-                fontFamily: PVSF, fontSize: 9, padding: '10px 0', cursor: canMix && !mixLoading ? 'pointer' : 'not-allowed',
-                border: `3px solid ${canMix ? GBC_AMBER : '#2a4a08'}`,
-                color: canMix ? GBC_AMBER : GBC_MUTED,
-                background: canMix ? 'rgba(245,158,11,0.08)' : 'transparent',
-                width: '100%', boxSizing: 'border-box',
-              }}
-            >
-              {mixLoading ? '► ANALYZING...' : '► MIX STRAINS'}
-            </button>
-            {mixError && (
-              <span style={{ fontFamily: PVSF, fontSize: 8, color: '#e84040' }}>
-                {mixError === 'NO_KEY' ? 'NO API KEY — SET ONE IN POKECENTER' : mixError}
-              </span>
-            )}
-            {mixResult && (() => {
-              const MIX_HEADERS = ['COMBINED EFFECT', 'FLAVOUR PROFILE', 'BEST FOR', 'MIXING TIP'] as const
-              const MIX_COLORS: Record<string, string> = {
-                'COMBINED EFFECT': GBC_GREEN,
-                'FLAVOUR PROFILE': GBC_AMBER,
-                'BEST FOR':        GBC_VIOLET,
-                'MIXING TIP':      '#5a9a18',
-              }
-              const regex = new RegExp(`(${MIX_HEADERS.join('|')})`, 'g')
-              const parts = mixResult.split(regex)
-              const sections: { header: string; body: string }[] = []
-              if (parts[0].trim()) sections.push({ header: '', body: parts[0].trim() })
-              for (let i = 1; i < parts.length; i += 2) {
-                sections.push({ header: parts[i], body: (parts[i + 1] ?? '').trimStart() })
-              }
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {sections.map((sec, i) => {
-                    const col = MIX_COLORS[sec.header] ?? GBC_TEXT
-                    return (
-                      <div key={i} style={{ border: `2px solid ${sec.header ? col : GBC_DARKEST}`, background: '#060e05', padding: 10 }}>
-                        {sec.header && (
-                          <span style={{ fontFamily: PVSF, fontSize: 8, color: col, display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>
-                            {sec.header}
-                          </span>
-                        )}
-                        <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
-                          {sec.body}
-                        </p>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
-          </div>
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: cx, top: cy,
+              width: DOT, height: DOT,
+              background: GBC_AMBER,
+              opacity,
+              transform: `rotate(${deg}deg)`,
+            }}
+          />
         )
-      })()}
+      })}
+    </div>
+  )
+}
 
+const MIXER_LABELS: Record<keyof FourBlendResult, { color: string; icon: string }> = {
+  taste:    { color: GBC_AMBER,  icon: '★' },
+  euphoric: { color: GBC_GREEN,  icon: '▲' },
+  relax:    { color: GBC_VIOLET, icon: '●' },
+  wildcard: { color: '#f06090',  icon: '◆' },
+}
+
+function StrainMixer({ party, db }: { party: StrainEntry[]; db: StrainRecord[] }) {
+  const [result, setResult] = useState<FourBlendResult | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const findDb = (name: string) => db.find((d) => normName(String(d.Strain)) === normName(name))
+
+  const enrichedParty = party.map((s) => {
+    const d = findDb(s.name)
+    return { name: s.name, type: s.type ?? d?.Type, thc: s.thc ?? d?.thc, cbd: s.cbd ?? d?.cbd, terpenes: d?.terpenes, effects: d?.Effects, medical: d?.medical }
+  })
+
+  const handleGet = async () => {
+    setLoading(true)
+    setResult(null)
+    setError('')
+    try {
+      const r = await generateFourBlends(enrichedParty)
+      setResult(r)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : ''
+      setError(msg === 'NO_KEY' ? 'SET API KEY IN SMOKÉ CENTER FIRST' : 'AI ERROR — TRY AGAIN')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ border: `3px solid ${GBC_AMBER}`, boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00', background: '#0a0900', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_AMBER, letterSpacing: 0.5 }}>STRAIN MIXER</span>
+      <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, lineHeight: 1.6, margin: 0 }}>
+        Prof T-Oak will suggest four blends from your party — taste, euphoric, relax, and a wild card.
+      </p>
+
+      <button
+        onClick={handleGet}
+        disabled={loading}
+        style={{
+          fontFamily: PVSF, fontSize: 10, padding: '12px 0', width: '100%',
+          cursor: loading ? 'default' : 'pointer',
+          border: `3px solid ${loading ? GBC_DARKEST : GBC_AMBER}`,
+          color: loading ? GBC_MUTED : GBC_AMBER,
+          background: loading ? 'transparent' : 'rgba(245,158,11,0.08)',
+          boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        }}
+      >
+        {loading ? <><CircleSpinner /><span style={{ fontFamily: PVSF, fontSize: 9 }}>ASKING PROF T-OAK...</span></> : '► GET SUGGESTIONS'}
+      </button>
+
+      {error && (
+        <span style={{ fontFamily: PVSF, fontSize: 8, color: '#e84040' }}>{error}</span>
+      )}
+
+      {result && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {(Object.keys(result) as (keyof FourBlendResult)[]).map((key) => {
+            const card = result[key]
+            const { color, icon } = MIXER_LABELS[key]
+            return (
+              <div key={key} style={{ border: `2px solid ${color}`, background: '#060d05', padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: PVSF, fontSize: 8, color }}>{icon} {card.label}</span>
+                </div>
+                <span style={{ fontFamily: PVSF, fontSize: 9, color: GBC_TEXT, lineHeight: 1.6 }}>
+                  {card.strainA.toUpperCase()} + {card.strainB.toUpperCase()}
+                </span>
+                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, opacity: 0.85 }}>
+                  {card.reason}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

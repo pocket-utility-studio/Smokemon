@@ -263,6 +263,87 @@ export interface DualBlendResult {
   medical: MixSuggestion
 }
 
+export interface BlendCard {
+  label: string
+  strainA: string
+  strainB: string
+  reason: string
+}
+
+export interface FourBlendResult {
+  taste:    BlendCard
+  euphoric: BlendCard
+  relax:    BlendCard
+  wildcard: BlendCard
+}
+
+/**
+ * Always returns exactly four blend suggestions from the party — no goal input needed.
+ * TASTE, AWARE & EUPHORIC, RELAX (EVENING), WILD CARD.
+ */
+export async function generateFourBlends(party: EnrichedStrain[]): Promise<FourBlendResult> {
+  if (party.length < 2) throw new Error('Need at least 2 strains')
+  const client = getClient()
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: { temperature: 0.6 },
+  })
+
+  const partyList = party
+    .map((s) => {
+      let line = `- ${s.name} (${s.type ?? 'unknown'}`
+      if (s.thc != null)  line += `, THC ${s.thc}%`
+      if (s.terpenes)     line += `, terpenes: ${s.terpenes}`
+      if (s.effects)      line += `, effects: ${s.effects}`
+      if (s.medical)      line += `, medical: ${s.medical}`
+      line += ')'
+      return line
+    })
+    .join('\n')
+
+  const prompt = `You are Professor T-Oak, cannabis terpene expert. The trainer has the following strains in their party:
+
+${partyList}
+
+Suggest exactly FOUR pairings from the party above — one for each of these specific goals. Each pairing must use two DIFFERENT strains from the list, and the same strain can appear in multiple pairings.
+
+Goals:
+1. "taste" — the pairing with the most interesting or enjoyable combined flavour/aroma
+2. "euphoric" — the pairing best for feeling aware, uplifted, and euphoric
+3. "relax" — the pairing best for relaxing in the evening, winding down
+4. "wildcard" — a surprising or unusual pairing the trainer might not have considered — explain why it works
+
+For each pairing, write 2-3 sentences explaining WHY this combination works — reference actual terpenes, cannabinoid ratios, or strain characteristics.
+
+Respond ONLY with valid JSON, no markdown, no code fences:
+{
+  "taste":    { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" },
+  "euphoric": { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" },
+  "relax":    { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" },
+  "wildcard": { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" }
+}`
+
+  const result = await model.generateContent(prompt)
+  const text = result.response.text().trim()
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Unexpected response from AI')
+  const data = JSON.parse(jsonMatch[0]) as Record<string, Record<string, string>>
+
+  const parse = (key: string, label: string): BlendCard => ({
+    label,
+    strainA: data[key]?.strainA ?? '',
+    strainB: data[key]?.strainB ?? '',
+    reason:  data[key]?.reason  ?? '',
+  })
+
+  return {
+    taste:    parse('taste',    'TASTE'),
+    euphoric: parse('euphoric', 'AWARE & EUPHORIC'),
+    relax:    parse('relax',    'RELAX'),
+    wildcard: parse('wildcard', 'WILD CARD'),
+  }
+}
+
 /**
  * Always returns exactly two blend suggestions from the party:
  * one optimised for taste/flavour, one for medical/therapeutic effect.
