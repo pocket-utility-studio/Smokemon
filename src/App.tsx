@@ -22,6 +22,8 @@ import DataAudit from './pages/DataAudit'
 import LegendaryStrains from './pages/LegendaryStrains'
 import AvbEdibles from './pages/AvbEdibles'
 import CannabinoidGuide from './pages/CannabinoidGuide'
+import WantedList from './pages/WantedList'
+import SessionHistory from './pages/SessionHistory'
 
 export default function App() {
   return (
@@ -50,6 +52,8 @@ export default function App() {
                 <Route path="legendary" element={<LegendaryStrains />} />
                 <Route path="edibles" element={<AvbEdibles />} />
                 <Route path="cannabinoids" element={<CannabinoidGuide />} />
+                <Route path="wanted" element={<WantedList />} />
+                <Route path="sessions" element={<SessionHistory />} />
               </Route>
             </Routes>
             </LayoutModeProvider>
