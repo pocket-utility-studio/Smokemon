@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react'
+import { removeBackground } from '@imgly/background-removal'
 
 // GBC 5-color kiwi palette (R, G, B)
 const GBC_PALETTE: [number, number, number][] = [
@@ -20,9 +21,7 @@ function nearestColor(r: number, g: number, b: number): [number, number, number]
 }
 
 // Floyd-Steinberg dithering — spreads quantisation error to neighbours
-// giving far more perceived detail with the same 5-colour palette
 function floydSteinberg(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
-  // Float buffer so errors accumulate without clamping
   const buf = new Float32Array(w * h * 3)
   for (let i = 0; i < w * h; i++) {
     buf[i * 3]     = data[i * 4]
@@ -64,13 +63,24 @@ function floydSteinberg(data: Uint8ClampedArray, w: number, h: number): Uint8Cla
   return out
 }
 
+function blobToImageElement(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load failed')) }
+    img.src = url
+  })
+}
+
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
 
-// 48×48 gives noticeably more detail than 32×32 while staying clearly pixel art
 const PIXEL_SIZE = 48
 const SCALE = 5  // stored as 240×240
+
+type Step = 'idle' | 'removing' | 'dithering'
 
 interface BitBudCanvasProps {
   onCapture: (dataUrl: string) => void
@@ -80,41 +90,49 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [processing, setProcessing] = useState(false)
+  const [step, setStep] = useState<Step>('idle')
 
-  const processImage = useCallback((file: File) => {
-    setProcessing(true)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        // Downsample to PIXEL_SIZE×PIXEL_SIZE
-        const off = document.createElement('canvas')
-        off.width = PIXEL_SIZE
-        off.height = PIXEL_SIZE
-        const offCtx = off.getContext('2d')!
-        offCtx.drawImage(img, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
-        const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
+  const processImage = useCallback(async (file: File) => {
+    setStep('removing')
+    setPreview(null)
 
-        // Apply Floyd-Steinberg dithering into GBC palette
-        const dithered = floydSteinberg(data, PIXEL_SIZE, PIXEL_SIZE)
-        offCtx.putImageData(new ImageData(Uint8ClampedArray.from(dithered), PIXEL_SIZE, PIXEL_SIZE), 0, 0)
-
-        // Scale up with pixelated rendering
-        const display = canvasRef.current!
-        display.width = PIXEL_SIZE * SCALE
-        display.height = PIXEL_SIZE * SCALE
-        const dCtx = display.getContext('2d')!
-        dCtx.imageSmoothingEnabled = false
-        dCtx.drawImage(off, 0, 0, PIXEL_SIZE * SCALE, PIXEL_SIZE * SCALE)
-
-        const dataUrl = display.toDataURL('image/png')
-        setPreview(dataUrl)
-        setProcessing(false)
-      }
-      img.src = e.target!.result as string
+    // Attempt background removal — fall back to original if offline / error
+    let sourceBlob: Blob = file
+    try {
+      sourceBlob = await removeBackground(file, { debug: false })
+    } catch {
+      // continue with original photo
     }
-    reader.readAsDataURL(file)
+
+    setStep('dithering')
+
+    const img = await blobToImageElement(sourceBlob)
+
+    // Composite onto the darkest GBC colour so transparent areas match the app bg
+    const off = document.createElement('canvas')
+    off.width = PIXEL_SIZE
+    off.height = PIXEL_SIZE
+    const offCtx = off.getContext('2d')!
+    offCtx.fillStyle = '#050a04'
+    offCtx.fillRect(0, 0, PIXEL_SIZE, PIXEL_SIZE)
+    offCtx.drawImage(img, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
+
+    const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
+
+    // Apply Floyd-Steinberg dithering into GBC palette
+    const dithered = floydSteinberg(data, PIXEL_SIZE, PIXEL_SIZE)
+    offCtx.putImageData(new ImageData(Uint8ClampedArray.from(dithered), PIXEL_SIZE, PIXEL_SIZE), 0, 0)
+
+    // Scale up with pixelated rendering
+    const display = canvasRef.current!
+    display.width = PIXEL_SIZE * SCALE
+    display.height = PIXEL_SIZE * SCALE
+    const dCtx = display.getContext('2d')!
+    dCtx.imageSmoothingEnabled = false
+    dCtx.drawImage(off, 0, 0, PIXEL_SIZE * SCALE, PIXEL_SIZE * SCALE)
+
+    setPreview(display.toDataURL('image/png'))
+    setStep('idle')
   }, [])
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,9 +141,12 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     e.target.value = ''
   }
 
-  const handleSave = () => {
-    if (preview) onCapture(preview)
-  }
+  const busy = step !== 'idle'
+
+  const statusLabel =
+    step === 'removing' ? '► REMOVING BG...' :
+    step === 'dithering' ? '► PROCESSING...' :
+    '► UPLOAD PHOTO'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -133,7 +154,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         BIT-BUD FILTER
       </span>
       <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
-        Upload a bud photo to convert it to 8-bit GBC style.
+        Upload a bud photo — background removed automatically, then converted to GBC style.
       </p>
 
       <input
@@ -147,12 +168,12 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
       <button
         onClick={() => fileInputRef.current?.click()}
-        disabled={processing}
+        disabled={busy}
         style={{
           fontFamily: FONT,
           fontSize: 10,
           padding: '11px 14px',
-          cursor: processing ? 'default' : 'pointer',
+          cursor: busy ? 'default' : 'pointer',
           border: '3px solid #84cc16',
           color: '#84cc16',
           background: 'rgba(132,204,22,0.08)',
@@ -161,7 +182,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
           letterSpacing: 0.5,
         }}
       >
-        {processing ? '► PROCESSING...' : '► UPLOAD PHOTO'}
+        {statusLabel}
       </button>
 
       {/* Display canvas */}
@@ -178,7 +199,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
       {preview && (
         <button
-          onClick={handleSave}
+          onClick={() => onCapture(preview)}
           style={{
             fontFamily: FONT,
             fontSize: 10,
@@ -198,7 +219,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
       {preview && (
         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, textAlign: 'center' }}>
-          5-COLOR GBC PALETTE · DITHERED
+          BG REMOVED · 5-COLOR GBC · DITHERED
         </span>
       )}
     </div>
