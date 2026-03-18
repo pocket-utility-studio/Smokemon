@@ -310,7 +310,7 @@ function WeatherWindow() {
     return (
       <div style={boxStyle}>
         <span style={{ fontFamily: FONT, fontSize: 6, color: GBC_MUTED }}>
-          {status === 'loading' ? '...' : 'OUTSIDE'}
+          {status === 'loading' ? <span className="gbc-dots" /> : 'OUTSIDE'}
         </span>
       </div>
     )

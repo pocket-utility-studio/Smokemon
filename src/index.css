@@ -55,6 +55,18 @@ body {
   animation: gbc-blink 1s step-end infinite;
 }
 
+/* Animated loading dots — cycles . → .. → ... */
+@keyframes gbc-dots {
+  0%         { content: '.'; }
+  33.33%     { content: '..'; }
+  66.66%     { content: '...'; }
+}
+
+.gbc-dots::after {
+  content: '.';
+  animation: gbc-dots 0.9s steps(1, end) infinite;
+}
+
 /* Strip all border-radius inside the screen content */
 .gbc-screen-content * {
   border-radius: 0 !important;

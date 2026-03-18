@@ -195,7 +195,7 @@ export default function WantedList() {
               disabled={lookupLoading || query.trim().length < 2}
               style={{ fontFamily: FONT, fontSize: 8, padding: '8px 10px', minHeight: 44, flexShrink: 0, border: `2px solid ${query.trim().length >= 2 ? RED : RED_DIM}`, background: 'transparent', color: query.trim().length >= 2 ? RED : '#4a2020', cursor: 'pointer' }}
             >
-              {lookupLoading ? '...' : 'AI'}
+              {lookupLoading ? <span className="gbc-dots" /> : 'AI'}
             </button>
           </div>
 

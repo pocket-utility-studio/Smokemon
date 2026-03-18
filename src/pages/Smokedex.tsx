@@ -837,7 +837,7 @@ function PartyView({
                     opacity: !suggestGoal.trim() ? 0.4 : 1,
                   }}
                 >
-                  {suggestLoading ? '...' : '► GO'}
+                  {suggestLoading ? <span className="gbc-dots" /> : '► GO'}
                 </button>
               </div>
 
@@ -976,7 +976,7 @@ function PartyView({
                               background: 'rgba(245,158,11,0.08)',
                               opacity: !searchQueries[slot].trim() ? 0.4 : 1,
                             }}
-                          >{lookupLoading[slot] ? '...' : 'AI LOOKUP'}</button>
+                          >{lookupLoading[slot] ? <span className="gbc-dots" /> : 'AI LOOKUP'}</button>
                         </div>
 
                         {/* DB suggestions dropdown */}
