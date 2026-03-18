@@ -19,9 +19,58 @@ function nearestColor(r: number, g: number, b: number): [number, number, number]
   return best
 }
 
+// Floyd-Steinberg dithering — spreads quantisation error to neighbours
+// giving far more perceived detail with the same 5-colour palette
+function floydSteinberg(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+  // Float buffer so errors accumulate without clamping
+  const buf = new Float32Array(w * h * 3)
+  for (let i = 0; i < w * h; i++) {
+    buf[i * 3]     = data[i * 4]
+    buf[i * 3 + 1] = data[i * 4 + 1]
+    buf[i * 3 + 2] = data[i * 4 + 2]
+  }
+
+  const out = new Uint8ClampedArray(w * h * 4)
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 3
+      const r = Math.max(0, Math.min(255, buf[idx]))
+      const g = Math.max(0, Math.min(255, buf[idx + 1]))
+      const b = Math.max(0, Math.min(255, buf[idx + 2]))
+
+      const [nr, ng, nb] = nearestColor(r, g, b)
+      const oi = (y * w + x) * 4
+      out[oi] = nr; out[oi + 1] = ng; out[oi + 2] = nb; out[oi + 3] = 255
+
+      const er = r - nr, eg = g - ng, eb = b - nb
+
+      const spread = (dx: number, dy: number, factor: number) => {
+        const nx = x + dx, ny = y + dy
+        if (nx < 0 || nx >= w || ny >= h) return
+        const ni = (ny * w + nx) * 3
+        buf[ni]     += er * factor
+        buf[ni + 1] += eg * factor
+        buf[ni + 2] += eb * factor
+      }
+
+      spread( 1,  0, 7 / 16)
+      spread(-1,  1, 3 / 16)
+      spread( 0,  1, 5 / 16)
+      spread( 1,  1, 1 / 16)
+    }
+  }
+
+  return out
+}
+
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
+
+// 48×48 gives noticeably more detail than 32×32 while staying clearly pixel art
+const PIXEL_SIZE = 48
+const SCALE = 5  // stored as 240×240
 
 interface BitBudCanvasProps {
   onCapture: (dataUrl: string) => void
@@ -39,8 +88,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
-        const PIXEL_SIZE = 32
-        // Offscreen canvas for downsampling
+        // Downsample to PIXEL_SIZE×PIXEL_SIZE
         const off = document.createElement('canvas')
         off.width = PIXEL_SIZE
         off.height = PIXEL_SIZE
@@ -48,17 +96,12 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         offCtx.drawImage(img, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
         const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
 
-        // Map each pixel to nearest palette colour
-        const mapped = new Uint8ClampedArray(data.length)
-        for (let i = 0; i < data.length; i += 4) {
-          const [r, g, b] = nearestColor(data[i], data[i + 1], data[i + 2])
-          mapped[i] = r; mapped[i + 1] = g; mapped[i + 2] = b; mapped[i + 3] = 255
-        }
-        offCtx.putImageData(new ImageData(mapped, PIXEL_SIZE, PIXEL_SIZE), 0, 0)
+        // Apply Floyd-Steinberg dithering into GBC palette
+        const dithered = floydSteinberg(data, PIXEL_SIZE, PIXEL_SIZE)
+        offCtx.putImageData(new ImageData(Uint8ClampedArray.from(dithered), PIXEL_SIZE, PIXEL_SIZE), 0, 0)
 
-        // Display canvas — scale up with pixelated rendering
+        // Scale up with pixelated rendering
         const display = canvasRef.current!
-        const SCALE = 5
         display.width = PIXEL_SIZE * SCALE
         display.height = PIXEL_SIZE * SCALE
         const dCtx = display.getContext('2d')!
@@ -97,6 +140,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         onChange={handleFile}
         style={{ display: 'none' }}
       />
@@ -120,7 +164,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         {processing ? '► PROCESSING...' : '► UPLOAD PHOTO'}
       </button>
 
-      {/* Hidden display canvas */}
+      {/* Display canvas */}
       <canvas
         ref={canvasRef}
         style={{
@@ -154,7 +198,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
       {preview && (
         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, textAlign: 'center' }}>
-          5-COLOR GBC PALETTE APPLIED
+          5-COLOR GBC PALETTE · DITHERED
         </span>
       )}
     </div>
