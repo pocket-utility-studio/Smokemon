@@ -1,6 +1,5 @@
-import { useState, useRef, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Fuse from 'fuse.js'
-import Tesseract from 'tesseract.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
@@ -1111,7 +1110,33 @@ const DEX_CATEGORIES: DexCategory[] = [
 // ── Strain detail view ────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 20
-type SortKey = 'az' | 'thc' | 'rating'
+type SortKey = 'popular' | 'az' | 'thc' | 'rating'
+
+// Curated popularity order — first 4 pages (80 strains) show these first, then A-Z
+const POPULAR_STRAINS: string[] = [
+  'OG Kush', 'Blue Dream', 'Sour Diesel', 'Girl Scout Cookies', 'Jack Herer',
+  'White Widow', 'AK-47', 'Northern Lights', 'Gelato', 'Gorilla Glue #4',
+  'Pineapple Express', 'Granddaddy Purple', 'Purple Haze', 'Super Silver Haze',
+  'Trainwreck', 'Blueberry', 'Amnesia Haze', 'Cheese', 'Skunk #1', 'Bubba Kush',
+  'Strawberry Cough', 'Durban Poison', 'Hindu Kush', 'Wedding Cake', 'Runtz',
+  'Do-Si-Dos', 'Bruce Banner', 'Zkittlez', 'Tangie', 'Gelato 41',
+  'Green Crack', 'LA Confidential', 'Lemon Haze', 'Maui Wowie', 'NYC Diesel',
+  'Purple Kush', 'Super Lemon Haze', 'Animal Cookies', 'Chemdawg', 'Fire OG',
+  'Grapefruit', 'Harlequin', 'Jack the Ripper', 'Lemon OG', 'Obama Kush',
+  'Skywalker OG', 'Sunset Sherbet', 'White Fire OG', 'Chocolope', 'Gushers',
+  'Biscotti', 'MAC 1', 'Triangle Kush', 'Platinum OG', 'Lemon Skunk',
+  'Strawberry Banana', 'Blue Cheese', 'Cherry Pie', 'Headband', 'Mimosa',
+  'Ice Cream Cake', 'Alien OG', 'Critical Mass', 'Death Star', 'Forbidden Fruit',
+  'Tropicana Cookies', 'Blue Cookies', 'Sour OG', 'Larry Bird', 'Papaya',
+  'Sherbet', 'Pink Kush', 'Black Diamond', 'Banana OG', 'Cookies and Cream',
+  'Cereal Milk', 'Jealousy', 'Gary Payton', 'London Pound Cake', 'Purple Punch',
+]
+
+function popularityRank(name: string): number {
+  const lower = name.toLowerCase()
+  const idx = POPULAR_STRAINS.findIndex((p) => p.toLowerCase() === lower)
+  return idx === -1 ? Infinity : idx
+}
 
 
 function StrainDetail({ strain, onBack }: { strain: StrainRecord; onBack: () => void }) {
@@ -1274,7 +1299,7 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
   const [focused, setFocused] = useState(false)
   const [category, setCategory] = useState<DexCategory>(DEX_CATEGORIES[0])
   const [selected, setSelected] = useState<StrainRecord | null>(null)
-  const [sort, setSort] = useState<SortKey>('az')
+  const [sort, setSort] = useState<SortKey>('popular')
   const [page, setPage] = useState(0)
   const [geminiResult, setGeminiResult] = useState<(StrainLookupResult & { name: string }) | null>(null)
   const [geminiLoading, setGeminiLoading] = useState(false)
@@ -1352,6 +1377,11 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
         .map(({ item }) => item)
     } else {
       pool = [...pool]
+      if (sort === 'popular') pool.sort((a, b) => {
+        const ra = popularityRank(displayName(a)), rb = popularityRank(displayName(b))
+        if (ra !== rb) return ra - rb
+        return displayName(a).localeCompare(displayName(b))
+      })
       if (sort === 'az')     pool.sort((a, b) => displayName(a).localeCompare(displayName(b)))
       if (sort === 'thc')    pool.sort((a, b) => (b.thc ?? 0) - (a.thc ?? 0))
       if (sort === 'rating') pool.sort((a, b) => (b.Rating ?? 0) - (a.Rating ?? 0))
@@ -1368,9 +1398,10 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
   }
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-    { key: 'az',     label: 'A-Z' },
-    { key: 'thc',    label: 'THC' },
-    { key: 'rating', label: 'RATING' },
+    { key: 'popular', label: 'POPULAR' },
+    { key: 'az',      label: 'A-Z' },
+    { key: 'thc',     label: 'THC' },
+    { key: 'rating',  label: 'RATING' },
   ]
 
   return (
@@ -1648,168 +1679,13 @@ function StrainDex({ db }: { db: StrainRecord[] }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const emptyForm = {
-  name: '',
-  type: undefined as StrainEntry['type'],
-  thc: '',
-  cbd: '',
-  amount: '',
-  notes: '',
-}
-
 export default function Smokedex() {
-  const { strains, addStrain, updateStrain, deleteStrain } = useStash()
+  const { strains, updateStrain, deleteStrain } = useStash()
   const { db } = useStrainDb()
-  const addFuse = useMemo(() => new Fuse(db, {
-    keys: [
-      { name: 'Strain',   weight: 3 },
-      { name: 'Effects',  weight: 1.5 },
-      { name: 'terpenes', weight: 1.2 },
-      { name: 'Flavor',   weight: 1 },
-      { name: 'Type',     weight: 0.5 },
-    ],
-    threshold: 0.4,
-    distance: 200,
-    includeScore: true,
-  }), [db])
-  const [tab, setTab] = useState<'party' | 'pc' | 'dex' | 'add'>('party')
+  const [tab, setTab] = useState<'party' | 'pc' | 'dex'>('party')
   const [confirmPurge, setConfirmPurge] = useState(false)
-  const [form, setForm] = useState({ ...emptyForm })
-  const [focusedField, setFocusedField] = useState<string | null>(null)
-  const [scanning, setScanning] = useState(false)
-  const [confirmed, setConfirmed] = useState(false)
-  const [suggestions, setSuggestions] = useState<StrainRecord[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [autoFilling, setAutoFilling] = useState(false)
-  const [autoFillMsg, setAutoFillMsg] = useState('')
-  const [autoFillHistory, setAutoFillHistory] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const applyAutoFill = async (name: string) => {
-    if (!name.trim() || autoFilling) return
-    setAutoFilling(true)
-    setAutoFillMsg('')
-    setAutoFillHistory('')
-    try {
-      const data = await lookupStrainData(name.trim())
-      setForm((prev) => {
-        const noteParts: string[] = []
-        if (data.terpenes) noteParts.push(`Terpenes: ${data.terpenes}`)
-        if (data.effects)  noteParts.push(`Effects: ${data.effects}`)
-        const mergedNotes = [prev.notes.trim(), ...noteParts].filter(Boolean).join('\n')
-        return {
-          ...prev,
-          type:  prev.type ?? data.type,
-          thc:   prev.thc !== '' ? prev.thc : data.thc != null ? String(data.thc) : prev.thc,
-          cbd:   prev.cbd !== '' ? prev.cbd : data.cbd != null ? String(data.cbd) : prev.cbd,
-          notes: mergedNotes,
-        }
-      })
-      if (data.history) setAutoFillHistory(data.history)
-      setAutoFillMsg('FILLED!')
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : ''
-      setAutoFillMsg(msg === 'NO_KEY' ? 'SET KEY IN SMOKÉ CENTER' : 'NOT FOUND')
-    } finally {
-      setAutoFilling(false)
-      setTimeout(() => setAutoFillMsg(''), 4000)
-    }
-  }
 
   const party = strains.filter((s) => s.inStock)
-
-  const resizeImage = (file: File, maxPx = 1200): Promise<Blob> =>
-    new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => {
-        const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
-        const w = Math.round(img.width * scale)
-        const h = Math.round(img.height * scale)
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('resize failed')), 'image/jpeg', 0.85)
-      }
-      img.onerror = reject
-      img.src = URL.createObjectURL(file)
-    })
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setScanning(true)
-    try {
-      const resized = await resizeImage(file)
-      const result = await Tesseract.recognize(resized, 'eng', { logger: () => {} })
-      const text = result.data.text
-
-      // Parse THC
-      const thcMatch =
-        text.match(/THC[:\s]+(\d+\.?\d*)\s*%/i) ||
-        text.match(/(\d+\.?\d*)\s*%\s*THC/i)
-      const cbdMatch =
-        text.match(/CBD[:\s]+(\d+\.?\d*)\s*%/i) ||
-        text.match(/(\d+\.?\d*)\s*%\s*CBD/i)
-
-      // Extract strain name: first non-empty line, or after keywords
-      const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
-      let parsedName = ''
-      for (const line of lines) {
-        // skip lines that look like dosage/percentage noise
-        if (/^\d/.test(line)) continue
-        if (line.length < 3) continue
-        parsedName = line.replace(/[^a-zA-Z0-9\s\-']/g, '').trim()
-        if (parsedName.length >= 3) break
-      }
-
-      const ocrThc = thcMatch ? thcMatch[1] : ''
-      const ocrCbd = cbdMatch ? cbdMatch[1] : ''
-      let nameToUse = ''
-      setForm((prev) => {
-        nameToUse = parsedName && !prev.name ? parsedName : prev.name
-        return {
-          ...prev,
-          name: nameToUse,
-          thc: ocrThc || prev.thc,
-          cbd: ocrCbd || prev.cbd,
-        }
-      })
-      // Auto-fill from Gemini if we got a name but no THC/CBD from the label
-      if (parsedName && !ocrThc && !ocrCbd) {
-        await applyAutoFill(parsedName)
-      }
-    } catch {
-      // ignore OCR errors
-    } finally {
-      setScanning(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
-  const handleSubmit = () => {
-    if (!form.name.trim()) return
-    addStrain({
-      name: form.name.trim(),
-      type: form.type,
-      thc: form.thc !== '' ? parseFloat(form.thc) : undefined,
-      cbd: form.cbd !== '' ? parseFloat(form.cbd) : undefined,
-      amount: form.amount.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-      inStock: true,
-    })
-    setForm({ ...emptyForm })
-    setConfirmed(true)
-    setTimeout(() => {
-      setConfirmed(false)
-      setTab('party')
-    }, 1500)
-  }
-
-  const inputStyle = (field: string) => ({
-    ...inputBase,
-    border: `2px solid ${focusedField === field ? '#4a8a10' : GBC_DARKEST}`,
-  })
 
   const tabBtn = (active: boolean) => ({
     fontFamily: "'PokemonGb', 'Press Start 2P', monospace" as const,
@@ -1874,11 +1750,10 @@ export default function Smokedex() {
         <button style={tabBtn(tab === 'party')} onClick={() => setTab('party')}>PARTY</button>
         <button style={tabBtn(tab === 'pc')} onClick={() => setTab('pc')}>BILL'S PC</button>
         <button style={tabBtn(tab === 'dex')} onClick={() => setTab('dex')}>DEX</button>
-        <button style={tabBtn(tab === 'add')} onClick={() => setTab('add')}>ADD</button>
       </div>
 
       {/* Summary bar */}
-      {tab !== 'dex' && tab !== 'add' && (
+      {tab !== 'dex' && (
         <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, flexShrink: 0 }}>
           {party.length}/6 IN PARTY · {strains.length} IN BILL'S PC
         </div>
@@ -1946,403 +1821,6 @@ export default function Smokedex() {
       {/* DEX TAB */}
       {tab === 'dex' && <StrainDex db={db} />}
 
-      {/* ADD NEW TAB */}
-      {tab === 'add' && (
-        <>
-          {/* Form poke-box */}
-          <div style={{ ...pokeBox, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-            <p style={{
-              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 9,
-              color: GBC_MUTED,
-              margin: 0,
-            }}>
-              NEW STRAIN ENTRY
-            </p>
-
-            {/* Strain name */}
-            <div>
-              <label style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 8,
-                color: GBC_MUTED,
-                display: 'block',
-                marginBottom: 6,
-              }}>
-                STRAIN NAME *
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    setForm({ ...form, name: value })
-                    if (value.length >= 2) {
-                      const results = addFuse.search(value).slice(0, 6).map((r) => r.item)
-                      setSuggestions(results)
-                      setShowSuggestions(true)
-                    } else {
-                      setSuggestions([])
-                      setShowSuggestions(false)
-                    }
-                  }}
-                  style={inputStyle('name')}
-                  onFocus={() => {
-                    setFocusedField('name')
-                    if (form.name.length >= 2) setShowSuggestions(true)
-                  }}
-                  onBlur={() => {
-                    setFocusedField(null)
-                    setTimeout(() => setShowSuggestions(false), 150)
-                  }}
-                  placeholder="OG Kush, sleepy, myrcene..."
-                />
-                {showSuggestions && suggestions.length > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    width: '100%',
-                    zIndex: 50,
-                    background: '#0a1408',
-                    border: '2px solid #2a4a08',
-                    boxSizing: 'border-box',
-                  }}>
-                    {suggestions.map((s) => {
-                      const col = s.Type === 'sativa' ? '#84cc16' : s.Type === 'indica' ? '#a78bfa' : '#f59e0b'
-                      return (
-                        <div
-                          key={s.Strain}
-                          onPointerDown={() => {
-                            setForm({
-                              ...form,
-                              name: displayName(s),
-                              type: s.Type,
-                              thc: s.thc != null ? String(s.thc) : form.thc,
-                              cbd: s.cbd != null ? String(s.cbd) : form.cbd,
-                            })
-                            setSuggestions([])
-                            setShowSuggestions(false)
-                          }}
-                          style={{
-                            padding: '8px 10px',
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                            color: '#c8e890',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            gap: 8,
-                          }}
-                        >
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div>{displayName(s)}</div>
-                            {s.Effects && (
-                              <div style={{ fontFamily: 'monospace', fontSize: 10, color: GBC_MUTED, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {s.Effects.split(',').slice(0, 3).map((e) => e.trim()).join(', ')}
-                              </div>
-                            )}
-                          </div>
-                          <span style={{
-                            fontFamily: 'monospace',
-                            fontSize: 10,
-                            color: col,
-                            border: `1px solid ${col}`,
-                            padding: '1px 4px',
-                            flexShrink: 0,
-                            marginTop: 1,
-                          }}>
-                            {s.Type}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Type selector */}
-            <div>
-              <label style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 8,
-                color: GBC_MUTED,
-                display: 'block',
-                marginBottom: 6,
-              }}>
-                TYPE
-              </label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['sativa', 'indica', 'hybrid'] as const).map((t) => {
-                  const active = form.type === t
-                  const col = typeColor(t)
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => setForm({ ...form, type: active ? undefined : t })}
-                      style={{
-                        fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                        fontSize: 8,
-                        padding: '6px 10px',
-                        border: `2px solid ${active ? col : GBC_DARKEST}`,
-                        background: active ? `rgba(${t === 'sativa' ? '132,204,22' : t === 'indica' ? '167,139,250' : '245,158,11'},0.12)` : 'transparent',
-                        color: active ? col : GBC_MUTED,
-                        cursor: 'pointer',
-                        flex: 1,
-                      }}
-                    >
-                      {t.toUpperCase()}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Auto-fill from API */}
-            {form.name.trim().length >= 2 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button
-                  onClick={() => applyAutoFill(form.name)}
-                  disabled={autoFilling}
-                  style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 9,
-                    padding: '8px 12px',
-                    minHeight: 44,
-                    flex: 1,
-                    border: `2px solid ${autoFilling ? GBC_DARKEST : GBC_MUTED}`,
-                    background: autoFilling ? 'rgba(74,122,16,0.1)' : 'transparent',
-                    color: autoFilling ? GBC_DARKEST : GBC_MUTED,
-                    cursor: autoFilling ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {autoFilling ? '► FETCHING...' : '► FETCH LAB DATA'}
-                </button>
-                {autoFillMsg && (
-                  <span style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 8,
-                    color: autoFillMsg === 'FILLED!' ? GBC_GREEN : '#e84040',
-                    flexShrink: 0,
-                  }}>
-                    {autoFillMsg}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Strain history from Gemini */}
-            {autoFillHistory && (
-              <div style={{ background: GBC_BG, border: `1px solid ${GBC_DARKEST}`, padding: '10px 12px' }}>
-                <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 7, color: GBC_MUTED, marginBottom: 6 }}>
-                  STRAIN HISTORY
-                </div>
-                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0, opacity: 0.85 }}>
-                  {autoFillHistory}
-                </p>
-              </div>
-            )}
-
-            {/* THC / CBD row */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 8,
-                  color: GBC_MUTED,
-                  display: 'block',
-                  marginBottom: 6,
-                }}>
-                  THC %
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={40}
-                  step={0.1}
-                  value={form.thc}
-                  onChange={(e) => setForm({ ...form, thc: e.target.value })}
-                  style={inputStyle('thc')}
-                  onFocus={() => setFocusedField('thc')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="0–40"
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{
-                  fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                  fontSize: 8,
-                  color: GBC_MUTED,
-                  display: 'block',
-                  marginBottom: 6,
-                }}>
-                  CBD %
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  step={0.1}
-                  value={form.cbd}
-                  onChange={(e) => setForm({ ...form, cbd: e.target.value })}
-                  style={inputStyle('cbd')}
-                  onFocus={() => setFocusedField('cbd')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="0–20"
-                />
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div>
-              <label style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 8,
-                color: GBC_MUTED,
-                display: 'block',
-                marginBottom: 6,
-              }}>
-                AMOUNT
-              </label>
-              <input
-                type="text"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                style={inputStyle('amount')}
-                onFocus={() => setFocusedField('amount')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="e.g. 3.5g"
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 8,
-                color: GBC_MUTED,
-                display: 'block',
-                marginBottom: 6,
-              }}>
-                NOTES
-              </label>
-              <textarea
-                rows={3}
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                style={{
-                  ...inputStyle('notes'),
-                  resize: 'none',
-                }}
-                onFocus={() => setFocusedField('notes')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Effects, flavour, occasion..."
-              />
-            </div>
-
-          </div>
-
-          {/* OCR section */}
-          <div style={{
-            ...pokeBox,
-            padding: '14px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}>
-            <p style={{
-              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 9,
-              color: GBC_GREEN,
-              margin: 0,
-            }}>
-              SCAN DISPENSARY LABEL
-            </p>
-            <p style={{
-              fontFamily: 'monospace',
-              fontSize: 12,
-              color: GBC_TEXT,
-              opacity: 0.7,
-              margin: 0,
-              lineHeight: 1.6,
-            }}>
-              Take a photo of your label to auto-fill the form. If THC/CBD aren't on the label, a lab database lookup runs automatically.
-            </p>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-              id="ocr-file-input"
-            />
-
-            <label
-              htmlFor="ocr-file-input"
-              style={{
-                fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                fontSize: 10,
-                padding: '10px 14px',
-                border: `3px solid ${GBC_DARKEST}`,
-                background: 'transparent',
-                color: GBC_MUTED,
-                cursor: 'pointer',
-                display: 'inline-block',
-                boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #1a3008',
-                userSelect: 'none',
-              }}
-            >
-              {'\u25ba'} SCAN LABEL PHOTO
-            </label>
-
-            {scanning && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  className="gbc-blink"
-                  style={{
-                    fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-                    fontSize: 10,
-                    color: GBC_GREEN,
-                  }}
-                >
-                  SCANNING...
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Submit button */}
-          <button
-            onClick={handleSubmit}
-            disabled={!form.name.trim() || confirmed}
-            style={{
-              fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 11,
-              padding: '12px',
-              width: '100%',
-              border: form.name.trim() && !confirmed
-                ? `3px solid ${GBC_GREEN}`
-                : `3px solid ${GBC_DARKEST}`,
-              background: form.name.trim() && !confirmed
-                ? GBC_GREEN
-                : 'transparent',
-              color: form.name.trim() && !confirmed ? GBC_BG : GBC_MUTED,
-              cursor: form.name.trim() && !confirmed ? 'pointer' : 'not-allowed',
-              boxShadow: form.name.trim() && !confirmed
-                ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010'
-                : 'none',
-            }}
-          >
-            {confirmed ? 'REGISTERED!' : '\u25ba ADD TO SMOKÉDEX'}
-          </button>
-        </>
-      )}
     </div>
   )
 }

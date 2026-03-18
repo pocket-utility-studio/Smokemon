@@ -57,10 +57,10 @@ const UK_SECTIONS: Section[] = [
   },
   {
     title: 'INTERNATIONAL TRAVEL',
-    accent: GBC_RED,
-    icon: '✕',
+    accent: GBC_AMBER,
+    icon: '▲',
     text:
-      'It is illegal to carry your prescribed cannabis across any international border, including within the Schengen Area or to other UK territories. Cannabis remains a controlled substance under international conventions. A UK prescription provides no legal protection outside the UK.',
+      'Travel with your prescribed cannabis is possible, but rules are entirely country-by-country. Always carry your original pharmacy-dispensed packaging and a copy of your prescription. Some countries require advance permission or a declaration on arrival — check with the destination country\'s embassy or border agency before you travel. Do not assume your UK prescription automatically covers you abroad.',
   },
   {
     title: 'RECREATIONAL USE',
@@ -85,8 +85,68 @@ const UK_QUICK_FACTS = [
   { text: 'Smoking: still illegal',               color: GBC_RED },
   { text: 'Driving limit: 2μg/L THC (blood)',     color: GBC_AMBER },
   { text: 'Prescription = statutory defence',     color: GBC_GREEN },
-  { text: 'International travel: never legal',    color: GBC_RED },
+  { text: 'Int\'l travel: check country rules',     color: GBC_AMBER },
   { text: 'CBD <0.2% THC: legal supplement',      color: GBC_GREEN },
+]
+
+const POLICE_STEPS = [
+  {
+    label: 'STAY CALM',
+    text: 'Do not argue, raise your voice, or walk away. Keep your hands visible. You are more protected by staying composed than by confrontation.',
+  },
+  {
+    label: 'KNOW YOUR RIGHTS',
+    text: 'Police can search you under Section 23 of the Misuse of Drugs Act if they suspect drug possession. Ask calmly: "Am I being detained, or am I free to go?" If detained, ask the reason. Note the officer\'s name and badge number.',
+  },
+  {
+    label: 'SHOW YOUR PRESCRIPTION',
+    text: 'Present your prescription and the original pharmacy-dispensed packaging. Politely explain it is a legally prescribed CBPM (Cannabis-Based Product for Medicinal Use) under Schedule 2 of the Misuse of Drugs Regulations 2001.',
+  },
+  {
+    label: 'RIGHT TO SILENCE',
+    text: 'You do not have to answer questions beyond confirming your identity when required. Politely say: "I am exercising my right to remain silent and would like to speak to a solicitor." You cannot be penalised for silence.',
+  },
+  {
+    label: 'IF ARRESTED',
+    text: 'You have the right to free legal advice. Ask for a duty solicitor immediately — this is your right under PACE 1984 (Police and Criminal Evidence Act). Do not sign anything or answer interview questions without a solicitor present.',
+  },
+  {
+    label: 'AFTER THE STOP',
+    text: 'Write down everything as soon as possible: officer names, badge numbers, time, location, and what was said. If medication was seized unlawfully, you can make a complaint to the IOPC (Independent Office for Police Conduct).',
+  },
+]
+
+const UK_LINKS = [
+  {
+    label: 'GOV.UK: Cannabis-Based Products for Medicinal Use',
+    sublabel: 'Official government guidance on CBPMs',
+    url: 'https://www.gov.uk/government/collections/cannabis-based-products-for-medicinal-use-cbpms',
+    color: GBC_GREEN,
+  },
+  {
+    label: 'Home Office: Travelling with controlled drugs',
+    sublabel: 'How to apply for a personal licence to travel',
+    url: 'https://www.gov.uk/travelling-controlled-drugs',
+    color: GBC_GREEN,
+  },
+  {
+    label: 'Legislation.gov.uk: Misuse of Drugs Regs 2001',
+    sublabel: 'The Schedule 2 regulations covering CBPMs',
+    url: 'https://www.legislation.gov.uk/uksi/2001/3998/contents',
+    color: GBC_MUTED,
+  },
+  {
+    label: 'Release: Know Your Rights',
+    sublabel: 'Drug charity — rights when stopped by police',
+    url: 'https://www.release.org.uk/know-your-rights',
+    color: GBC_AMBER,
+  },
+  {
+    label: 'Release: Helpline 0207 324 2989',
+    sublabel: 'Free and confidential drugs law advice',
+    url: 'https://www.release.org.uk',
+    color: GBC_AMBER,
+  },
 ]
 
 // ── ES ────────────────────────────────────────────────────────────────────────
@@ -216,6 +276,37 @@ export default function LawGuide() {
               <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>{s.text}</p>
             </div>
           ))}
+
+          {/* If stopped by police */}
+          <div style={{ border: `3px solid ${GBC_AMBER}`, boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00', background: '#0a0900', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_AMBER, letterSpacing: 0.5 }}>IF STOPPED BY POLICE</span>
+            <p style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, lineHeight: 1.6, margin: 0 }}>
+              A guide for medicinal cannabis patients.
+            </p>
+            {POLICE_STEPS.map((step, i) => (
+              <div key={i} style={{ borderLeft: `3px solid ${GBC_AMBER}`, paddingLeft: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_AMBER }}>{i + 1}. {step.label}</span>
+                <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.7, margin: 0 }}>{step.text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Useful links */}
+          <div style={{ ...pokeBox, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, display: 'block', marginBottom: 4 }}>USEFUL LINKS</span>
+            {UK_LINKS.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'block', padding: '8px 10px', border: `1px solid ${link.color}`, background: 'transparent', textDecoration: 'none' }}
+              >
+                <span style={{ fontFamily: FONT, fontSize: 8, color: link.color, display: 'block', marginBottom: 3 }}>{link.label}</span>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED }}>{link.sublabel}</span>
+              </a>
+            ))}
+          </div>
 
           <div style={{ textAlign: 'center', paddingBottom: 8 }}>
             <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>
