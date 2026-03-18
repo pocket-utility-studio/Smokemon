@@ -25,6 +25,13 @@ export default defineConfig({
     tailwindcss(),
     versionJsonPlugin,
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,gif,mp3,ttf}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
@@ -77,12 +84,6 @@ export default defineConfig({
             icons: [{ src: 'icon-192.png', sizes: '192x192' }],
           },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,gif,mp3,ttf}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        skipWaiting: true,
-        clientsClaim: true,
       },
     }),
   ],

@@ -8,6 +8,14 @@ import type { StrainRecord } from '../hooks/useStrainDb'
 import { askNurseJoy, generateDualBlend } from '../services/gemini'
 import type { EnrichedStrain, ConsultationFeedback, DualBlendResult } from '../services/gemini'
 import { BudSprite } from '../components/BudSprite'
+import {
+  getCleaningInterval,
+  setCleaningInterval,
+  markCleaned,
+  daysUntilCleaningDue,
+  isCleaningOverdue,
+  requestNotificationPermission,
+} from '../hooks/useNotificationScheduler'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -488,6 +496,24 @@ export default function PokeCenter() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') ?? '')
   const [keyInput, setKeyInput] = useState('')
   const [showKeyInput, setShowKeyInput] = useState(false)
+  const [cleanInterval, setCleanIntervalState] = useState(() => getCleaningInterval())
+  const [cleanTick, setCleanTick] = useState(0)  // bumped to force re-render after markCleaned
+
+  const handleSetCleanInterval = async (days: number) => {
+    setCleaningInterval(days)
+    setCleanIntervalState(days)
+    if (days > 0) await requestNotificationPermission()
+  }
+
+  const handleJustCleaned = () => {
+    markCleaned()
+    setCleanTick((t) => t + 1)
+  }
+
+  // Compute cleaning status fresh each render (reads localStorage)
+  const cleanDaysLeft = cleanInterval > 0 ? daysUntilCleaningDue() : null
+  const cleanOverdue  = cleanInterval > 0 ? isCleaningOverdue() : false
+  void cleanTick  // consumed to satisfy lint
 
   // Consultation feedback memory
   const [feedbackHistory, setFeedbackHistory] = useState<ConsultationFeedback[]>(() => {
@@ -669,6 +695,77 @@ export default function PokeCenter() {
             </button>
           </div>
         )}
+
+        {/* Cleaning reminder */}
+        <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <NurseJoySprite size={28} />
+            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>VAPE CLEANING REMINDER</span>
+          </div>
+
+          {/* Interval selector */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            {([0, 7, 14, 30] as const).map((days) => {
+              const active = cleanInterval === days
+              return (
+                <button
+                  key={days}
+                  onClick={() => handleSetCleanInterval(days)}
+                  style={{
+                    flex: 1, fontFamily: FONT, fontSize: 8, padding: '10px 0', minHeight: 44,
+                    cursor: 'pointer',
+                    border: `2px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
+                    background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
+                    color: active ? GBC_GREEN : GBC_MUTED,
+                  }}
+                >
+                  {days === 0 ? 'OFF' : `${days}D`}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Status display */}
+          {cleanInterval > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              {cleanOverdue ? (
+                <div style={{
+                  border: `2px solid #e84040`, background: 'rgba(232,64,64,0.08)',
+                  padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4,
+                }}>
+                  <span style={{ fontFamily: FONT, fontSize: 8, color: '#e84040' }}>CLEANING OVERDUE</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#ff8080', lineHeight: 1.5 }}>
+                    Your vape needs a clean. Residue builds up over time and affects flavour and efficiency.
+                  </span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED }}>NEXT CLEAN IN:</span>
+                  <span style={{ fontFamily: FONT, fontSize: 11, color: cleanDaysLeft === 0 ? GBC_AMBER : GBC_GREEN }}>
+                    {cleanDaysLeft === 0 ? 'TODAY' : `${cleanDaysLeft}D`}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Just cleaned button */}
+          {cleanInterval > 0 && (
+            <button
+              onClick={handleJustCleaned}
+              style={{
+                width: '100%', fontFamily: FONT, fontSize: 9, padding: '11px 0', minHeight: 44,
+                cursor: 'pointer',
+                border: `2px solid ${GBC_GREEN}`,
+                background: 'rgba(132,204,22,0.08)',
+                color: GBC_GREEN,
+                boxSizing: 'border-box',
+              }}
+            >
+              ► JUST CLEANED IT
+            </button>
+          )}
+        </div>
 
         {/* Party */}
         <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>

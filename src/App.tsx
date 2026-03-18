@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { VibeProvider } from './context/VibeContext'
@@ -28,6 +29,13 @@ import SessionHistory from './pages/SessionHistory'
 import DoseTimer from './pages/DoseTimer'
 import StrainQuiz from './pages/StrainQuiz'
 import UniversalSearch from './pages/UniversalSearch'
+import CheckIn from './pages/CheckIn'
+import { useNotificationScheduler } from './hooks/useNotificationScheduler'
+
+function AppWithScheduler({ children }: { children: ReactNode }) {
+  useNotificationScheduler()
+  return <>{children}</>
+}
 
 export default function App() {
   return (
@@ -39,6 +47,7 @@ export default function App() {
             <NavigationProvider>
             <GifModeProvider>
             <LayoutModeProvider>
+            <AppWithScheduler>
             <Routes>
               <Route element={<AppLayout />}>
                 <Route index element={<DashboardHome />} />
@@ -62,8 +71,10 @@ export default function App() {
                 <Route path="dose-timer" element={<DoseTimer />} />
                 <Route path="quiz" element={<StrainQuiz />} />
                 <Route path="search" element={<UniversalSearch />} />
+                <Route path="check-in" element={<CheckIn />} />
               </Route>
             </Routes>
+            </AppWithScheduler>
             </LayoutModeProvider>
             </GifModeProvider>
             </NavigationProvider>
