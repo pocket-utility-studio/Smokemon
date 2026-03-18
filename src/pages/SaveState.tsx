@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { exportSaveData, importSaveData } from '../utils/storage'
 import { playSave } from '../utils/sounds'
 import { useVibe } from '../context/VibeContext'
 import { useTheme } from '../context/ThemeContext'
+import { getShellColor, setShellColor, resetShellColor, DEFAULT_SHELL } from '../hooks/useShellColor'
 
 const pokeBox = {
   border: '3px solid #84cc16',
@@ -38,11 +39,46 @@ const dangerBtn: React.CSSProperties = {
 
 type FeedbackState = 'idle' | 'saved' | 'loaded' | 'error'
 
+const FONT = "'PokemonGb', 'Press Start 2P', monospace"
+
+const SHELL_UNLOCK_THRESHOLD = 25
+
+function countUniqueSessionStrains(): number {
+  try {
+    const sessions = JSON.parse(localStorage.getItem('utilhub_sessions') ?? '[]')
+    if (!Array.isArray(sessions)) return 0
+    const names = new Set(
+      (sessions as Array<{ strainName?: string }>)
+        .map((s) => s.strainName?.toLowerCase().trim())
+        .filter(Boolean),
+    )
+    return names.size
+  } catch {
+    return 0
+  }
+}
+
 export default function SaveState() {
   const { darkMode, setDarkMode } = useVibe()
   const { theme, toggleTheme } = useTheme()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [exportFeedback, setExportFeedback] = useState<FeedbackState>('idle')
+
+  // ── Hardware shell customiser ──────────────────────────────────────────────
+  const [shellColor,      setShellColorState] = useState(getShellColor)
+  const uniqueStrains     = useMemo(countUniqueSessionStrains, [])
+  const hardwareUnlocked  = uniqueStrains >= SHELL_UNLOCK_THRESHOLD
+  const unlockProgress    = Math.min(1, uniqueStrains / SHELL_UNLOCK_THRESHOLD)
+
+  const handleShellChange = (hex: string) => {
+    setShellColorState(hex)
+    setShellColor(hex)
+  }
+
+  const handleShellReset = () => {
+    resetShellColor()
+    setShellColorState(DEFAULT_SHELL)
+  }
   const [importFeedback, setImportFeedback] = useState<FeedbackState>('idle')
   const [showConfirm, setShowConfirm] = useState(false)
   const [showSaveConfirm, setShowSaveConfirm] = useState(false)
@@ -245,6 +281,110 @@ export default function SaveState() {
           ))}
         </div>
       </div>
+
+      {/* ── Hardware Shell Customiser ──────────────────────────────────── */}
+      {hardwareUnlocked ? (
+        /* UNLOCKED — show the colour picker */
+        <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontFamily: FONT, fontSize: 9, color: '#84cc16', letterSpacing: 0.5 }}>
+              HARDWARE SHELL
+            </span>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: '#f59e0b', border: '1px solid #f59e0b', padding: '2px 6px' }}>
+              ★ UNLOCKED
+            </span>
+          </div>
+          <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
+            Pick a shell colour. The gradient and D-pad tints are derived automatically.
+          </p>
+
+          {/* Colour picker row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: 52, height: 52,
+                background: shellColor,
+                border: '3px solid #84cc16',
+                boxSizing: 'border-box',
+              }} />
+              <input
+                type="color"
+                value={shellColor}
+                onChange={(e) => handleShellChange(e.target.value)}
+                style={{
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
+                  opacity: 0, cursor: 'pointer',
+                }}
+                aria-label="Shell colour picker"
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontFamily: FONT, fontSize: 7, color: '#4a7a10' }}>
+                SHELL COLOR
+              </span>
+              <span style={{ fontFamily: 'monospace', fontSize: 14, color: '#c8e890', letterSpacing: 2 }}>
+                {shellColor.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Reset */}
+          <button
+            onClick={handleShellReset}
+            style={{
+              ...btnBase,
+              fontSize: 9,
+              border: '2px solid #2a4a08',
+              color: '#4a7a10',
+              background: 'transparent',
+            }}
+          >
+            ► RESET TO KIWI GREEN
+          </button>
+        </div>
+      ) : (
+        /* LOCKED — show progress toward 25 strains */
+        <div style={{
+          ...pokeBox,
+          border: '3px solid #2a4a08',
+          boxShadow: 'none',
+          padding: 14,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          opacity: 0.75,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontFamily: FONT, fontSize: 9, color: '#4a7a10', letterSpacing: 0.5 }}>
+              HARDWARE SHELL
+            </span>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: '#2a4a08', border: '1px solid #2a4a08', padding: '2px 6px' }}>
+              LOCKED
+            </span>
+          </div>
+          <p style={{ fontFamily: 'monospace', fontSize: 13, color: '#4a7a10', lineHeight: 1.7, margin: 0 }}>
+            Log {SHELL_UNLOCK_THRESHOLD} unique strains to unlock the Hardware Customiser.
+          </p>
+          {/* Progress bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: FONT, fontSize: 7, color: '#2a4a08' }}>PROGRESS</span>
+              <span style={{ fontFamily: FONT, fontSize: 7, color: '#4a7a10' }}>
+                {uniqueStrains} / {SHELL_UNLOCK_THRESHOLD}
+              </span>
+            </div>
+            <div style={{ height: 8, background: '#0a1408', border: '2px solid #2a4a08', boxSizing: 'border-box' }}>
+              <div style={{
+                height: '100%',
+                width: `${unlockProgress * 100}%`,
+                background: '#2a4a08',
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GBA SP Dark Mode toggle */}
       <div style={{ ...pokeBox, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>

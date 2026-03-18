@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { removeBackground } from '@imgly/background-removal'
 
 // GBC 5-color kiwi palette (R, G, B)
@@ -73,26 +73,43 @@ function blobToImageElement(blob: Blob): Promise<HTMLImageElement> {
   })
 }
 
-const FONT = "'PokemonGb', 'Press Start 2P', monospace"
+const FONT      = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
+const GBC_BG    = '#050a04'
 
 const PIXEL_SIZE = 48
 const SCALE = 5  // stored as 240×240
 
-type Step = 'idle' | 'removing' | 'dithering'
+type Step        = 'idle' | 'removing' | 'dithering'
+type RevealPhase = 'idle' | 'silhouette' | 'flash' | 'revealed'
 
 interface BitBudCanvasProps {
   onCapture: (dataUrl: string) => void
 }
 
 export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [step, setStep] = useState<Step>('idle')
+  const fileInputRef  = useRef<HTMLInputElement>(null)
+  const canvasRef     = useRef<HTMLCanvasElement>(null)
+  const [preview,     setPreview]     = useState<string | null>(null)
+  const [step,        setStep]        = useState<Step>('idle')
+  const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle')
+
+  // ── Reveal sequence ─────────────────────────────────────────────────────────
+  // silhouette (2 s) → flash (360 ms CSS anim) → revealed
+  useEffect(() => {
+    if (revealPhase === 'silhouette') {
+      const t = setTimeout(() => setRevealPhase('flash'), 2000)
+      return () => clearTimeout(t)
+    }
+    if (revealPhase === 'flash') {
+      const t = setTimeout(() => setRevealPhase('revealed'), 400)
+      return () => clearTimeout(t)
+    }
+  }, [revealPhase])
 
   const processImage = useCallback(async (file: File) => {
+    setRevealPhase('idle')
     setStep('removing')
     setPreview(null)
 
@@ -133,6 +150,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
     setPreview(display.toDataURL('image/png'))
     setStep('idle')
+    setRevealPhase('silhouette')   // ← start the reveal
   }, [])
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +165,17 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     step === 'removing' ? '► REMOVING BG...' :
     step === 'dithering' ? '► PROCESSING...' :
     '► UPLOAD PHOTO'
+
+  // Canvas filter per phase
+  const canvasFilter =
+    revealPhase === 'silhouette' ? 'brightness(0)' :
+    revealPhase === 'revealed'   ? 'brightness(1)' :
+    undefined  // 'flash' phase — handled by CSS class
+
+  const canvasTransition = revealPhase === 'revealed' ? 'filter 0.3s ease-out' : 'none'
+
+  const showOverlay = preview && (revealPhase === 'silhouette' || revealPhase === 'flash')
+  const showCapture = preview && revealPhase === 'revealed'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -185,31 +214,63 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         {statusLabel}
       </button>
 
-      {/* Display canvas */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: preview ? 'block' : 'none',
-          imageRendering: 'pixelated',
-          width: '100%',
-          border: '3px solid #84cc16',
-          boxSizing: 'border-box',
-        }}
-      />
+      {/* ── Canvas + reveal overlay ─────────────────────────────────────── */}
+      <div style={{ position: 'relative' }}>
+        <canvas
+          ref={canvasRef}
+          className={revealPhase === 'flash' ? 'gbc-whodat-flash' : ''}
+          style={{
+            display:         preview ? 'block' : 'none',
+            imageRendering:  'pixelated',
+            width:           '100%',
+            border:          '3px solid #84cc16',
+            boxSizing:       'border-box',
+            filter:          canvasFilter,
+            transition:      canvasTransition,
+          }}
+        />
 
-      {preview && (
+        {/* "WHO'S THAT SMOKÉMON?" text — shown during silhouette + flash */}
+        {showOverlay && (
+          <div style={{
+            position:       'absolute',
+            bottom:         3,
+            left:           3,
+            right:          3,
+            background:     `${GBC_BG}cc`,
+            padding:        '6px 8px',
+            display:        'flex',
+            justifyContent: 'center',
+            pointerEvents:  'none',
+          }}>
+            <span style={{
+              fontFamily:  FONT,
+              fontSize:    7,
+              color:       GBC_GREEN,
+              textAlign:   'center',
+              lineHeight:  1.7,
+              letterSpacing: 0.5,
+            }}>
+              WHO'S THAT{'\n'}SMOKÉPMON?
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Save button — only revealed after the full animation */}
+      {showCapture && (
         <button
           onClick={() => onCapture(preview)}
           style={{
-            fontFamily: FONT,
-            fontSize: 10,
-            padding: '11px 14px',
-            cursor: 'pointer',
-            border: '3px solid #84cc16',
-            color: '#84cc16',
-            background: 'rgba(132,204,22,0.15)',
-            width: '100%',
-            boxSizing: 'border-box',
+            fontFamily:    FONT,
+            fontSize:      10,
+            padding:       '11px 14px',
+            cursor:        'pointer',
+            border:        '3px solid #84cc16',
+            color:         '#84cc16',
+            background:    'rgba(132,204,22,0.15)',
+            width:         '100%',
+            boxSizing:     'border-box',
             letterSpacing: 0.5,
           }}
         >
@@ -217,7 +278,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         </button>
       )}
 
-      {preview && (
+      {showCapture && (
         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, textAlign: 'center' }}>
           BG REMOVED · 5-COLOR GBC · DITHERED
         </span>

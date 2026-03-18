@@ -143,6 +143,18 @@ body {
   color: #050e04 !important;
 }
 
+/* Who's that Smokémon? reveal flash */
+@keyframes gbc-whodat-flash {
+  0%   { filter: brightness(0); }
+  28%  { filter: brightness(0) drop-shadow(0 0 6px #fff) drop-shadow(0 0 20px #fff) drop-shadow(0 0 44px #fff); }
+  58%  { filter: brightness(0.45); }
+  85%  { filter: brightness(0.9); }
+  100% { filter: brightness(1); }
+}
+.gbc-whodat-flash {
+  animation: gbc-whodat-flash 0.36s ease-out forwards;
+}
+
 /* ── Theme: dark (default) ─────────────────────────────────────────────────── */
 :root {
   --gbc-bg:       #050a04;
@@ -156,6 +168,15 @@ body {
   --gbc-red:      #e84040;
   --gbc-charcoal: #0e1a0b;
   --gbc-shadow2:  #3a6010;
+
+  /* Hardware shell theming — updated by useShellColor.ts */
+  --shell-light: #a8e030;
+  --shell-mid:   #84cc16;
+  --shell-dark:  #6aaa08;
+  --dpad-arm-a:  #2a2a2a;
+  --dpad-arm-b:  #181818;
+  --dpad-arm-c:  #0e0e0e;
+  --dpad-arrow:  #555555;
 }
 
 /* ── Theme: light (original Game Boy LCD palette) ──────────────────────────── */

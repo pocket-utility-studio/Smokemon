@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useVibe } from '../context/VibeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
@@ -7,9 +7,11 @@ import SplashScreen from '../pages/SplashScreen'
 import { useTransitionNav } from '../context/NavigationContext'
 import { haptic } from '../utils/haptic'
 import WipeOverlay from '../components/WipeOverlay'
+import { applyShellColor, getShellColor } from '../hooks/useShellColor'
 
-const KIWI_GRAD = 'linear-gradient(160deg, #a8e030 0%, #84cc16 40%, #6aaa08 100%)'
-const BEZEL = '#181818'
+// Shell gradient now reads from CSS variables set by useShellColor.ts
+const KIWI_GRAD   = 'linear-gradient(160deg, var(--shell-light) 0%, var(--shell-mid) 40%, var(--shell-dark) 100%)'
+const BEZEL       = '#181818'
 const BEZEL_INNER = '#0e0e0e'
 
 // Easing used on every animated property
@@ -44,9 +46,9 @@ function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
     >
       <defs>
         <linearGradient id="g-arm" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#2a2a2a" />
-          <stop offset="50%"  stopColor="#181818" />
-          <stop offset="100%" stopColor="#0e0e0e" />
+          <stop offset="0%"   style={{ stopColor: 'var(--dpad-arm-a)' }} />
+          <stop offset="50%"  style={{ stopColor: 'var(--dpad-arm-b)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--dpad-arm-c)' }} />
         </linearGradient>
         <radialGradient id="g-dome" cx="38%" cy="30%" r="65%">
           <stop offset="0%"   stopColor="#484848" />
@@ -109,10 +111,10 @@ function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
       {/* Centre thumb indent */}
       <circle cx={dp.x} cy={dp.y} r={12} fill="url(#g-dpc)" />
       {/* Arrows */}
-      <polygon points={`${dp.x-26},${dp.y} ${dp.x-18},${dp.y-6} ${dp.x-18},${dp.y+6}`} fill="#555" />
-      <polygon points={`${dp.x+26},${dp.y} ${dp.x+18},${dp.y-6} ${dp.x+18},${dp.y+6}`} fill="#555" />
-      <polygon points={`${dp.x},${dp.y-26} ${dp.x-6},${dp.y-18} ${dp.x+6},${dp.y-18}`} fill="#555" />
-      <polygon points={`${dp.x},${dp.y+26} ${dp.x-6},${dp.y+18} ${dp.x+6},${dp.y+18}`} fill="#555" />
+      <polygon points={`${dp.x-26},${dp.y} ${dp.x-18},${dp.y-6} ${dp.x-18},${dp.y+6}`} style={{ fill: 'var(--dpad-arrow)' }} />
+      <polygon points={`${dp.x+26},${dp.y} ${dp.x+18},${dp.y-6} ${dp.x+18},${dp.y+6}`} style={{ fill: 'var(--dpad-arrow)' }} />
+      <polygon points={`${dp.x},${dp.y-26} ${dp.x-6},${dp.y-18} ${dp.x+6},${dp.y-18}`} style={{ fill: 'var(--dpad-arrow)' }} />
+      <polygon points={`${dp.x},${dp.y+26} ${dp.x-6},${dp.y+18} ${dp.x+6},${dp.y+18}`} style={{ fill: 'var(--dpad-arrow)' }} />
 
       {/* ── B button ───────────────────────────────────────── */}
       {/* Outer groove shadow ring */}
@@ -217,6 +219,11 @@ export default function AppLayout() {
   const emu = layoutMode === 'emulator'
   // Separate from emu — only true during the initial splash boot sequence
   const [booting, setBooting] = useState(() => sessionStorage.getItem('hasBooted') !== '1')
+
+  // Re-apply the saved shell colour in case a hard reload cleared inline vars
+  // (module-level apply in useShellColor.ts already runs at import time,
+  //  this is a belt-and-braces safety net)
+  useEffect(() => { applyShellColor(getShellColor()) }, [])
 
   // Called by SplashScreen when user taps through to the app
   const handleStart = useCallback(() => {
