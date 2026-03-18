@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ThemeProvider } from './context/ThemeContext'
 import { VibeProvider } from './context/VibeContext'
 import { StashProvider } from './context/StashContext'
 import { TimeOfDayProvider } from './context/TimeOfDayContext'
@@ -26,9 +27,11 @@ import WantedList from './pages/WantedList'
 import SessionHistory from './pages/SessionHistory'
 import DoseTimer from './pages/DoseTimer'
 import StrainQuiz from './pages/StrainQuiz'
+import UniversalSearch from './pages/UniversalSearch'
 
 export default function App() {
   return (
+    <ThemeProvider>
     <TimeOfDayProvider>
       <StashProvider>
         <VibeProvider>
@@ -58,6 +61,7 @@ export default function App() {
                 <Route path="sessions" element={<SessionHistory />} />
                 <Route path="dose-timer" element={<DoseTimer />} />
                 <Route path="quiz" element={<StrainQuiz />} />
+                <Route path="search" element={<UniversalSearch />} />
               </Route>
             </Routes>
             </LayoutModeProvider>
@@ -67,5 +71,6 @@ export default function App() {
         </VibeProvider>
       </StashProvider>
     </TimeOfDayProvider>
+    </ThemeProvider>
   )
 }

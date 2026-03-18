@@ -130,3 +130,33 @@ body {
   background: #84cc16 !important;
   color: #050e04 !important;
 }
+
+/* ── Theme: dark (default) ─────────────────────────────────────────────────── */
+:root {
+  --gbc-bg:       #050a04;
+  --gbc-text:     #c8e890;
+  --gbc-green:    #84cc16;
+  --gbc-muted:    #4a7a10;
+  --gbc-darkest:  #2a4a08;
+  --gbc-box:      #0a1408;
+  --gbc-amber:    #f59e0b;
+  --gbc-violet:   #a78bfa;
+  --gbc-red:      #e84040;
+  --gbc-charcoal: #0e1a0b;
+  --gbc-shadow2:  #3a6010;
+}
+
+/* ── Theme: light (original Game Boy LCD palette) ──────────────────────────── */
+[data-theme="light"] {
+  --gbc-bg:       #9bbc0f;
+  --gbc-text:     #0f380f;
+  --gbc-green:    #306230;
+  --gbc-muted:    #4a6820;
+  --gbc-darkest:  #6a9030;
+  --gbc-box:      #8bac0f;
+  --gbc-amber:    #1a3a08;
+  --gbc-violet:   #183818;
+  --gbc-red:      #0f380f;
+  --gbc-charcoal: #5a7828;
+  --gbc-shadow2:  #7a9c38;
+}

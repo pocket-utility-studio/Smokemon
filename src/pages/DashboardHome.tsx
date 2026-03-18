@@ -71,6 +71,7 @@ const MENU: TopItem[] = [
       { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT',   description: 'VERIFY STRAIN DATA QUALITY',      tag: '[AUDIT]', tagColor: '#4a9a20' },
     ],
   },
+  { kind: 'leaf', to: '/search',      label: 'SEARCH ALL',    description: 'SEARCH EVERY STRAIN & LOG',   tag: '[FIND]', tagColor: '#84cc16' },
   { kind: 'leaf', to: '/wanted',     label: 'WANTED LIST',   description: 'STRAINS YOU ARE HUNTING',     tag: '[HUNT]', tagColor: '#e84040' },
   { kind: 'leaf', to: '/sessions',   label: 'SESSION LOG',   description: 'LOG & TRACK YOUR SESSIONS',   tag: '[LOG]',  tagColor: '#a78bfa' },
   { kind: 'leaf', to: '/dose-timer', label: 'DOSE TIMER',    description: 'TRACK ONSET & PEAK PHASES',   tag: '[DOSE]', tagColor: '#f59e0b' },

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { exportSaveData, importSaveData } from '../utils/storage'
 import { playSave } from '../utils/sounds'
 import { useVibe } from '../context/VibeContext'
+import { useTheme } from '../context/ThemeContext'
 
 const pokeBox = {
   border: '3px solid #84cc16',
@@ -39,6 +40,7 @@ type FeedbackState = 'idle' | 'saved' | 'loaded' | 'error'
 
 export default function SaveState() {
   const { darkMode, setDarkMode } = useVibe()
+  const { theme, toggleTheme } = useTheme()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [exportFeedback, setExportFeedback] = useState<FeedbackState>('idle')
   const [importFeedback, setImportFeedback] = useState<FeedbackState>('idle')
@@ -262,6 +264,17 @@ export default function SaveState() {
           }}
         >
           {darkMode ? '► SP DARK MODE: ON' : '► SP DARK MODE: OFF'}
+        </button>
+        <button
+          onClick={toggleTheme}
+          style={{
+            ...btnBase,
+            border: theme === 'dark' ? '3px solid #84cc16' : '3px solid #2a4a08',
+            color: theme === 'dark' ? '#84cc16' : '#4a7a10',
+            background: theme === 'dark' ? 'rgba(132,204,22,0.08)' : 'transparent',
+          }}
+        >
+          {theme === 'dark' ? '► LIGHT MODE' : '► DARK MODE'}
         </button>
       </div>
 
