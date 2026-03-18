@@ -30,6 +30,7 @@ import DoseTimer from './pages/DoseTimer'
 import StrainQuiz from './pages/StrainQuiz'
 import UniversalSearch from './pages/UniversalSearch'
 import CheckIn from './pages/CheckIn'
+import TrainerRecord from './pages/TrainerRecord'
 import { useNotificationScheduler } from './hooks/useNotificationScheduler'
 
 function AppWithScheduler({ children }: { children: ReactNode }) {
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="quiz" element={<StrainQuiz />} />
                 <Route path="search" element={<UniversalSearch />} />
                 <Route path="check-in" element={<CheckIn />} />
+                <Route path="trainer-record" element={<TrainerRecord />} />
               </Route>
             </Routes>
             </AppWithScheduler>

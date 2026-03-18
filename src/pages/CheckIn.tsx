@@ -31,6 +31,7 @@ interface SessionEntry {
   preSeverity?:  number
   postSeverity?: number
   postNotes?:    string
+  temp?:         number
 }
 
 const SYMPTOM_OPTS = [

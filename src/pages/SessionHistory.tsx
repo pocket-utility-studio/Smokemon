@@ -29,7 +29,10 @@ interface SessionEntry {
   preSeverity?:  number
   postSeverity?: number
   postNotes?:    string
+  temp?:         number   // vape temperature in °C
 }
+
+const VAPE_TEMPS = [160, 170, 180, 190, 200, 210, 220]
 
 const STORAGE_KEY = 'utilhub_sessions'
 
@@ -128,6 +131,7 @@ export default function SessionHistory() {
   const [notes,        setNotes]        = useState('')
   const [symptoms,     setSymptoms]     = useState<string[]>([])
   const [preSeverity,  setPreSeverity]  = useState<number | undefined>()
+  const [temp,         setTemp]         = useState<number | undefined>()
   const [justSaved,    setJustSaved]    = useState(false)
   const [confirmId,    setConfirmId]    = useState<string | null>(null)
   const [notifStatus,  setNotifStatus]  = useState<'idle' | 'requesting' | 'denied'>('idle')
@@ -175,6 +179,7 @@ export default function SessionHistory() {
       notes:       notes.trim(),
       symptoms:    symptoms.length > 0 ? [...symptoms] : undefined,
       preSeverity: preSeverity,
+      temp,
     }
     const next = [entry, ...sessions]
     setSessions(next)
@@ -200,6 +205,7 @@ export default function SessionHistory() {
     setNotes('')
     setSymptoms([])
     setPreSeverity(undefined)
+    setTemp(undefined)
     setJustSaved(true)
     setTimeout(() => setJustSaved(false), 1500)
   }
@@ -315,6 +321,33 @@ export default function SessionHistory() {
             )}
           </div>
         )}
+
+        {/* Vape temp */}
+        <div>
+          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, display: 'block', marginBottom: 6 }}>
+            VAPE TEMP (OPTIONAL)
+          </span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {VAPE_TEMPS.map((t) => {
+              const active = temp === t
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTemp(active ? undefined : t)}
+                  style={{
+                    flex: 1, fontFamily: FONT, fontSize: 7, padding: '7px 0', minHeight: 36,
+                    cursor: 'pointer',
+                    border: `2px solid ${active ? GBC_AMBER : GBC_DARKEST}`,
+                    background: active ? `${GBC_AMBER}18` : 'transparent',
+                    color: active ? GBC_AMBER : GBC_MUTED,
+                  }}
+                >
+                  {t}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {/* Notes */}
         <textarea
