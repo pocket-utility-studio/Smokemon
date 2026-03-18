@@ -62,6 +62,7 @@ export default function SessionHistory() {
   const [notes, setNotes]             = useState('')
   const [rating, setRating]           = useState<SessionEntry['rating']>('good')
   const [justSaved, setJustSaved]     = useState(false)
+  const [confirmId, setConfirmId]     = useState<string | null>(null)
 
   // Build combined search list: stash strains first, then full DB
   const searchPool = useMemo(() => {
@@ -222,10 +223,24 @@ export default function SessionHistory() {
                       {formatDate(s.date)}
                     </div>
                   </div>
-                  <button
-                    onClick={() => deleteSession(s.id)}
-                    style={{ background: 'transparent', border: 'none', color: GBC_MUTED, fontFamily: FONT, fontSize: 9, cursor: 'pointer', padding: '4px 6px', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >[x]</button>
+                  {confirmId === s.id ? (
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ fontFamily: FONT, fontSize: 7, color: '#e84040' }}>DELETE?</span>
+                      <button
+                        onClick={() => { deleteSession(s.id); setConfirmId(null) }}
+                        style={{ background: 'transparent', border: `1px solid #e84040`, color: '#e84040', fontFamily: FONT, fontSize: 8, cursor: 'pointer', minWidth: 44, minHeight: 44, padding: '0 6px' }}
+                      >YES</button>
+                      <button
+                        onClick={() => setConfirmId(null)}
+                        style={{ background: 'transparent', border: `1px solid ${GBC_DARKEST}`, color: GBC_MUTED, fontFamily: FONT, fontSize: 8, cursor: 'pointer', minWidth: 44, minHeight: 44, padding: '0 6px' }}
+                      >NO</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(s.id)}
+                      style={{ background: 'transparent', border: 'none', color: GBC_MUTED, fontFamily: FONT, fontSize: 9, cursor: 'pointer', padding: '4px 6px', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >[x]</button>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: s.notes ? 8 : 0 }}>
                   {s.strainType && <span style={{ fontFamily: FONT, fontSize: 7, color: col, border: `1px solid ${col}`, padding: '2px 5px' }}>{s.strainType.toUpperCase()}</span>}
