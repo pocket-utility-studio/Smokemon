@@ -24,6 +24,8 @@ import AvbEdibles from './pages/AvbEdibles'
 import CannabinoidGuide from './pages/CannabinoidGuide'
 import WantedList from './pages/WantedList'
 import SessionHistory from './pages/SessionHistory'
+import DoseTimer from './pages/DoseTimer'
+import StrainQuiz from './pages/StrainQuiz'
 
 export default function App() {
   return (
@@ -54,6 +56,8 @@ export default function App() {
                 <Route path="cannabinoids" element={<CannabinoidGuide />} />
                 <Route path="wanted" element={<WantedList />} />
                 <Route path="sessions" element={<SessionHistory />} />
+                <Route path="dose-timer" element={<DoseTimer />} />
+                <Route path="quiz" element={<StrainQuiz />} />
               </Route>
             </Routes>
             </LayoutModeProvider>

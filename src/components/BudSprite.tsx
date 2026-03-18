@@ -12,9 +12,45 @@
 
 import React from 'react'
 
-const PX   = 2    // SVG units per pixel
-const COLS = 8
-const ROWS = 12
+const PX   = 1    // SVG units per pixel
+const COLS = 32   // Scale4x from original 8  (8 → 16 → 32)
+const ROWS = 48   // Scale4x from original 12 (12 → 24 → 48)
+// At display size=24: 2:1 clean integer downscale → ultra-crisp pixelated rendering
+
+// Scale2x from string[] source (first pass)
+function scale2xFromStrings(pixels: string[]): number[][] {
+  const srcRows = pixels.length
+  const srcCols = pixels[0]?.length ?? 0
+  const src: number[][] = pixels.map((row) =>
+    Array.from({ length: srcCols }, (_, i) => parseInt(row[i] ?? '0', 10)),
+  )
+  return scale2xFromNumbers(src, srcRows, srcCols)
+}
+
+// Scale2x from number[][] source (subsequent passes)
+function scale2xFromNumbers(src: number[][], srcRows: number, srcCols: number): number[][] {
+  const out: number[][] = Array.from({ length: srcRows * 2 }, () => new Array(srcCols * 2).fill(0))
+  for (let r = 0; r < srcRows; r++) {
+    for (let c = 0; c < srcCols; c++) {
+      const E = src[r][c]
+      const B = r > 0 ? src[r - 1][c] : 0
+      const D = c > 0 ? src[r][c - 1] : 0
+      const F = c < srcCols - 1 ? src[r][c + 1] : 0
+      const H = r < srcRows - 1 ? src[r + 1][c] : 0
+      out[r * 2    ][c * 2    ] = (D === B && B !== F && D !== H) ? D : E
+      out[r * 2    ][c * 2 + 1] = (B === F && B !== D && F !== H) ? F : E
+      out[r * 2 + 1][c * 2    ] = (D === H && D !== B && H !== F) ? D : E
+      out[r * 2 + 1][c * 2 + 1] = (H === F && D !== H && B !== F) ? F : E
+    }
+  }
+  return out
+}
+
+// Apply Scale2x twice: 8×12 → 16×24 → 32×48
+function applyScale4x(pixels: string[]): number[][] {
+  const pass1 = scale2xFromStrings(pixels)         // 16×24
+  return scale2xFromNumbers(pass1, pass1.length, pass1[0]?.length ?? 0)  // 32×48
+}
 
 interface SpriteData {
   palette: string[]  // index 0 = unused (transparent), 1–6 = colors
@@ -648,19 +684,20 @@ export function BudSprite({
   const sprite = SPRITES[design]
   if (!sprite) return null
 
-  const naturalW = COLS * PX
-  const naturalH = ROWS * PX
+  // Apply Scale4x (Scale2x twice): 8×12 → 16×24 → 32×48
+  const upscaled = applyScale4x(sprite.pixels)
+  const naturalW = COLS * PX  // 16
+  const naturalH = ROWS * PX  // 24
   const scale    = size / naturalH
   const displayW = Math.round(naturalW * scale)
 
   const rects: React.ReactElement[] = []
 
-  sprite.pixels.forEach((row, rowIdx) => {
-    for (let col = 0; col < COLS; col++) {
-      const colorIdx = parseInt(row[col] ?? '0', 10)
-      if (colorIdx === 0) continue
+  upscaled.forEach((row, rowIdx) => {
+    row.forEach((colorIdx, col) => {
+      if (colorIdx === 0) return
       const color = sprite.palette[colorIdx]
-      if (!color) continue
+      if (!color) return
       rects.push(
         <rect
           key={`${rowIdx}-${col}`}
@@ -671,7 +708,7 @@ export function BudSprite({
           fill={color}
         />,
       )
-    }
+    })
   })
 
   return (
@@ -680,7 +717,7 @@ export function BudSprite({
       viewBox={`0 0 ${naturalW} ${naturalH}`}
       width={displayW}
       height={size}
-      style={{ imageRendering: 'auto', display: 'block', flexShrink: 0, transform: 'scaleY(-1)' }}
+      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, transform: 'scaleY(-1)' }}
     >
       {rects}
     </svg>
