@@ -5,8 +5,8 @@ import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
 import { useStrainDb } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { askNurseJoy, generateMixSuggestions } from '../services/gemini'
-import type { EnrichedStrain, ConsultationFeedback, MixSuggestion } from '../services/gemini'
+import { askNurseJoy, generateDualBlend } from '../services/gemini'
+import type { EnrichedStrain, ConsultationFeedback, DualBlendResult } from '../services/gemini'
 import { BudSprite } from '../components/BudSprite'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -501,13 +501,13 @@ export default function PokeCenter() {
   // Blend suggestion
   const [blendGoal, setBlendGoal]       = useState('')
   const [blendLoading, setBlendLoading] = useState(false)
-  const [blendResults, setBlendResults] = useState<MixSuggestion[]>([])
+  const [blendResults, setBlendResults] = useState<DualBlendResult | null>(null)
   const [blendError, setBlendError]     = useState('')
 
   const handleBlend = async () => {
     if (party.length < 2 || !hasKey || blendLoading) return
     setBlendLoading(true)
-    setBlendResults([])
+    setBlendResults(null)
     setBlendError('')
     try {
       const enriched: EnrichedStrain[] = party.map((s) => {
@@ -523,8 +523,7 @@ export default function PokeCenter() {
           notes: s.notes,
         }
       })
-      const results = await generateMixSuggestions(blendGoal.trim() || 'balanced relaxation', enriched)
-      setBlendResults(results)
+      setBlendResults(await generateDualBlend(blendGoal.trim(), enriched))
     } catch (e) {
       setBlendError(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -740,17 +739,21 @@ export default function PokeCenter() {
               </p>
             )}
 
-            {blendResults.length > 0 && (
+            {blendResults && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                {blendResults.map((mix, i) => (
-                  <div key={i} style={{ border: `1px solid ${GBC_DARKEST}`, background: GBC_BG, padding: '10px' }}>
-                    <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN, marginBottom: 6 }}>
+                {([
+                  { label: 'TASTE',   color: GBC_AMBER,  mix: blendResults.taste   },
+                  { label: 'MEDICAL', color: GBC_VIOLET, mix: blendResults.medical },
+                ] as const).map(({ label, color, mix }) => (
+                  <div key={label} style={{ border: `2px solid ${color}`, background: GBC_BG, padding: '10px' }}>
+                    <div style={{ fontFamily: FONT, fontSize: 7, color, marginBottom: 6 }}>[{label}]</div>
+                    <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN, marginBottom: 8, lineHeight: 1.6 }}>
                       {mix.strainA.toUpperCase()} + {mix.strainB.toUpperCase()}
                     </div>
-                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_AMBER, lineHeight: 1.6, margin: '0 0 6px' }}>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.6, margin: '0 0 6px' }}>
                       {mix.flavourReason}
                     </p>
-                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.6, margin: 0, opacity: 0.8 }}>
+                    <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, lineHeight: 1.6, margin: 0 }}>
                       {mix.terpeneReason}
                     </p>
                   </div>

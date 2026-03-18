@@ -258,6 +258,81 @@ ${partyList}`
     .slice(0, 5)
 }
 
+export interface DualBlendResult {
+  taste:   MixSuggestion
+  medical: MixSuggestion
+}
+
+/**
+ * Always returns exactly two blend suggestions from the party:
+ * one optimised for taste/flavour, one for medical/therapeutic effect.
+ */
+export async function generateDualBlend(
+  goal: string,
+  party: EnrichedStrain[],
+): Promise<DualBlendResult> {
+  if (party.length < 2) throw new Error('Need at least 2 strains')
+  const client = getClient()
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: { temperature: 0.4 },
+  })
+
+  const partyList = party
+    .map((s) => {
+      let line = `- ${s.name} (${s.type ?? 'unknown'}`
+      if (s.thc != null)  line += `, THC ${s.thc}%`
+      if (s.terpenes)     line += `, terpenes: ${s.terpenes}`
+      if (s.effects)      line += `, effects: ${s.effects}`
+      if (s.medical)      line += `, medical: ${s.medical}`
+      line += ')'
+      return line
+    })
+    .join('\n')
+
+  const prompt = `You are Professor T-Oak, cannabis terpene expert.
+
+The trainer's goal: "${goal || 'balanced relaxation'}"
+
+From the party below, give exactly TWO blend suggestions:
+1. "taste" — the pairing with the best combined flavour/aroma profile
+2. "medical" — the pairing best suited for therapeutic/medical effect
+
+Each pairing must use two DIFFERENT strains from the list.
+
+Respond with ONLY valid JSON, no markdown, no code fences:
+{
+  "taste": {
+    "strainA": "<exact name>",
+    "strainB": "<exact name>",
+    "flavourReason": "<1-2 sentences on combined aroma/taste>",
+    "terpeneReason": "<1-2 sentences on terpene synergy for flavour>"
+  },
+  "medical": {
+    "strainA": "<exact name>",
+    "strainB": "<exact name>",
+    "flavourReason": "<1-2 sentences on combined effect profile>",
+    "terpeneReason": "<1-2 sentences on terpene synergy for therapeutic benefit>"
+  }
+}
+
+Party:
+${partyList}`
+
+  const result = await model.generateContent(prompt)
+  const text = result.response.text().trim()
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error('Unexpected response from AI')
+  const data = JSON.parse(jsonMatch[0]) as Record<string, Record<string, string>>
+  const parse = (d: Record<string, string>): MixSuggestion => ({
+    strainA:       d.strainA       ?? '',
+    strainB:       d.strainB       ?? '',
+    flavourReason: d.flavourReason ?? '',
+    terpeneReason: d.terpeneReason ?? '',
+  })
+  return { taste: parse(data.taste), medical: parse(data.medical) }
+}
+
 /**
  * Mix two strains and predict their combined entourage effect.
  */
