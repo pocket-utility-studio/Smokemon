@@ -20,6 +20,11 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
+  build: {
+    rollupOptions: {
+      external: ['onnxruntime-web', 'onnxruntime-web/webgpu'],
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
