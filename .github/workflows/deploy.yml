@@ -16,14 +16,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Bump patch version
+      - name: Set patch version from run number
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version patch --no-git-tag-version
-          git add package.json
-          git commit -m "chore: bump version [skip ci]"
-          git push
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const [major, minor] = pkg.version.split('.');
+            pkg.version = major + '.' + minor + '.' + '${{ github.run_number }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
       - run: npm install --legacy-peer-deps
       - run: npm run build
       - uses: peaceiris/actions-gh-pages@v3
