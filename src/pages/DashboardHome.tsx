@@ -3,6 +3,17 @@ import { useTransitionNav } from '../context/NavigationContext'
 import { playNavigate } from '../utils/sounds'
 import { haptic } from '../utils/haptic'
 
+function hasUnseenFact(): boolean {
+  try {
+    const raw = localStorage.getItem('utilhub_daily_loot')
+    if (!raw) return true
+    const parsed = JSON.parse(raw)
+    const now = new Date()
+    const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+    return parsed.date !== today
+  } catch { return true }
+}
+
 const pokeBox = {
   border: '4px solid #84cc16',
   background: '#050e04',
@@ -53,8 +64,9 @@ const MENU: TopItem[] = [
     children: [
       { kind: 'leaf', to: '/legendary',  label: 'HALL OF FAME', description: '24 LEGENDARY STRAINS & THEIR LORE', tag: '[LORE]',  tagColor: '#f59e0b' },
       { kind: 'leaf', to: '/edibles',    label: 'AVB EDIBLES',  description: '20 RECIPES FOR YOUR LEFTOVERS',    tag: '[COOK]',  tagColor: '#84cc16' },
-      { kind: 'leaf', to: '/terpenes',   label: 'TERPENE DICT', description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',   tag: '[LEARN]', tagColor: '#a78bfa' },
-      { kind: 'leaf', to: '/facts',      label: 'FACT CART',    description: 'DAILY CANNABIS HISTORY',          tag: '[DAILY]', tagColor: '#84cc16' },
+      { kind: 'leaf', to: '/terpenes',      label: 'TERPENE DICT',    description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',  tag: '[LEARN]', tagColor: '#a78bfa' },
+      { kind: 'leaf', to: '/cannabinoids', label: 'CANNABINOID GUIDE', description: '8 CANNABINOIDS EXPLAINED',    tag: '[CANNA]', tagColor: '#c8e890' },
+      { kind: 'leaf', to: '/facts',        label: 'FACT CART',       description: 'DAILY CANNABIS HISTORY',        tag: '[DAILY]', tagColor: '#84cc16' },
       { kind: 'leaf', to: '/law',        label: 'LAW GUIDE',    description: 'UK + ES CANNABIS LAW',             tag: '[LAW]',   tagColor: '#e84040' },
       { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT',   description: 'VERIFY STRAIN DATA QUALITY',      tag: '[AUDIT]', tagColor: '#4a9a20' },
     ],
@@ -85,7 +97,7 @@ function Sprite({ color }: { color: string }) {
 // ── Row shared renderer ────────────────────────────────────────────────────────
 
 function MenuRow({
-  label, description, tag, tagColor, isActive, isBack = false,
+  label, description, tag, tagColor, isActive, isBack = false, badge = false,
   onEnter, onHover,
 }: {
   label: string
@@ -94,6 +106,7 @@ function MenuRow({
   tagColor: string
   isActive: boolean
   isBack?: boolean
+  badge?: boolean
   onEnter: () => void
   onHover: () => void
 }) {
@@ -135,6 +148,13 @@ function MenuRow({
               padding: '3px 6px', flexShrink: 0,
             }}>{tag}</span>
           )}
+          {badge && !isBack && (
+            <span className="gbc-blink" style={{
+              fontFamily: FONT, fontSize: 8,
+              color: '#e84040', border: '2px solid #e84040',
+              padding: '2px 5px', flexShrink: 0,
+            }}>! NEW</span>
+          )}
         </div>
       </div>
 
@@ -155,6 +175,7 @@ function MenuRow({
 export default function DashboardHome() {
   const [cursor, setCursor] = useState(0)
   const [openGroup, setOpenGroup] = useState<Group | null>(null)
+  const [newFact, setNewFact] = useState(hasUnseenFact)
   const { transitionTo } = useTransitionNav()
 
   // Items visible in the current view (main or sub-menu)
@@ -182,6 +203,7 @@ export default function DashboardHome() {
       setCursor(1) // skip BACK, land on first child
       return
     }
+    if (item.to === '/facts') setNewFact(false)
     transitionTo(item.to)
   }
 
@@ -241,6 +263,7 @@ export default function DashboardHome() {
           const tagColor = isBack ? '#84cc16' : item.tagColor
           const description = isBack ? undefined : item.description
 
+          const isFact = !isBack && (item as Leaf).to === '/facts'
           return (
             <MenuRow
               key={isBack ? '__back__' : (item as Leaf | Group).label}
@@ -250,6 +273,7 @@ export default function DashboardHome() {
               tagColor={tagColor}
               isActive={cursor === i}
               isBack={isBack}
+              badge={isFact && newFact}
               onEnter={() => activate(item)}
               onHover={() => { setCursor(i); haptic(10); playNavigate() }}
             />

@@ -21,6 +21,7 @@ import AbvPage from './pages/AbvPage'
 import DataAudit from './pages/DataAudit'
 import LegendaryStrains from './pages/LegendaryStrains'
 import AvbEdibles from './pages/AvbEdibles'
+import CannabinoidGuide from './pages/CannabinoidGuide'
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="data-audit" element={<DataAudit />} />
                 <Route path="legendary" element={<LegendaryStrains />} />
                 <Route path="edibles" element={<AvbEdibles />} />
+                <Route path="cannabinoids" element={<CannabinoidGuide />} />
               </Route>
             </Routes>
             </LayoutModeProvider>
