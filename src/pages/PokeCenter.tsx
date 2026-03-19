@@ -883,9 +883,18 @@ export default function PokeCenter() {
         )}
 
         {/* Ask Nurse Joy */}
-        <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
-          <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
-            WHAT DO YOU WANT TO FEEL?
+        <div style={{
+          border: `3px solid ${GBC_AMBER}`,
+          boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00',
+          background: '#0a0900',
+          padding: '14px',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_AMBER }}>►</span>
+            <span style={{ fontFamily: FONT, fontSize: 10, color: GBC_AMBER, letterSpacing: 0.5 }}>
+              WHAT DO YOU WANT TO FEEL?
+            </span>
           </div>
           <textarea
             rows={2}
@@ -910,10 +919,10 @@ export default function PokeCenter() {
                   key={tag}
                   onClick={() => toggleTag(tag)}
                   style={{
-                    fontFamily: FONT, fontSize: 9, padding: '5px 10px',
-                    border: `2px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
-                    background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
-                    color: active ? GBC_GREEN : GBC_MUTED, cursor: 'pointer',
+                    fontFamily: FONT, fontSize: 9, padding: '7px 12px', minHeight: 36,
+                    border: `2px solid ${active ? GBC_AMBER : GBC_DARKEST}`,
+                    background: active ? 'rgba(245,158,11,0.15)' : 'transparent',
+                    color: active ? GBC_AMBER : GBC_MUTED, cursor: 'pointer',
                   }}
                 >
                   {tag}
@@ -925,12 +934,12 @@ export default function PokeCenter() {
             onClick={handleAsk}
             disabled={!canAsk || loading}
             style={{
-              marginTop: 12, width: '100%', fontFamily: FONT, fontSize: 11,
-              padding: '12px 0',
-              background: canAsk && !loading ? GBC_GREEN : 'transparent',
+              marginTop: 14, width: '100%', fontFamily: FONT, fontSize: 11,
+              padding: '14px 0',
+              background: canAsk && !loading ? GBC_AMBER : 'transparent',
               color: canAsk && !loading ? '#050a04' : GBC_MUTED,
-              border: `3px solid ${canAsk && !loading ? GBC_GREEN : GBC_DARKEST}`,
-              boxShadow: canAsk && !loading ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010' : 'none',
+              border: `3px solid ${canAsk && !loading ? GBC_AMBER : GBC_DARKEST}`,
+              boxShadow: canAsk && !loading ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00' : 'none',
               cursor: canAsk && !loading ? 'pointer' : 'not-allowed',
             }}
           >

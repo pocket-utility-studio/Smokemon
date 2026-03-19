@@ -32,7 +32,7 @@ interface SessionEntry {
   temp?:         number   // vape temperature in °C
 }
 
-const VAPE_TEMPS = [160, 170, 180, 190, 200, 210, 220]
+const VAPE_TEMPS = [160, 170, 180, 190, 200, 210]
 
 const STORAGE_KEY = 'utilhub_sessions'
 
@@ -230,6 +230,36 @@ export default function SessionHistory() {
       {/* Log form */}
       <div style={{ border: `3px solid ${GBC_GREEN}`, boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010', background: GBC_BOX, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN }}>LOG SESSION</span>
+
+        {/* Party quick-select */}
+        {strains.length > 0 && (
+          <div>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, display: 'block', marginBottom: 6 }}>
+              YOUR PARTY
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+              {strains.map((s) => {
+                const col = typeColor(s.type)
+                const active = query === s.name
+                return (
+                  <button
+                    key={s.name}
+                    onPointerDown={() => selectStrain({ name: s.name, type: s.type })}
+                    style={{
+                      fontFamily: FONT, fontSize: 7, padding: '6px 8px', minHeight: 36,
+                      cursor: 'pointer',
+                      border: `2px solid ${active ? col : GBC_DARKEST}`,
+                      background: active ? `${col}22` : 'transparent',
+                      color: active ? col : GBC_MUTED,
+                    }}
+                  >
+                    {s.name.toUpperCase()}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Strain search */}
         <div style={{ position: 'relative' }}>

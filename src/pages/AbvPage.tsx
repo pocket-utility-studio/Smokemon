@@ -67,18 +67,6 @@ const ONSET_METHODS = [
   { label: 'SUBLINGUAL OIL', onset: '15–45 MIN', peak: '1–2 HRS', duration: '3–5 HRS', accent: '#84cc16' },
 ]
 
-function ProfToakSprite({ size = 56 }: { size?: number }) {
-  return (
-    <img
-      src={`${import.meta.env.BASE_URL}prof-toak.png`}
-      alt="Prof T-Oak"
-      width={size}
-      height={size}
-      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, objectFit: 'contain' }}
-    />
-  )
-}
-
 function PotencyBar({ value }: { value: number }) {
   const filled = Math.round((value / 100) * 10)
   return (
@@ -215,25 +203,6 @@ export default function AbvPage() {
         }}>
           {c.statusTag}
         </span>
-      </div>
-
-      {/* Prof T-Oak intro */}
-      <div style={{
-        ...pokeBox,
-        padding: '12px',
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-      }}>
-        <ProfToakSprite size={48} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 8, color: '#84cc16' }}>
-            PROF T-OAK
-          </span>
-          <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
-            Already Vaped Bud is more useful than you think! Select your AVB condition to see potency, tips, and onset timers for each consumption method.
-          </p>
-        </div>
       </div>
 
       {/* Condition picker */}

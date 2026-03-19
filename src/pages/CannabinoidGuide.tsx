@@ -201,16 +201,42 @@ export default function CannabinoidGuide() {
         </span>
       </div>
 
-      {/* Intro */}
-      <div style={{
-        border: `3px solid ${GBC_DARKEST}`,
-        boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #1a3008',
-        background: GBC_BOX, padding: 12,
-      }}>
-        <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, lineHeight: 1.7, margin: 0 }}>
-          Over 140 cannabinoids exist in cannabis. Each interacts differently with your endocannabinoid system. These are the most important ones — what they do, where they act, and when they activate.
-        </p>
-      </div>
+      {/* Guide */}
+      {[
+        {
+          title: 'WHAT ARE CANNABINOIDS?',
+          body: 'Cannabinoids are a class of chemical compounds that interact with specialised receptors found throughout the human body, brain, and immune system. Cannabis contains over 140 identified cannabinoids, though most are present in trace amounts. The most important distinction is psychoactive (alters perception and cognition) versus non-psychoactive (medicinal effects without a high). THC is the primary psychoactive compound. All other major cannabinoids are non-psychoactive or mildly so.',
+        },
+        {
+          title: 'THE ENDOCANNABINOID SYSTEM',
+          body: "The endocannabinoid system (ECS) was only discovered in 1988, making it one of the newest frontiers in human biology. It regulates mood, pain, appetite, memory, inflammation, and sleep through two main receptor types: CB1 receptors, concentrated in the brain and nervous system, and CB2 receptors, found mainly in immune tissue. Your body produces its own cannabinoids — anandamide (the 'bliss molecule') and 2-AG — that use these pathways constantly. Plant cannabinoids work because they closely mimic these endogenous molecules.",
+        },
+        {
+          title: 'THC AND CBD: THE MAIN TWO',
+          body: 'THC (tetrahydrocannabinol) directly binds CB1 receptors in the brain, producing euphoria, altered time perception, increased appetite, and pain relief. CBD (cannabidiol) does not bind strongly to either receptor — instead it modulates them indirectly and acts on serotonin and vanilloid receptors. Critically, CBD counteracts some effects of THC: strains with higher CBD ratios tend to produce less anxiety and paranoia. FDA-approved as Epidiolex for severe childhood epilepsy, CBD is the most clinically researched cannabinoid.',
+        },
+        {
+          title: 'THE MINOR CANNABINOIDS: CBG AND CBN',
+          body: 'CBG (cannabigerol) is often called the "mother cannabinoid" because CBGA is the chemical precursor from which THC, CBD, and CBC are all synthesised. It is non-psychoactive, found in low concentrations in most strains, and shows promise for glaucoma, inflammation, and antibacterial effects. CBN (cannabinol) is not directly produced by the plant — it forms when THC oxidises and degrades over time through exposure to air and light. Aged or poorly stored cannabis is high in CBN. It is mildly psychoactive and strongly sedating.',
+        },
+        {
+          title: 'THCV, CBC, THCA, AND CBDA',
+          body: 'THCV (tetrahydrocannabivarin) is a structural analogue of THC found in African sativa landraces. At low doses it actually blocks CB1 receptors, potentially reducing appetite and moderating THC effects. At high doses it becomes psychoactive. CBC (cannabichromene) is non-psychoactive and interacts with pain receptors (TRPV1 and TRPA1) rather than CB receptors. THCA and CBDA are the raw, unheated acid forms of THC and CBD found in fresh cannabis. They convert to their active counterparts through heat — this is decarboxylation. Raw cannabis consumed without heat produces no high.',
+        },
+        {
+          title: 'WHY RATIOS MATTER MORE THAN PERCENTAGES',
+          body: 'A strain with 25% THC does not necessarily produce a stronger or better experience than one at 18%. The ratio of THC to CBD, the presence of minor cannabinoids, and the full terpene profile all shape the character of the effect. Two strains with identical THC levels but different terpene profiles can feel dramatically different — one energising, one sedating. Full-spectrum products that preserve all cannabinoids and terpenes consistently outperform isolates in clinical patient surveys. The plant works best as a complete system.',
+        },
+      ].map((p) => (
+        <div key={p.title} style={{
+          border: `3px solid ${GBC_DARKEST}`,
+          boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #1a3008',
+          background: GBC_BOX, padding: 12,
+        }}>
+          <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_GREEN, marginBottom: 8 }}>{p.title}</div>
+          <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.8, margin: 0 }}>{p.body}</p>
+        </div>
+      ))}
 
       {/* Psychoactive banner */}
       <div style={{

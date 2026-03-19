@@ -21,11 +21,11 @@ type Section = { title: string; accent: string; icon: string; text: string }
 
 const UK_SECTIONS: Section[] = [
   {
-    title: 'YOUR PRESCRIPTION',
+    title: 'THE 2018 LAW CHANGE',
     accent: GBC_GREEN,
     icon: '★',
     text:
-      'A valid CBPM (Cannabis-Based Product for Medicinal Use) prescription is issued by a specialist clinician registered with the GMC. It is a Schedule 2 controlled drug prescription under the Misuse of Drugs Regulations 2001. You are legally entitled to possess and use your prescribed medication.',
+      'On 1 November 2018, the UK government rescheduled cannabis-based medicinal products from Schedule 1 to Schedule 2 of the Misuse of Drugs Regulations 2001. This landmark change, announced by Home Secretary Sajid Javid, made it legal for specialist clinicians on the GMC register to prescribe cannabis-based products for medicinal use (CBPMs) for the first time. This followed high-profile cases involving children with severe epilepsy who were benefiting from cannabis-based treatments abroad.',
   },
   {
     title: 'KEEP ORIGINAL PACKAGING',
@@ -79,7 +79,7 @@ const UK_SECTIONS: Section[] = [
 ]
 
 const UK_QUICK_FACTS = [
-  { text: 'CBPMs legal since Nov 2018',           color: GBC_GREEN },
+  { text: 'Medical cannabis legalised Nov 2018',   color: GBC_GREEN },
   { text: 'Must keep in original packaging',      color: GBC_AMBER },
   { text: 'Vaporizing: OK under prescription',    color: GBC_GREEN },
   { text: 'Smoking: still illegal',               color: GBC_RED },

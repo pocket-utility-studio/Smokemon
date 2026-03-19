@@ -3,7 +3,6 @@ import { useStrainDb, displayName, fetchLiveStrain } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
 import { lookupStrainData } from '../services/gemini'
 import type { StrainLookupResult } from '../services/gemini'
-import { useTransitionNav } from '../context/NavigationContext'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
@@ -95,8 +94,6 @@ function PorygonSprite() {
 
 export default function DataAudit() {
   const { db, loading } = useStrainDb()
-  const { transitionTo } = useTransitionNav()
-
   const [sample, setSample] = useState<StrainRecord[]>([])
   const [liveData, setLiveData] = useState<Record<string, { thc?: number; cbd?: number; terpenes?: string } | null>>({})
   const [fetching, setFetching] = useState(false)
@@ -122,12 +119,6 @@ export default function DataAudit() {
     const withCbd = db.filter((s) => s.cbd != null).length
     const withTerpenes = db.filter((s) => s.terpenes).length
     return { total, withThc, withCbd, withTerpenes }
-  }, [db])
-
-  const outliers = useMemo(() => {
-    return db
-      .filter((s) => s.thc != null && (s.thc as number) > 35)
-      .sort((a, b) => (b.thc as number) - (a.thc as number))
   }, [db])
 
   function loadSample() {
@@ -229,46 +220,7 @@ export default function DataAudit() {
         </div>
       )}
 
-      {/* Section 2: Outliers */}
-      {outliers.length > 0 && (
-        <div style={{
-          border: '3px solid #f59e0b',
-          boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
-          background: GBC_BOX,
-          padding: '10px 12px',
-          flexShrink: 0,
-        }}>
-          <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_AMBER, marginBottom: 10 }}>
-            SUSPICIOUS VALUES ({outliers.length} STRAINS &gt;35% THC)
-          </div>
-          {outliers.slice(0, 8).map((s) => (
-            <div key={s.Strain} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: 6, gap: 8,
-            }}>
-              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_TEXT, flex: 1 }}>{displayName(s)}</span>
-              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED, flexShrink: 0 }}>THC {s.thc}%</span>
-              <button
-                onClick={() => transitionTo('/smokedex')}
-                style={{
-                  fontFamily: FONT, fontSize: 7, padding: '4px 8px', minHeight: 32,
-                  border: `1px solid ${GBC_AMBER}`, background: 'transparent',
-                  color: GBC_AMBER, cursor: 'pointer', flexShrink: 0,
-                }}
-              >
-                EDIT
-              </button>
-            </div>
-          ))}
-          {outliers.length > 8 && (
-            <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, marginTop: 4 }}>
-              ...and {outliers.length - 8} more
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Section 3: Live Comparison */}
+      {/* Section 2: Live Comparison */}
       <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
         <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 10 }}>
           LIVE COMPARISON

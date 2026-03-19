@@ -58,20 +58,6 @@ const RANGE_LABELS: Record<TempRange, string> = {
   'high': '205 - 210°C',
 }
 
-/* Prof T-Oak sprite */
-
-function ProfToakSprite({ size = 60 }: { size?: number }) {
-  return (
-    <img
-      src={`${import.meta.env.BASE_URL}prof-toak.png`}
-      alt="Prof T-Oak"
-      width={size}
-      height={size}
-      style={{ imageRendering: 'pixelated', display: 'block', flexShrink: 0, objectFit: 'contain' }}
-    />
-  )
-}
-
 /* Castform sprite components */
 
 function SunnyForm() {
@@ -230,23 +216,6 @@ export default function CastformDial() {
         }}>
           [VAPE]
         </span>
-      </div>
-
-      {/* Prof T-Oak intro */}
-      <div style={{
-        ...pokeBox,
-        padding: '10px 12px',
-        display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0,
-      }}>
-        <ProfToakSprite size={56} />
-        <div>
-          <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P'", fontSize: 9, color: '#f0e040', marginBottom: 6 }}>
-            PROF T-OAK
-          </div>
-          <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
-            Dial in your temperature for the perfect session.
-          </p>
-        </div>
       </div>
 
       {/* Castform sprite area */}

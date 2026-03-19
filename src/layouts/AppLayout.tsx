@@ -211,8 +211,6 @@ export default function AppLayout() {
   const { wipePhase, goBack } = useTransitionNav()
 
   const location = useLocation()
-  const LAB_ROUTES = ['/castform', '/avb', '/abv-guide']
-  const isInLab = LAB_ROUTES.some((r) => location.pathname === r || location.pathname.startsWith(r + '/'))
 
   const isHome = location.pathname === '/'
 
@@ -357,21 +355,6 @@ export default function AppLayout() {
                     position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 99,
                     backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
                   }} />
-                  {/* Prof T-Oak — lab pages only */}
-                  <div style={{
-                    position: 'absolute', right: 8, top: 6, zIndex: 98,
-                    pointerEvents: 'none',
-                    opacity: booting || !isInLab ? 0 : 0.75,
-                    transition: `opacity ${T}`,
-                  }}>
-                    <img
-                      src={`${import.meta.env.BASE_URL}prof-toak.png`}
-                      alt="Prof T-Oak"
-                      width={22}
-                      height={22}
-                      style={{ imageRendering: 'pixelated', display: 'block' }}
-                    />
-                  </div>
                   {/* Content */}
                   <div className={`${font} gbc-screen-content`} style={{
                     position: 'absolute', inset: 0, zIndex: 1,

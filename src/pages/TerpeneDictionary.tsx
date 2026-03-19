@@ -311,7 +311,7 @@ function PixelProgressBar({ current, total }: { current: number; total: number }
 }
 
 export default function TerpeneDictionary() {
-  const [tab, setTab] = useState<'dict' | 'quiz'>('dict')
+  const [tab, setTab] = useState<'guide' | 'dict' | 'quiz'>('guide')
 
   const [quizState, setQuizState] = useState<QuizState>('idle')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
@@ -394,14 +394,14 @@ export default function TerpeneDictionary() {
 
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-        {(['dict', 'quiz'] as const).map((t) => (
+        {(['guide', 'dict', 'quiz'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
               fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
-              fontSize: 11,
-              padding: '8px 14px',
+              fontSize: 9,
+              padding: '8px 10px',
               border: tab === t ? '3px solid #84cc16' : '3px solid #2a4a08',
               boxShadow: tab === t
                 ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010'
@@ -411,10 +411,51 @@ export default function TerpeneDictionary() {
               cursor: 'pointer',
             }}
           >
-            {t === 'dict' ? 'DICTIONARY' : 'QUIZ'}
+            {t === 'guide' ? 'GUIDE' : t === 'dict' ? 'DICT' : 'QUIZ'}
           </button>
         ))}
       </div>
+
+      {/* Guide tab */}
+      {tab === 'guide' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            {
+              title: 'WHAT ARE TERPENES?',
+              body: 'Terpenes are aromatic compounds found in almost all plants, fungi, and even some insects. They are responsible for the distinctive scents of lavender, pine, citrus peel, and black pepper — and they are the reason two cannabis strains can smell completely different despite similar cannabinoid levels. Cannabis produces over 200 identified terpenes, making it one of the most chemically complex plants on Earth.',
+            },
+            {
+              title: 'WHERE DO THEY COME FROM?',
+              body: 'In cannabis, terpenes are produced inside the same microscopic glandular trichomes that produce THC and CBD. The terpene profile of a plant is shaped by genetics, but also heavily influenced by growing conditions: light spectrum, temperature swings, soil composition, humidity, and stress levels all affect which terpenes are expressed and in what quantities. This is why the same strain grown in different conditions can smell and feel noticeably different.',
+            },
+            {
+              title: 'THE ENTOURAGE EFFECT',
+              body: 'Terpenes are not just aromatic molecules — they actively modify how cannabinoids affect the body and brain. This synergy is known as the entourage effect. Myrcene, for example, may increase cell membrane permeability, helping THC cross the blood-brain barrier more rapidly and intensifying the onset. Caryophyllene binds directly to CB2 receptors, adding anti-inflammatory action without psychoactivity. The result is that identical THC percentages can feel completely different depending on the terpene profile.',
+            },
+            {
+              title: 'THE BIG THREE',
+              body: 'Myrcene is the most abundant terpene in cannabis — earthy, musky, herbal. It dominates most indica strains and strongly contributes to the sedating couch-lock effect. Limonene brings a bright citrus quality (lemon, orange) and is strongly associated with mood elevation and stress relief — common in sativa-dominant cultivars. Caryophyllene smells spicy and peppery like black pepper or cloves, and is the only terpene known to also act as a cannabinoid by binding CB2 receptors directly — useful for pain and inflammation.',
+            },
+            {
+              title: 'THE NEXT TIER',
+              body: 'Linalool is the dominant terpene in lavender — floral, calming, strongly anti-anxiety. Strains high in linalool tend to be excellent for sleep and stress. Alpha-Pinene smells of pine forests and has an interesting property: it inhibits the breakdown of acetylcholine, which may counteract some of the short-term memory impairment caused by THC. Humulene (found in hops and ginseng) has a woody, earthy, slightly spicy aroma and is associated with appetite suppression — unusual among cannabis terpenes. Terpinolene is floral and piney, found more rarely but common in Jack Herer and related strains; associated with uplifting, creative effects.',
+            },
+            {
+              title: 'TRUST YOUR NOSE',
+              body: 'Your sense of smell is a direct terpene-reading tool. If a strain smells aggressively citrusy, it is almost certainly limonene-dominant and likely to be uplifting. Deep earthy and musky? Myrcene-heavy, expect sedation. Floral and lavender-like? Linalool. Sharp pine and wood? Pinene and humulene. The connection between smell and effect is not coincidental — it is chemistry. Use the DICT tab below to explore all 16 terpenes, their aroma profiles, effects, and which foods they also appear in.',
+            },
+          ].map((p) => (
+            <div key={p.title} style={{ ...pokeBox, padding: '12px' }}>
+              <div style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_GREEN, marginBottom: 8 }}>
+                {p.title}
+              </div>
+              <p style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, lineHeight: 1.8, margin: 0 }}>
+                {p.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Dictionary tab */}
       {tab === 'dict' && (
