@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { removeBackground } from '@imgly/background-removal'
+import { compressImage } from '../utils/compressImage'
 import Fuse from 'fuse.js'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
@@ -87,6 +89,25 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
   const [inStock,      setInStock]      = useState(strain.inStock)
   const [budDesign,    setBudDesign]    = useState(strain.budDesign ?? '')
   const [imageDataUrl, setImageDataUrl] = useState(strain.imageDataUrl ?? '')
+  const [photoRemoving, setPhotoRemoving] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setPhotoRemoving(true)
+    try {
+      let blob: Blob = file
+      try { blob = await removeBackground(file, { debug: false }) } catch { /* fall back */ }
+      const url = URL.createObjectURL(blob)
+      const compressed = await compressImage(url, 600, 0.8)
+      URL.revokeObjectURL(url)
+      setImageDataUrl(compressed)
+    } finally {
+      setPhotoRemoving(false)
+    }
+  }
 
   const autoDesign = getBudDesign(strain.name, strain.type, dbContext)
 
@@ -224,19 +245,20 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
         </div>
       </div>
 
-      {/* Bit-Bud photo filter */}
+      {/* Photo */}
       <div style={{
         border: '3px solid #84cc16',
         boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
         background: '#0a1408',
         padding: 12,
       }}>
+        <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, color: GBC_MUTED, display: 'block', marginBottom: 10 }}>PHOTO</span>
         {imageDataUrl && (
-          <div style={{ marginBottom: 8 }}>
+          <div style={{ marginBottom: 10 }}>
             <img
               src={imageDataUrl}
-              alt="8-bit bud photo"
-              style={{ width: '100%', imageRendering: 'pixelated', display: 'block', border: '2px solid #2a4a08' }}
+              alt="bud photo"
+              style={{ width: '100%', display: 'block', border: '2px solid #2a4a08' }}
             />
             <button
               onClick={() => setImageDataUrl('')}
@@ -248,6 +270,24 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
             >► REMOVE PHOTO</button>
           </div>
         )}
+
+        {/* Plain photo upload (bg removed) */}
+        <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+        <button
+          onPointerDown={() => !photoRemoving && photoInputRef.current?.click()}
+          disabled={photoRemoving}
+          style={{
+            fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8,
+            padding: '10px 0', width: '100%', marginBottom: 12, cursor: photoRemoving ? 'not-allowed' : 'pointer',
+            border: `2px solid ${imageDataUrl ? GBC_DARKEST : GBC_GREEN}`,
+            color: photoRemoving ? GBC_MUTED : imageDataUrl ? GBC_MUTED : GBC_GREEN,
+            background: 'transparent',
+          }}
+        >
+          {photoRemoving ? '► REMOVING BG...' : imageDataUrl ? '► REPLACE PHOTO' : '► TAKE PHOTO'}
+        </button>
+
+        {/* Bit-Bud GBC dither */}
         <BitBudCanvas onCapture={(url) => setImageDataUrl(url)} />
       </div>
 
