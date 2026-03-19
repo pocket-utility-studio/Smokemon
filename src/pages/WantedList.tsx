@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
+import { removeBackground } from '@imgly/background-removal'
 import { compressImage } from '../utils/compressImage'
 import Fuse from 'fuse.js'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
@@ -108,6 +109,7 @@ export default function WantedList() {
   const [pending, setPending] = useState<Partial<WantedEntry> | null>(null)
   const [pendingNotes, setPendingNotes] = useState('')
   const [pendingBudArt, setPendingBudArt] = useState<string>(randomBudArt)
+  const [photoRemoving, setPhotoRemoving] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
 
   const fuse = useMemo(() => new Fuse(db, {
@@ -155,17 +157,21 @@ export default function WantedList() {
     }
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = async (evt) => {
-      const raw = evt.target?.result as string
-      const compressed = await compressImage(raw, 300, 0.7)
-      setPendingBudArt(`custom:${compressed}`)
-    }
-    reader.readAsDataURL(file)
     e.target.value = ''
+    setPhotoRemoving(true)
+    try {
+      let blob: Blob = file
+      try { blob = await removeBackground(file, { debug: false }) } catch { /* fall back to original */ }
+      const url = URL.createObjectURL(blob)
+      const compressed = await compressImage(url, 300, 0.7)
+      URL.revokeObjectURL(url)
+      setPendingBudArt(`custom:${compressed}`)
+    } finally {
+      setPhotoRemoving(false)
+    }
   }
 
   const addToWanted = () => {
@@ -316,10 +322,11 @@ export default function WantedList() {
             </button>
             <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             <button
-              onPointerDown={() => photoInputRef.current?.click()}
-              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${pendingBudArt.startsWith('custom:') ? RED : RED_DIM}`, color: pendingBudArt.startsWith('custom:') ? RED : GBC_MUTED, padding: '8px 10px', cursor: 'pointer', minHeight: 44 }}
+              onPointerDown={() => !photoRemoving && photoInputRef.current?.click()}
+              disabled={photoRemoving}
+              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${pendingBudArt.startsWith('custom:') ? RED : RED_DIM}`, color: pendingBudArt.startsWith('custom:') ? RED : GBC_MUTED, padding: '8px 10px', cursor: photoRemoving ? 'not-allowed' : 'pointer', minHeight: 44 }}
             >
-              {pendingBudArt.startsWith('custom:') ? 'PHOTO ✓' : 'PHOTO'}
+              {photoRemoving ? 'REMOVING BG...' : pendingBudArt.startsWith('custom:') ? 'PHOTO ✓' : 'PHOTO'}
             </button>
           </div>
         </div>
