@@ -214,7 +214,7 @@ function EliteFourCard({
       <BudSprite
         name={strain.name}
         type={strain.type}
-        size={40}
+        size={64}
         context={dbMatch ? {
           description: dbMatch.Description,
           effects:     dbMatch.Effects,

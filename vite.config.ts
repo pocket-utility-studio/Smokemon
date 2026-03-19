@@ -35,6 +35,7 @@ export default defineConfig({
       filename: 'sw.ts',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,gif,mp3,ttf}'],
+        globIgnores: ['**/homepic.png', '**/Homepic.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       registerType: 'autoUpdate',

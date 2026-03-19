@@ -347,7 +347,7 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
           <TypeSprite type={type} size={28} />
-          <BudSprite name={name} type={type} size={24} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
+          <BudSprite name={name} type={type} size={64} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
         </div>
         <div style={{ fontFamily: FONT, fontSize: 11, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
           {name.toUpperCase()}

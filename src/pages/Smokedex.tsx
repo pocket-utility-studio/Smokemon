@@ -213,7 +213,7 @@ function StrainEditForm({ strain, dbContext, onSave, onCancel }: {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <BudSprite name={strain.name} type={type} size={24} budDesign={design} />
+              <BudSprite name={strain.name} type={type} size={40} budDesign={design} />
             </button>
           ))}
         </div>
@@ -322,7 +322,7 @@ function StashList({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: editingId === s.id ? 14 : 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                 <TypeSprite type={s.type} size={36} />
-                <BudSprite name={s.name} type={s.type} size={24} context={dbCtx} budDesign={s.budDesign} />
+                <BudSprite name={s.name} type={s.type} size={64} context={dbCtx} budDesign={s.budDesign} />
               </div>
               <span style={{
                 fontFamily: "'PokemonGb', 'Press Start 2P', monospace",
@@ -530,7 +530,7 @@ function PartyView({
             >
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                 <TypeSprite type={s.type} size={20} />
-                <BudSprite name={s.name} type={s.type} size={24} context={dbCtx} budDesign={s.budDesign} />
+                <BudSprite name={s.name} type={s.type} size={48} context={dbCtx} budDesign={s.budDesign} />
               </div>
               <span style={{
                 fontFamily: PVSF, fontSize: 8,
