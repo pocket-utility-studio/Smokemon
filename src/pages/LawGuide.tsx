@@ -118,6 +118,12 @@ const POLICE_STEPS = [
 
 const UK_LINKS = [
   {
+    label: 'GOV.UK: 2018 Medical Cannabis Announcement',
+    sublabel: 'Home Secretary rescheduling announcement — Nov 2018',
+    url: 'https://www.gov.uk/government/news/home-secretary-announces-review-of-scheduling-of-cannabis-based-products-for-medicinal-use',
+    color: GBC_GREEN,
+  },
+  {
     label: 'GOV.UK: Cannabis-Based Products for Medicinal Use',
     sublabel: 'Official government guidance on CBPMs',
     url: 'https://www.gov.uk/government/collections/cannabis-based-products-for-medicinal-use-cbpms',

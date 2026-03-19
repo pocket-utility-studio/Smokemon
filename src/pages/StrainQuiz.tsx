@@ -15,6 +15,26 @@ const GBC_RED = '#e84040'
 
 const HS_KEY = 'utilhub_quiz_highscore'
 
+// First 4 pages of the Smokedex — quiz only uses these 80 strains
+const POPULAR_STRAINS: string[] = [
+  'OG Kush', 'Blue Dream', 'Sour Diesel', 'Girl Scout Cookies', 'Jack Herer',
+  'White Widow', 'AK-47', 'Northern Lights', 'Gelato', 'Gorilla Glue #4',
+  'Pineapple Express', 'Granddaddy Purple', 'Purple Haze', 'Super Silver Haze',
+  'Trainwreck', 'Blueberry', 'Amnesia Haze', 'Cheese', 'Skunk #1', 'Bubba Kush',
+  'Strawberry Cough', 'Durban Poison', 'Hindu Kush', 'Wedding Cake', 'Runtz',
+  'Do-Si-Dos', 'Bruce Banner', 'Zkittlez', 'Tangie', 'Gelato 41',
+  'Green Crack', 'LA Confidential', 'Lemon Haze', 'Maui Wowie', 'NYC Diesel',
+  'Purple Kush', 'Super Lemon Haze', 'Animal Cookies', 'Chemdawg', 'Fire OG',
+  'Grapefruit', 'Harlequin', 'Jack the Ripper', 'Lemon OG', 'Obama Kush',
+  'Skywalker OG', 'Sunset Sherbet', 'White Fire OG', 'Chocolope', 'Gushers',
+  'Biscotti', 'MAC 1', 'Triangle Kush', 'Platinum OG', 'Lemon Skunk',
+  'Strawberry Banana', 'Blue Cheese', 'Cherry Pie', 'Headband', 'Mimosa',
+  'Ice Cream Cake', 'Alien OG', 'Critical Mass', 'Death Star', 'Forbidden Fruit',
+  'Tropicana Cookies', 'Blue Cookies', 'Sour OG', 'Larry Bird', 'Papaya',
+  'Sherbet', 'Pink Kush', 'Black Diamond', 'Banana OG', 'Cookies and Cream',
+  'Cereal Milk', 'Jealousy', 'Gary Payton', 'London Pound Cake', 'Purple Punch',
+]
+
 interface Question {
   type: 'A' | 'B' | 'C'
   prompt: string
@@ -196,7 +216,10 @@ export default function StrainQuiz() {
   }, [isNewHigh])
 
   const startQuiz = useCallback(() => {
-    const qs = generateQuestions(db, 10)
+    const popularLower = new Set(POPULAR_STRAINS.map((s) => s.toLowerCase()))
+    const filteredDb = db.filter((s) => popularLower.has(s.Strain.toLowerCase()))
+    const pool = filteredDb.length >= 4 ? filteredDb : db
+    const qs = generateQuestions(pool, 10)
     if (qs.length === 0) return
     setQuestions(qs)
     setCurrentIdx(0)

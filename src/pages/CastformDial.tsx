@@ -177,6 +177,23 @@ function CastformLabel({ range }: { range: TempRange }) {
   )
 }
 
+function ProfToakSprite() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <img
+        src={`${import.meta.env.BASE_URL}prof-toak.png`}
+        alt="Prof T-Oak"
+        width={96}
+        height={96}
+        style={{ imageRendering: 'pixelated', display: 'block', objectFit: 'contain' }}
+      />
+      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10', letterSpacing: 0.5 }}>
+        PROF T-OAK
+      </span>
+    </div>
+  )
+}
+
 export default function CastformDial() {
   const [temp, setTemp] = useState(185)
 
@@ -217,6 +234,8 @@ export default function CastformDial() {
           [VAPE]
         </span>
       </div>
+
+      <ProfToakSprite />
 
       {/* Castform sprite area */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>

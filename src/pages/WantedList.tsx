@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
+import { compressImage } from '../utils/compressImage'
 import Fuse from 'fuse.js'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import { lookupStrainData } from '../services/gemini'
@@ -25,6 +26,41 @@ interface WantedEntry {
   notes?: string
   addedAt: string
   acquired: boolean
+  budArt?: string  // 'pixel:0'–'pixel:5' for built-in, 'custom:data:...' for uploaded
+}
+
+// ── Bud art images ────────────────────────────────────────────────────────────
+
+const BUD_COUNT = 13
+
+function budImageUrl(n: number): string {
+  return n === 1 ? '/Smokemon/Bud1.png' : `/Smokemon/bud${n}.png`
+}
+
+function randomBudArt(): string {
+  return `pixel:${Math.floor(Math.random() * BUD_COUNT) + 1}`
+}
+
+function PixelBud({ artId, size = 32 }: { artId: string; size?: number }) {
+  if (artId.startsWith('custom:')) {
+    return (
+      <img
+        src={artId.slice(7)}
+        alt="bud"
+        style={{ width: size, height: size, objectFit: 'cover', display: 'block', flexShrink: 0 }}
+      />
+    )
+  }
+  const raw = parseInt(artId.replace('pixel:', ''), 10) || 1
+  // clamp to 1–13, handle legacy 0-based indices from old bitmask system
+  const n = raw < 1 ? (raw % BUD_COUNT) + 1 : ((raw - 1) % BUD_COUNT) + 1
+  return (
+    <img
+      src={budImageUrl(n)}
+      alt="bud"
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', flexShrink: 0 }}
+    />
+  )
 }
 
 const STORAGE_KEY = 'utilhub_wanted'
@@ -71,6 +107,8 @@ export default function WantedList() {
   // Pending entry being built before adding
   const [pending, setPending] = useState<Partial<WantedEntry> | null>(null)
   const [pendingNotes, setPendingNotes] = useState('')
+  const [pendingBudArt, setPendingBudArt] = useState<string>(randomBudArt)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const fuse = useMemo(() => new Fuse(db, {
     keys: [{ name: 'Strain', weight: 3 }, { name: 'Effects', weight: 1 }],
@@ -117,6 +155,19 @@ export default function WantedList() {
     }
   }
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async (evt) => {
+      const raw = evt.target?.result as string
+      const compressed = await compressImage(raw, 300, 0.7)
+      setPendingBudArt(`custom:${compressed}`)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
   const addToWanted = () => {
     const name = (pending?.name ?? query).trim()
     if (!name) return
@@ -130,6 +181,7 @@ export default function WantedList() {
       notes:    pendingNotes.trim() || undefined,
       addedAt:  new Date().toISOString(),
       acquired: false,
+      budArt:   pendingBudArt,
     }
     const next = [entry, ...wanted]
     setWanted(next)
@@ -137,6 +189,7 @@ export default function WantedList() {
     setQuery('')
     setPending(null)
     setPendingNotes('')
+    setPendingBudArt(randomBudArt())
   }
 
   const markAcquired = (id: string) => {
@@ -238,6 +291,39 @@ export default function WantedList() {
           </div>
         )}
 
+        {/* Bud art picker */}
+        <div>
+          <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, display: 'block', marginBottom: 6 }}>BUD ART</span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {Array.from({ length: BUD_COUNT }, (_, i) => {
+              const id = `pixel:${i + 1}`
+              const active = pendingBudArt === id
+              return (
+                <button
+                  key={id}
+                  onPointerDown={() => setPendingBudArt(id)}
+                  style={{ background: 'transparent', border: `2px solid ${active ? RED : RED_DIM}`, padding: 4, cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <PixelBud artId={id} size={28} />
+                </button>
+              )
+            })}
+            <button
+              onPointerDown={() => setPendingBudArt(randomBudArt())}
+              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${RED_DIM}`, color: GBC_MUTED, padding: '8px 10px', cursor: 'pointer', minHeight: 44 }}
+            >
+              ?RNG
+            </button>
+            <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+            <button
+              onPointerDown={() => photoInputRef.current?.click()}
+              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${pendingBudArt.startsWith('custom:') ? RED : RED_DIM}`, color: pendingBudArt.startsWith('custom:') ? RED : GBC_MUTED, padding: '8px 10px', cursor: 'pointer', minHeight: 44 }}
+            >
+              {pendingBudArt.startsWith('custom:') ? 'PHOTO ✓' : 'PHOTO'}
+            </button>
+          </div>
+        </div>
+
         {/* Notes */}
         <textarea
           rows={2}
@@ -298,13 +384,16 @@ function WantedCard({ entry: w, onAcquire, onRemove }: { entry: WantedEntry; onA
       padding: 12,
       opacity: w.acquired ? 0.6 : 1,
     }}>
-      {/* Row 1: name + date + remove */}
+      {/* Row 1: bud art + name + date + remove */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: FONT, fontSize: 12, color: w.acquired ? GBC_MUTED : RED, lineHeight: 1.5, wordBreak: 'break-word' }}>
-            {w.acquired && '✓ '}{w.name.toUpperCase()}
+        <div style={{ display: 'flex', gap: 8, flex: 1 }}>
+          {w.budArt && <PixelBud artId={w.budArt} size={40} />}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: FONT, fontSize: 12, color: w.acquired ? GBC_MUTED : RED, lineHeight: 1.5, wordBreak: 'break-word' }}>
+              {w.acquired && '✓ '}{w.name.toUpperCase()}
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, marginTop: 2 }}>{date}</div>
           </div>
-          <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, marginTop: 2 }}>{date}</div>
         </div>
         <button
           onClick={() => onRemove(w.id)}

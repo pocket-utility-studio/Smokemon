@@ -169,6 +169,23 @@ function OnsetTimer({ method }: { method: typeof ONSET_METHODS[0] }) {
   )
 }
 
+function ProfToakSprite() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <img
+        src={`${import.meta.env.BASE_URL}prof-toak.png`}
+        alt="Prof T-Oak"
+        width={96}
+        height={96}
+        style={{ imageRendering: 'pixelated', display: 'block', objectFit: 'contain' }}
+      />
+      <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: '#4a7a10', letterSpacing: 0.5 }}>
+        PROF T-OAK
+      </span>
+    </div>
+  )
+}
+
 export default function AbvPage() {
   const [condition, setCondition] = useState<AvbCondition>('perfect')
   const c = CONDITIONS[condition]
@@ -204,6 +221,8 @@ export default function AbvPage() {
           {c.statusTag}
         </span>
       </div>
+
+      <ProfToakSprite />
 
       {/* Condition picker */}
       <div style={{ ...pokeBox, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
