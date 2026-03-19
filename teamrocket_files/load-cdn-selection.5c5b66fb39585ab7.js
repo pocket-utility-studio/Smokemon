@@ -1,2 +1,0 @@
-"use strict";(this.webpackChunk_hz_project_x=this.webpackChunk_hz_project_x||[]).push([["11689"],{677796(t,s,i){let p;(p=document.cookie.split(";").map(t=>t.trim()).find(t=>t.startsWith("x-asset-public-path"))?.split("=")[1])&&(i.p=p)}},function(t){t(t.s=677796)}]);
-//# sourceMappingURL=load-cdn-selection.5c5b66fb39585ab7.js.map
