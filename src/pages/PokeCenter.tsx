@@ -337,7 +337,7 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
         ...pokeBox,
         padding: '10px 10px',
         opacity: inStock ? 1 : 0.5,
-        flex: expanded ? '1 1 100%' : '1 1 calc(50% - 4px)',
+        flex: '1 1 100%',
         minWidth: 0,
         cursor: 'pointer',
         transition: 'flex 0.15s',
