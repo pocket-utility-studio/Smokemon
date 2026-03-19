@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import Fuse from 'fuse.js'
 import { parseGIF, decompressFrames } from 'gifuct-js'
 import { useGifMode } from '../context/GifModeContext'
 import { useLayoutMode } from '../context/LayoutModeContext'
@@ -314,10 +315,13 @@ function NurseJoyDialogue({ text }: { text: string }) {
 
 // ── Party card ────────────────────────────────────────────────────────────────
 
-function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
-  name: string; type?: string; thc?: number; inStock: boolean; dbMatch?: StrainRecord; onToggle: () => void
+function PartyCard({ name, type, thc, inStock, dbMatch, onToggle, onStrengthChange }: {
+  name: string; type?: string; thc?: number; inStock: boolean; dbMatch?: StrainRecord
+  onToggle: () => void; onStrengthChange?: (thc: number) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [editingThc, setEditingThc] = useState(false)
+  const [thcInput, setThcInput] = useState(thc != null ? String(thc) : '')
   const col = type === 'sativa' ? GBC_GREEN : type === 'indica' ? GBC_VIOLET : GBC_AMBER
 
   const terpenes = dbMatch?.terpenes
@@ -371,8 +375,41 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle }: {
             {type.toUpperCase()}
           </span>
         )}
-        {thc != null && (
-          <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>THC {thc}%</span>
+        {onStrengthChange && (
+          editingThc ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+              <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>THC</span>
+              <input
+                autoFocus
+                type="number"
+                min={0}
+                max={40}
+                value={thcInput}
+                onChange={(e) => setThcInput(e.target.value)}
+                onBlur={() => {
+                  const v = parseFloat(thcInput)
+                  if (!isNaN(v) && v >= 0 && v <= 40) onStrengthChange(v)
+                  setEditingThc(false)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                  if (e.key === 'Escape') { setThcInput(thc != null ? String(thc) : ''); setEditingThc(false) }
+                }}
+                style={{
+                  width: 48, background: GBC_BG, border: `1px solid ${GBC_GREEN}`,
+                  color: GBC_GREEN, fontFamily: FONT, fontSize: 9, padding: '2px 4px', outline: 'none',
+                }}
+              />
+              <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>%</span>
+            </div>
+          ) : (
+            <span
+              onClick={(e) => { e.stopPropagation(); setThcInput(thc != null ? String(thc) : ''); setEditingThc(true) }}
+              style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, borderBottom: `1px dashed ${GBC_DARKEST}`, cursor: 'pointer' }}
+            >
+              {thc != null ? `THC ${thc}%` : 'SET STRENGTH'}
+            </span>
+          )
         )}
         {cbd != null && (
           <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>CBD {cbd}%</span>
@@ -484,7 +521,7 @@ function findDbMatch(name: string, db: StrainRecord[]): StrainRecord | undefined
 
 
 export default function PokeCenter() {
-  const { strains, updateStrain } = useStash()
+  const { strains, addStrain, updateStrain } = useStash()
   const { db } = useStrainDb()
   const [entered, setEntered] = useState(false)
   const [desiredEffect, setDesiredEffect] = useState('')
@@ -577,6 +614,39 @@ export default function PokeCenter() {
   const party = strains.filter((s) => s.inStock)
   const fullQuery = [desiredEffect.trim(), ...selectedTags].filter(Boolean).join(', ')
   const canAsk = fullQuery.length > 0 && party.length > 0 && hasKey
+
+  // Dex search — add strain directly to party
+  const [dexQuery, setDexQuery]           = useState('')
+  const [dexOpen, setDexOpen]             = useState(false)
+
+  const dexFuse = useMemo(() => new Fuse(db, {
+    keys: [{ name: 'Strain', weight: 3 }, { name: 'Type', weight: 1 }],
+    threshold: 0.35,
+    distance: 150,
+    includeScore: true,
+  }), [db])
+
+  const dexResults = useMemo(() => {
+    if (dexQuery.trim().length < 2) return []
+    return dexFuse.search(dexQuery.trim()).slice(0, 6).map((r) => r.item)
+  }, [dexFuse, dexQuery])
+
+  const addFromDex = (r: StrainRecord) => {
+    const existing = strains.find((s) => s.name.toLowerCase() === String(r.Strain).toLowerCase())
+    if (existing) {
+      updateStrain(existing.id, { inStock: true })
+    } else {
+      addStrain({
+        name: String(r.Strain),
+        type: r.Type as 'sativa' | 'indica' | 'hybrid' | undefined,
+        thc: r.thc,
+        cbd: r.cbd,
+        inStock: true,
+      })
+    }
+    setDexQuery('')
+    setDexOpen(false)
+  }
 
   const saveKey = () => {
     const k = keyInput.trim()
@@ -777,6 +847,48 @@ export default function PokeCenter() {
               <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_DARKEST }}>TAP TO EXPAND</span>
             )}
           </div>
+
+          {/* Dex search — add strain to party */}
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <input
+              type="text"
+              value={dexQuery}
+              onChange={(e) => { setDexQuery(e.target.value); setDexOpen(true) }}
+              onFocus={() => setDexOpen(true)}
+              onBlur={() => setTimeout(() => setDexOpen(false), 150)}
+              placeholder="SEARCH DEX TO ADD..."
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: GBC_BG, border: `2px solid ${GBC_DARKEST}`,
+                color: GBC_TEXT, fontFamily: 'monospace', fontSize: 13,
+                padding: '8px 10px', outline: 'none',
+              }}
+            />
+            {dexOpen && dexResults.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                background: GBC_BOX, border: `2px solid ${GBC_DARKEST}`, boxSizing: 'border-box',
+              }}>
+                {dexResults.map((r) => {
+                  const col = r.Type === 'sativa' ? GBC_GREEN : r.Type === 'indica' ? GBC_VIOLET : GBC_AMBER
+                  const alreadyIn = strains.some((s) => s.name.toLowerCase() === String(r.Strain).toLowerCase() && s.inStock)
+                  return (
+                    <div
+                      key={r.Strain}
+                      onPointerDown={() => addFromDex(r)}
+                      style={{ padding: '8px 10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
+                    >
+                      <span style={{ fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT }}>{String(r.Strain)}</span>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                        {r.Type && <span style={{ fontFamily: FONT, fontSize: 7, color: col, border: `1px solid ${col}`, padding: '1px 4px' }}>{r.Type.toUpperCase()}</span>}
+                        {alreadyIn && <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>IN PARTY</span>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           {party.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 9, color: GBC_DARKEST, lineHeight: 1.8 }}>
               {strains.length === 0 ? 'NO STRAINS IN STASH. ADD SOME IN SMOKÉDEX FIRST.' : 'NO STRAINS IN STOCK. ADD ONE FROM YOUR STASH BELOW.'}
@@ -792,6 +904,7 @@ export default function PokeCenter() {
                   inStock={s.inStock}
                   dbMatch={findDbMatch(s.name, db)}
                   onToggle={() => updateStrain(s.id, { inStock: !s.inStock })}
+                  onStrengthChange={(thc) => updateStrain(s.id, { thc })}
                 />
               ))}
             </div>
