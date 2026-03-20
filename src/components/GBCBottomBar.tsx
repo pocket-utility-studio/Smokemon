@@ -56,17 +56,19 @@ export default function GBCBottomBar() {
               onClick={() => { haptic(20); transitionTo(to) }}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                background: isActive ? '#84cc16' : 'transparent',
-                border: '2px solid transparent',
+                background: isActive ? 'rgba(132,204,22,0.12)' : 'transparent',
+                borderTop: '2px solid transparent',
+                borderBottom: isActive ? '3px solid #84cc16' : '3px solid transparent',
+                borderLeft: 'none', borderRight: 'none',
                 cursor: 'pointer',
                 padding: '6px 14px',
                 minWidth: 52,
               }}
             >
-              <Icon size={24} color={isActive ? '#0a1408' : '#2a5008'} strokeWidth={isActive ? 2.5 : 1.5} />
+              <Icon size={24} color={isActive ? '#84cc16' : '#2a5008'} strokeWidth={isActive ? 2.5 : 1.5} />
               <span style={{
                 fontSize: 9,
-                color: isActive ? '#0a1408' : '#2a5008',
+                color: isActive ? '#84cc16' : '#2a5008',
                 fontFamily: "'PokemonGb', 'Press Start 2P'",
                 letterSpacing: 0.5,
               }}>{label}</span>

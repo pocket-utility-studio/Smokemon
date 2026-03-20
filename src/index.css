@@ -141,6 +141,25 @@ body {
 .gbc-screen-content button:active {
   background: #84cc16 !important;
   color: #050e04 !important;
+  transform: scale(0.96);
+  transition: transform 0.06s ease;
+}
+
+/* Pixel divider */
+.gbc-divider {
+  width: 100%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #2a4a08 0px, #2a4a08 4px,
+    transparent 4px, transparent 8px
+  );
+  flex-shrink: 0;
+}
+
+/* Muted text — slightly brighter than the old #4a7a10 for readability */
+.gbc-muted-text {
+  color: #5a8a18;
 }
 
 /* Who's that Smokémon? reveal flash */

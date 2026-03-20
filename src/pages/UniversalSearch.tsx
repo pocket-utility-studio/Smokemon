@@ -249,37 +249,20 @@ export default function UniversalSearch() {
       }}
     >
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '8px',
-          flexWrap: 'wrap',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: FONT,
-            fontSize: '10px',
-            color: GBC_GREEN,
-            letterSpacing: '0.05em',
-          }}
-        >
-          UNIVERSAL SEARCH
+      <div style={{
+        border: `3px solid ${GBC_GREEN}`,
+        boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+        background: GBC_BOX, padding: '10px 12px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+      }}>
+        <span style={{ fontFamily: FONT, fontSize: 12, color: GBC_GREEN }}>
+          SEARCH ALL
         </span>
-        <span
-          style={{
-            fontFamily: FONT,
-            fontSize: '9px',
-            color: hasQuery ? GBC_TEXT : GBC_MUTED,
-            background: GBC_DARKEST,
-            padding: '4px 8px',
-            border: `1px solid ${hasQuery ? GBC_GREEN : GBC_MUTED}`,
-          }}
-        >
-          {hasQuery ? `${totalCount} RESULTS` : 'SEARCH ALL'}
-        </span>
+        {hasQuery && (
+          <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED, border: `1px solid ${GBC_DARKEST}`, padding: '3px 7px' }}>
+            {totalCount} FOUND
+          </span>
+        )}
       </div>
 
       {/* Search box */}
@@ -348,17 +331,10 @@ export default function UniversalSearch() {
             return (
               <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {/* Category header */}
-                <div
-                  style={{
-                    fontFamily: FONT,
-                    fontSize: '9px',
-                    color,
-                    padding: '4px 0',
-                    borderBottom: `1px solid ${GBC_DARKEST}`,
-                    marginBottom: '4px',
-                  }}
-                >
-                  {label} {items.length}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontFamily: FONT, fontSize: 9, color }}>{label}</span>
+                  <div style={{ flex: 1, height: 1, background: GBC_DARKEST }} />
+                  <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED }}>{items.length}</span>
                 </div>
                 {/* Result rows */}
                 {items.map((result) => (

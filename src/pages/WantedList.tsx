@@ -48,7 +48,7 @@ function PixelBud({ artId, size = 32 }: { artId: string; size?: number }) {
       <img
         src={artId.slice(7)}
         alt="bud"
-        style={{ width: size, height: size, objectFit: 'cover', display: 'block', flexShrink: 0 }}
+        style={{ width: size, height: size, objectFit: 'contain', display: 'block', flexShrink: 0 }}
       />
     )
   }
@@ -355,7 +355,7 @@ export default function WantedList() {
           <span style={{ fontFamily: FONT, fontSize: 9, color: '#4a2020' }}>NO ACTIVE WARRANTS</span>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           {hunting.map((w) => (
             <WantedCard key={w.id} entry={w} onAcquire={markAcquired} onRemove={remove} />
           ))}
@@ -368,7 +368,7 @@ export default function WantedList() {
           <div style={{ borderTop: `2px solid ${GBC_DARKEST}`, paddingTop: 8 }}>
             <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_GREEN }}>ACQUIRED ({acquired.length})</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {acquired.map((w) => (
               <WantedCard key={w.id} entry={w} onAcquire={markAcquired} onRemove={remove} />
             ))}
@@ -382,52 +382,104 @@ export default function WantedList() {
 
 function WantedCard({ entry: w, onAcquire, onRemove }: { entry: WantedEntry; onAcquire: (id: string) => void; onRemove: (id: string) => void }) {
   const col = typeColor(w.type)
-  const date = new Date(w.addedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+  const date = new Date(w.addedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })
+  const borderCol = w.acquired ? GBC_DARKEST : RED
 
   return (
     <div style={{
-      border: `3px solid ${w.acquired ? GBC_DARKEST : RED}`,
+      border: `4px solid ${borderCol}`,
+      boxShadow: w.acquired ? 'none' : `inset 0 0 0 2px #0e0404, inset 0 0 0 4px ${RED_DIM}`,
       background: w.acquired ? GBC_BG : RED_BG,
-      padding: 12,
-      opacity: w.acquired ? 0.6 : 1,
+      opacity: w.acquired ? 0.55 : 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '10px 10px 12px',
+      gap: 0,
     }}>
-      {/* Row 1: bud art + name + date + remove */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-        <div style={{ display: 'flex', gap: 8, flex: 1 }}>
-          {w.budArt && <PixelBud artId={w.budArt} size={40} />}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: FONT, fontSize: 12, color: w.acquired ? GBC_MUTED : RED, lineHeight: 1.5, wordBreak: 'break-word' }}>
-              {w.acquired && '✓ '}{w.name.toUpperCase()}
-            </div>
-            <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, marginTop: 2 }}>{date}</div>
-          </div>
+      {/* Poster header */}
+      <div style={{
+        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: `2px solid ${borderCol}`, paddingBottom: 6, marginBottom: 10,
+      }}>
+        <span style={{ fontFamily: FONT, fontSize: 14, color: w.acquired ? GBC_MUTED : RED, letterSpacing: 2 }}>
+          {w.acquired ? 'CAPTURED' : 'WANTED'}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: 'monospace', fontSize: 10, color: GBC_MUTED }}>{date}</span>
+          <button
+            onClick={() => onRemove(w.id)}
+            style={{ background: 'transparent', border: 'none', color: GBC_MUTED, fontFamily: FONT, fontSize: 9, cursor: 'pointer', padding: '4px 6px', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >[x]</button>
         </div>
-        <button
-          onClick={() => onRemove(w.id)}
-          style={{ background: 'transparent', border: 'none', color: GBC_MUTED, fontFamily: FONT, fontSize: 9, cursor: 'pointer', padding: '4px 6px', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >[x]</button>
       </div>
 
-      {/* Row 2: badges */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: w.terpenes || w.notes ? 8 : 0 }}>
-        {w.type && <span style={{ fontFamily: FONT, fontSize: 7, color: col, border: `1px solid ${col}`, padding: '2px 5px' }}>{w.type.toUpperCase()}</span>}
-        {w.thc != null && <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED }}>THC {w.thc}%</span>}
-        {w.effects && w.effects.split(',').slice(0, 3).map((e) => (
-          <span key={e} style={{ fontFamily: FONT, fontSize: 7, color: '#4a2020', border: '1px solid #3a0808', padding: '2px 4px' }}>{e.trim().toUpperCase()}</span>
-        ))}
-      </div>
-
-      {w.terpenes && (
-        <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, marginBottom: 6 }}>{w.terpenes}</div>
+      {/* Big bud image */}
+      {w.budArt && (
+        <div style={{
+          border: `3px solid ${borderCol}`,
+          background: '#060202',
+          padding: 8,
+          marginBottom: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '80%',
+        }}>
+          <PixelBud artId={w.budArt} size={160} />
+        </div>
       )}
+
+      {/* Name */}
+      <div style={{
+        fontFamily: FONT, fontSize: 15, color: w.acquired ? GBC_MUTED : RED,
+        textAlign: 'center', lineHeight: 1.6, wordBreak: 'break-word',
+        letterSpacing: 1, marginBottom: 10, width: '100%',
+      }}>
+        {w.name.toUpperCase()}
+      </div>
+
+      {/* Badges row */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 8 }}>
+        {w.type && <span style={{ fontFamily: FONT, fontSize: 8, color: col, border: `2px solid ${col}`, padding: '3px 7px' }}>{w.type.toUpperCase()}</span>}
+        {w.thc != null && <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_AMBER, border: `1px solid #6a4a08`, padding: '3px 7px' }}>THC {w.thc}%</span>}
+      </div>
+
+      {/* Effects */}
+      {w.effects && (
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 8 }}>
+          {w.effects.split(',').slice(0, 4).map((e) => (
+            <span key={e} style={{ fontFamily: FONT, fontSize: 7, color: '#7a3030', border: '1px solid #3a0808', padding: '2px 5px' }}>
+              {e.trim().toUpperCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Terpenes */}
+      {w.terpenes && (
+        <div style={{ fontFamily: 'monospace', fontSize: 11, color: GBC_MUTED, textAlign: 'center', marginBottom: 8 }}>
+          {w.terpenes}
+        </div>
+      )}
+
+      {/* Notes */}
       {w.notes && (
-        <div style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, opacity: 0.7, marginBottom: 8 }}>{w.notes}</div>
+        <div style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, opacity: 0.7, textAlign: 'center', marginBottom: 10, borderTop: `1px solid ${RED_DIM}`, paddingTop: 8, width: '100%' }}>
+          {w.notes}
+        </div>
       )}
 
       {/* Acquire button */}
       <button
         onClick={() => onAcquire(w.id)}
-        style={{ fontFamily: FONT, fontSize: 8, padding: '8px 0', width: '100%', cursor: 'pointer', border: `2px solid ${w.acquired ? GBC_DARKEST : GBC_GREEN}`, background: 'transparent', color: w.acquired ? GBC_MUTED : GBC_GREEN }}
+        style={{
+          fontFamily: FONT, fontSize: 9, padding: '12px 0', width: '100%', cursor: 'pointer',
+          border: `3px solid ${w.acquired ? GBC_DARKEST : GBC_GREEN}`,
+          background: w.acquired ? 'transparent' : 'rgba(132,204,22,0.08)',
+          color: w.acquired ? GBC_MUTED : GBC_GREEN,
+          marginTop: 4,
+        }}
       >
         {w.acquired ? '► MARK STILL HUNTING' : '► ACQUIRED'}
       </button>

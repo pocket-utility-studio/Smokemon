@@ -92,8 +92,7 @@ const MENU: TopItem[] = [
     label: 'SETTINGS', description: 'DISPLAY, DATA & SHELL OPTIONS',
     tag: '[SET]', tagColor: '#84cc16',
     children: [
-      { kind: 'leaf', to: '/settings',   label: 'DISPLAY OPTIONS', description: 'THEME, FACT & SHELL SETTINGS',  tag: '[SET]',   tagColor: '#84cc16' },
-      { kind: 'leaf', to: '/save',       label: 'SAVE GAME',       description: 'EXPORT / IMPORT YOUR DATA',     tag: '[DATA]',  tagColor: '#4a9a20' },
+      { kind: 'leaf', to: '/save',       label: 'DISPLAY & SAVE',  description: 'THEME, SHELL & DATA EXPORT',   tag: '[SET]',   tagColor: '#84cc16' },
       { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT',      description: 'VERIFY STRAIN DATA QUALITY',   tag: '[AUDIT]', tagColor: '#4a9a20' },
     ],
   },
@@ -140,10 +139,12 @@ function MenuRow({
       onClick={onEnter}
       style={{
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: isActive ? '16px 10px' : '12px 10px',
-        background: isActive ? '#84cc16' : 'transparent',
-        border: 'none', boxSizing: 'border-box', cursor: 'pointer',
-        flexShrink: 0, width: '100%', textAlign: 'left', gap: 8,
+        padding: isActive ? '12px 10px' : '10px 10px',
+        background: isActive ? 'rgba(132,204,22,0.12)' : 'transparent',
+        borderLeft: isActive ? '3px solid #84cc16' : '3px solid transparent',
+        borderTop: 'none', borderRight: 'none', borderBottom: 'none',
+        boxSizing: 'border-box', cursor: 'pointer',
+        flexShrink: 0, width: '100%', textAlign: 'left', gap: 6,
       }}
     >
       {/* Title row */}
@@ -161,7 +162,7 @@ function MenuRow({
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{
             fontFamily: FONT, fontSize: 13,
-            color: isBack ? '#4a7a10' : isActive ? '#050e04' : '#84cc16',
+            color: isBack ? '#4a7a10' : isActive ? '#84cc16' : '#84cc16',
           }}>
             {isBack ? '◄ BACK' : label}
           </span>
@@ -185,8 +186,8 @@ function MenuRow({
       {/* Description — active only */}
       {isActive && description && (
         <div style={{
-          fontFamily: FONT, fontSize: 9,
-          color: isActive ? '#0a2808' : '#88ff88', paddingLeft: isBack ? 24 : 48,
+          fontFamily: 'monospace', fontSize: 13,
+          color: '#5a8a18', paddingLeft: isBack ? 24 : 48,
           lineHeight: 1.8,
         }}>{description}</div>
       )}
@@ -287,20 +288,25 @@ export default function DashboardHome() {
           const tagColor = isBack ? '#84cc16' : item.tagColor
           const description = isBack ? undefined : item.description
 
+          // Pixel divider after the 3 pinned top items (index 2) in main menu
+          const showDivider = !isSubMenu && i === 3
+
           const isFact = !isBack && (item as Leaf).to === '/facts'
           return (
-            <MenuRow
-              key={isBack ? '__back__' : (item as Leaf | Group).label}
-              label={label}
-              description={description}
-              tag={tag}
-              tagColor={tagColor}
-              isActive={cursor === i}
-              isBack={isBack}
-              badge={isFact && newFact}
-              onEnter={() => activate(item)}
-              onHover={() => { setCursor(i); haptic(10); playNavigate() }}
-            />
+            <div key={isBack ? '__back__' : (item as Leaf | Group).label}>
+              {showDivider && <div className="gbc-divider" style={{ margin: '4px 10px' }} />}
+              <MenuRow
+                label={label}
+                description={description}
+                tag={tag}
+                tagColor={tagColor}
+                isActive={cursor === i}
+                isBack={isBack}
+                badge={isFact && newFact}
+                onEnter={() => activate(item)}
+                onHover={() => { setCursor(i); haptic(10); playNavigate() }}
+              />
+            </div>
           )
         })}
       </div>
