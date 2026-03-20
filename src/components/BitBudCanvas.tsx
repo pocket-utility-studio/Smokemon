@@ -102,8 +102,8 @@ const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
 const GBC_BG    = '#050a04'
 
-const PIXEL_SIZE = 96   // native pixel grid
-const SCALE      = 3    // stored as 288×288
+const PIXEL_SIZE = 192  // native pixel grid
+const SCALE      = 2    // stored as 384×384
 
 type Step        = 'idle' | 'removing' | 'dithering'
 type RevealPhase = 'idle' | 'silhouette' | 'flash' | 'revealed'
