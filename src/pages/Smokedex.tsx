@@ -580,8 +580,15 @@ function PartyView({
               }}>
                 {s.name.toUpperCase()}
               </span>
-              <div style={{ width: '100%', height: 3, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: barCol }} />
+              <div style={{ display: 'flex', gap: 2, width: '50%' }}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} style={{
+                    flex: 1, height: 7,
+                    background: i < Math.round(fill * 8) ? barCol : '#0a1e04',
+                    border: '1px solid #1a3a08',
+                    imageRendering: 'pixelated',
+                  }} />
+                ))}
               </div>
               <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>
                 {thc != null ? `THC ${thc}%` : '--'}
