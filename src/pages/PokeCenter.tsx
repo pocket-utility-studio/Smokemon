@@ -6,7 +6,7 @@ import { useLayoutMode } from '../context/LayoutModeContext'
 import { useStash } from '../context/StashContext'
 import { useStrainDb } from '../hooks/useStrainDb'
 import type { StrainRecord } from '../hooks/useStrainDb'
-import { askNurseJoy, generateDualBlend } from '../services/gemini'
+import { askNurseJoy, generateDualBlend, lookupStrainData } from '../services/gemini'
 import type { EnrichedStrain, ConsultationFeedback, DualBlendResult } from '../services/gemini'
 import { BudSprite } from '../components/BudSprite'
 import {
@@ -618,6 +618,9 @@ export default function PokeCenter() {
   // Dex search — add strain directly to party
   const [dexQuery, setDexQuery]           = useState('')
   const [dexOpen, setDexOpen]             = useState(false)
+  const [pcOpen, setPcOpen]               = useState(false)
+  const [aiLookupLoading, setAiLookupLoading] = useState(false)
+  const [aiLookupError, setAiLookupError]     = useState('')
 
   const dexFuse = useMemo(() => new Fuse(db, {
     keys: [{ name: 'Strain', weight: 3 }, { name: 'Type', weight: 1 }],
@@ -646,6 +649,34 @@ export default function PokeCenter() {
     }
     setDexQuery('')
     setDexOpen(false)
+  }
+
+  const handleAiLookup = async () => {
+    const name = dexQuery.trim()
+    if (!name || !hasKey || aiLookupLoading) return
+    setAiLookupLoading(true)
+    setAiLookupError('')
+    try {
+      const data = await lookupStrainData(name)
+      const existing = strains.find((s) => s.name.toLowerCase() === name.toLowerCase())
+      if (existing) {
+        updateStrain(existing.id, { inStock: true, ...( data.thc != null ? { thc: data.thc } : {}), ...(data.cbd != null ? { cbd: data.cbd } : {}), ...(data.type ? { type: data.type } : {}) })
+      } else {
+        addStrain({
+          name,
+          type: data.type,
+          thc: data.thc,
+          cbd: data.cbd,
+          inStock: true,
+        })
+      }
+      setDexQuery('')
+      setDexOpen(false)
+    } catch (e) {
+      setAiLookupError(e instanceof Error && e.message === 'NO_KEY' ? 'NO KEY SET' : 'LOOKUP FAILED')
+    } finally {
+      setAiLookupLoading(false)
+    }
   }
 
   const saveKey = () => {
@@ -766,75 +797,117 @@ export default function PokeCenter() {
           </div>
         )}
 
-        {/* Cleaning reminder */}
-        <div style={{ ...pokeBox, padding: '12px', flexShrink: 0 }}>
+        {/* Ask Nurse Joy */}
+        <div style={{
+          border: `3px solid ${GBC_AMBER}`,
+          boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00',
+          background: '#0a0900',
+          padding: '14px',
+          flexShrink: 0,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <NurseJoySprite size={28} />
-            <span style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED }}>VAPE CLEANING REMINDER</span>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_AMBER }}>►</span>
+            <span style={{ fontFamily: FONT, fontSize: 10, color: GBC_AMBER, letterSpacing: 0.5 }}>
+              WHAT DO YOU WANT TO FEEL?
+            </span>
           </div>
-
-          {/* Interval selector */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-            {([0, 7, 14, 30] as const).map((days) => {
-              const active = cleanInterval === days
+          <textarea
+            rows={2}
+            value={desiredEffect}
+            onChange={(e) => setDesiredEffect(e.target.value)}
+            placeholder="e.g. I want to relax and sleep..."
+            style={{
+              width: '100%', background: '#060e05',
+              border: `2px solid ${focused ? '#84cc16' : '#3a6010'}`,
+              color: '#e8f8c0', fontSize: 13, fontFamily: 'monospace',
+              padding: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box',
+              lineHeight: 1.7,
+            }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+          />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {EFFECT_TAGS.map((tag) => {
+              const active = selectedTags.includes(tag)
               return (
                 <button
-                  key={days}
-                  onClick={() => handleSetCleanInterval(days)}
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
                   style={{
-                    flex: 1, fontFamily: FONT, fontSize: 8, padding: '10px 0', minHeight: 44,
-                    cursor: 'pointer',
-                    border: `2px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
-                    background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
-                    color: active ? GBC_GREEN : GBC_MUTED,
+                    fontFamily: FONT, fontSize: 9, padding: '7px 12px', minHeight: 36,
+                    border: `2px solid ${active ? GBC_AMBER : GBC_DARKEST}`,
+                    background: active ? 'rgba(245,158,11,0.15)' : 'transparent',
+                    color: active ? GBC_AMBER : GBC_MUTED, cursor: 'pointer',
                   }}
                 >
-                  {days === 0 ? 'OFF' : `${days}D`}
+                  {tag}
                 </button>
               )
             })}
           </div>
+          <button
+            onClick={handleAsk}
+            disabled={!canAsk || loading}
+            style={{
+              marginTop: 14, width: '100%', fontFamily: FONT, fontSize: 11,
+              padding: '14px 0',
+              background: canAsk && !loading ? GBC_AMBER : 'transparent',
+              color: canAsk && !loading ? '#050a04' : GBC_MUTED,
+              border: `3px solid ${canAsk && !loading ? GBC_AMBER : GBC_DARKEST}`,
+              boxShadow: canAsk && !loading ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00' : 'none',
+              cursor: canAsk && !loading ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {loading ? 'ANALYZING...' : '► ASK NURSE JOY'}
+          </button>
+        </div>
 
-          {/* Status display */}
-          {cleanInterval > 0 && (
-            <div style={{ marginBottom: 10 }}>
-              {cleanOverdue ? (
-                <div style={{
-                  border: `2px solid #e84040`, background: 'rgba(232,64,64,0.08)',
-                  padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4,
-                }}>
-                  <span style={{ fontFamily: FONT, fontSize: 8, color: '#e84040' }}>CLEANING OVERDUE</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#ff8080', lineHeight: 1.5 }}>
-                    Your vape needs a clean. Residue builds up over time and affects flavour and efficiency.
-                  </span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED }}>NEXT CLEAN IN:</span>
-                  <span style={{ fontFamily: FONT, fontSize: 11, color: cleanDaysLeft === 0 ? GBC_AMBER : GBC_GREEN }}>
-                    {cleanDaysLeft === 0 ? 'TODAY' : `${cleanDaysLeft}D`}
-                  </span>
-                </div>
-              )}
+        {/* Cleaning reminder — compact */}
+        <div style={{ ...pokeBox, padding: '8px 10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, flexShrink: 0 }}>CLEAN VAPE:</span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {([0, 7, 14, 30] as const).map((days) => {
+                const active = cleanInterval === days
+                return (
+                  <button
+                    key={days}
+                    onClick={() => handleSetCleanInterval(days)}
+                    style={{
+                      fontFamily: FONT, fontSize: 7, padding: '4px 6px', minHeight: 32,
+                      cursor: 'pointer',
+                      border: `1px solid ${active ? GBC_GREEN : GBC_DARKEST}`,
+                      background: active ? 'rgba(132,204,22,0.12)' : 'transparent',
+                      color: active ? GBC_GREEN : GBC_MUTED,
+                    }}
+                  >
+                    {days === 0 ? 'OFF' : `${days}D`}
+                  </button>
+                )
+              })}
             </div>
-          )}
-
-          {/* Just cleaned button */}
-          {cleanInterval > 0 && (
-            <button
-              onClick={handleJustCleaned}
-              style={{
-                width: '100%', fontFamily: FONT, fontSize: 9, padding: '11px 0', minHeight: 44,
-                cursor: 'pointer',
-                border: `2px solid ${GBC_GREEN}`,
-                background: 'rgba(132,204,22,0.08)',
-                color: GBC_GREEN,
-                boxSizing: 'border-box',
-              }}
-            >
-              ► JUST CLEANED IT
-            </button>
-          )}
+            {cleanInterval > 0 && (
+              <>
+                <span style={{
+                  fontFamily: FONT, fontSize: 8,
+                  color: cleanOverdue ? '#e84040' : cleanDaysLeft === 0 ? GBC_AMBER : GBC_MUTED,
+                }}>
+                  {cleanOverdue ? 'OVERDUE' : cleanDaysLeft === 0 ? 'TODAY' : `${cleanDaysLeft}D LEFT`}
+                </span>
+                <button
+                  onClick={handleJustCleaned}
+                  style={{
+                    fontFamily: FONT, fontSize: 7, padding: '4px 8px', minHeight: 32,
+                    cursor: 'pointer', marginLeft: 'auto',
+                    border: `1px solid ${GBC_MUTED}`,
+                    background: 'transparent', color: GBC_MUTED,
+                  }}
+                >
+                  CLEANED
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Party */}
@@ -849,21 +922,43 @@ export default function PokeCenter() {
           </div>
 
           {/* Dex search — add strain to party */}
-          <div style={{ position: 'relative', marginBottom: 10 }}>
-            <input
-              type="text"
-              value={dexQuery}
-              onChange={(e) => { setDexQuery(e.target.value); setDexOpen(true) }}
-              onFocus={() => setDexOpen(true)}
-              onBlur={() => setTimeout(() => setDexOpen(false), 150)}
-              placeholder="SEARCH DEX TO ADD..."
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                background: GBC_BG, border: `2px solid ${GBC_DARKEST}`,
-                color: GBC_TEXT, fontFamily: 'monospace', fontSize: 13,
-                padding: '8px 10px', outline: 'none',
-              }}
-            />
+          <div style={{ position: 'relative', marginBottom: aiLookupError ? 4 : 10 }}>
+            <div style={{ display: 'flex', gap: 0 }}>
+              <input
+                type="text"
+                value={dexQuery}
+                onChange={(e) => { setDexQuery(e.target.value); setDexOpen(true); setAiLookupError('') }}
+                onFocus={() => setDexOpen(true)}
+                onBlur={() => setTimeout(() => setDexOpen(false), 150)}
+                placeholder="SEARCH DEX TO ADD..."
+                style={{
+                  flex: 1, minWidth: 0, boxSizing: 'border-box',
+                  background: GBC_BG, border: `2px solid ${GBC_DARKEST}`,
+                  borderRight: 'none',
+                  color: GBC_TEXT, fontFamily: 'monospace', fontSize: 13,
+                  padding: '8px 10px', outline: 'none',
+                }}
+              />
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleAiLookup() }}
+                disabled={!dexQuery.trim() || !hasKey || aiLookupLoading}
+                style={{
+                  fontFamily: FONT, fontSize: 7, flexShrink: 0,
+                  padding: '0 10px', minHeight: 40, minWidth: 44,
+                  border: `2px solid ${dexQuery.trim() && hasKey ? GBC_VIOLET : GBC_DARKEST}`,
+                  background: dexQuery.trim() && hasKey ? 'rgba(167,139,250,0.12)' : 'transparent',
+                  color: dexQuery.trim() && hasKey ? GBC_VIOLET : GBC_MUTED,
+                  cursor: dexQuery.trim() && hasKey && !aiLookupLoading ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+                title="Look up this strain with AI"
+              >
+                {aiLookupLoading ? <SpinningSquare /> : 'AI'}
+              </button>
+            </div>
+            {aiLookupError && (
+              <div style={{ fontFamily: FONT, fontSize: 7, color: '#e84040', marginBottom: 6, marginTop: 4 }}>{aiLookupError}</div>
+            )}
             {dexOpen && dexResults.length > 0 && (
               <div style={{
                 position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
@@ -975,90 +1070,37 @@ export default function PokeCenter() {
 
         {/* Stash — add to party */}
         {strains.filter((s) => !s.inStock).length > 0 && (
-          <div style={{ ...pokeBox, padding: '10px 12px', flexShrink: 0 }}>
-            <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_MUTED, marginBottom: 8 }}>
-              BILL'S PC
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {strains.filter((s) => !s.inStock).map((s) => (
-                <PartyCard
-                  key={s.id}
-                  name={s.name}
-                  type={s.type}
-                  thc={s.thc}
-                  inStock={s.inStock}
-                  dbMatch={findDbMatch(s.name, db)}
-                  onToggle={() => updateStrain(s.id, { inStock: !s.inStock })}
-                />
-              ))}
-            </div>
+          <div style={{ ...pokeBox, padding: '8px 12px', flexShrink: 0 }}>
+            <button
+              onClick={() => setPcOpen((v) => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: 0, minHeight: 32,
+              }}
+            >
+              <span style={{ fontFamily: FONT, fontSize: 8, color: GBC_MUTED }}>
+                BILL'S PC ({strains.filter((s) => !s.inStock).length})
+              </span>
+              <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_DARKEST }}>{pcOpen ? '▲' : '▼'}</span>
+            </button>
+            {pcOpen && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                {strains.filter((s) => !s.inStock).map((s) => (
+                  <PartyCard
+                    key={s.id}
+                    name={s.name}
+                    type={s.type}
+                    thc={s.thc}
+                    inStock={s.inStock}
+                    dbMatch={findDbMatch(s.name, db)}
+                    onToggle={() => updateStrain(s.id, { inStock: !s.inStock })}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
-
-        {/* Ask Nurse Joy */}
-        <div style={{
-          border: `3px solid ${GBC_AMBER}`,
-          boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00',
-          background: '#0a0900',
-          padding: '14px',
-          flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_AMBER }}>►</span>
-            <span style={{ fontFamily: FONT, fontSize: 10, color: GBC_AMBER, letterSpacing: 0.5 }}>
-              WHAT DO YOU WANT TO FEEL?
-            </span>
-          </div>
-          <textarea
-            rows={2}
-            value={desiredEffect}
-            onChange={(e) => setDesiredEffect(e.target.value)}
-            placeholder="e.g. I want to relax and sleep..."
-            style={{
-              width: '100%', background: '#060e05',
-              border: `2px solid ${focused ? '#84cc16' : '#3a6010'}`,
-              color: '#e8f8c0', fontSize: 13, fontFamily: 'monospace',
-              padding: '14px', resize: 'none', outline: 'none', boxSizing: 'border-box',
-              lineHeight: 1.7,
-            }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-          />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {EFFECT_TAGS.map((tag) => {
-              const active = selectedTags.includes(tag)
-              return (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  style={{
-                    fontFamily: FONT, fontSize: 9, padding: '7px 12px', minHeight: 36,
-                    border: `2px solid ${active ? GBC_AMBER : GBC_DARKEST}`,
-                    background: active ? 'rgba(245,158,11,0.15)' : 'transparent',
-                    color: active ? GBC_AMBER : GBC_MUTED, cursor: 'pointer',
-                  }}
-                >
-                  {tag}
-                </button>
-              )
-            })}
-          </div>
-          <button
-            onClick={handleAsk}
-            disabled={!canAsk || loading}
-            style={{
-              marginTop: 14, width: '100%', fontFamily: FONT, fontSize: 11,
-              padding: '14px 0',
-              background: canAsk && !loading ? GBC_AMBER : 'transparent',
-              color: canAsk && !loading ? '#050a04' : GBC_MUTED,
-              border: `3px solid ${canAsk && !loading ? GBC_AMBER : GBC_DARKEST}`,
-              boxShadow: canAsk && !loading ? 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a2c00' : 'none',
-              cursor: canAsk && !loading ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {loading ? 'ANALYZING...' : '► ASK NURSE JOY'}
-          </button>
-        </div>
 
         {/* Loading */}
         {loading && (

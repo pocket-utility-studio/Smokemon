@@ -5,7 +5,7 @@ import { haptic } from '../utils/haptic'
 
 const navItems = [
   { to: '/',            icon: LayoutDashboard, label: 'HOME',  exact: true  },
-  { to: '/smokedex',    icon: BookMarked,      label: 'DEX',   exact: false },
+  { to: '/smokedex',    icon: BookMarked,      label: 'DEX/NEW', exact: false },
   { to: '/poke-center', icon: HeartPulse,      label: 'RX',    exact: false },
   { to: '/castform',    icon: Thermometer,     label: 'TEMP',  exact: false },
 ]
@@ -73,6 +73,7 @@ export default function GBCBottomBar() {
             </button>
           )
         })}
+
       </div>
     </div>
   )
