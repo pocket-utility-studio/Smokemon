@@ -1,11 +1,14 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { removeBackground } from '@imgly/background-removal'
 
-// GBC 5-color kiwi palette (R, G, B)
+// GBC 8-color kiwi palette — expanded from 5 for better gradation
 const GBC_PALETTE: [number, number, number][] = [
-  [5,   10,  4],   // #050a04 — darkest
+  [5,   10,  4],   // #050a04 — darkest bg
   [14,  26,  11],  // #0e1a0b — charcoal
+  [28,  50,  6],   // #1c3206 — dark shadow
   [42,  74,  8],   // #2a4a08 — muted
+  [74,  120, 14],  // #4a780e — mid
+  [100, 160, 18],  // #64a012 — mid-bright
   [132, 204, 22],  // #84cc16 — accent
   [200, 232, 144], // #c8e890 — bright
 ]
@@ -73,13 +76,64 @@ function blobToImageElement(blob: Blob): Promise<HTMLImageElement> {
   })
 }
 
+// Find a square crop centred on the non-transparent subject pixels
+function findSubjectCrop(img: HTMLImageElement): { sx: number; sy: number; size: number } {
+  const W = img.naturalWidth
+  const H = img.naturalHeight
+
+  // Scan at reduced resolution for speed
+  const scanScale = Math.min(1, 512 / Math.max(W, H))
+  const sw = Math.round(W * scanScale)
+  const sh = Math.round(H * scanScale)
+
+  const c = document.createElement('canvas')
+  c.width = sw; c.height = sh
+  const ctx = c.getContext('2d')!
+  ctx.drawImage(img, 0, 0, sw, sh)
+  const { data } = ctx.getImageData(0, 0, sw, sh)
+
+  let minX = sw, minY = sh, maxX = 0, maxY = 0, hasContent = false
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (data[(y * sw + x) * 4 + 3] > 20) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+        hasContent = true
+      }
+    }
+  }
+
+  if (!hasContent) return { sx: 0, sy: 0, size: Math.min(W, H) }
+
+  // 8% padding, then make it square, convert back to original coords
+  const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.08)
+  const x1 = Math.max(0, (minX - pad) / scanScale)
+  const y1 = Math.max(0, (minY - pad) / scanScale)
+  const x2 = Math.min(W, (maxX + pad) / scanScale)
+  const y2 = Math.min(H, (maxY + pad) / scanScale)
+
+  const halfW = (x2 - x1) / 2
+  const halfH = (y2 - y1) / 2
+  const half  = Math.max(halfW, halfH)
+  const cx = x1 + halfW
+  const cy = y1 + halfH
+
+  return {
+    sx:   Math.max(0, cx - half),
+    sy:   Math.max(0, cy - half),
+    size: Math.min(half * 2, W, H),
+  }
+}
+
 const FONT      = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
 const GBC_BG    = '#050a04'
 
-const PIXEL_SIZE = 48
-const SCALE = 5  // stored as 240×240
+const PIXEL_SIZE = 72   // up from 48 — more detail
+const SCALE      = 4    // stored as 288×288
 
 type Step        = 'idle' | 'removing' | 'dithering'
 type RevealPhase = 'idle' | 'silhouette' | 'flash' | 'revealed'
@@ -89,13 +143,13 @@ interface BitBudCanvasProps {
 }
 
 export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
-  const fileInputRef  = useRef<HTMLInputElement>(null)
-  const canvasRef     = useRef<HTMLCanvasElement>(null)
+  const cameraInputRef  = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+  const canvasRef       = useRef<HTMLCanvasElement>(null)
   const [preview,     setPreview]     = useState<string | null>(null)
   const [step,        setStep]        = useState<Step>('idle')
   const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle')
 
-  // ── Reveal sequence ─────────────────────────────────────────────────────────
   // silhouette (2 s) → flash (360 ms CSS anim) → revealed
   useEffect(() => {
     if (revealPhase === 'silhouette') {
@@ -113,36 +167,42 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     setStep('removing')
     setPreview(null)
 
-    // Attempt background removal — fall back to original if offline / error
+    // Background removal — fall back to original if offline / error
     let sourceBlob: Blob = file
     try {
       sourceBlob = await removeBackground(file, { debug: false })
-    } catch {
-      // continue with original photo
-    }
+    } catch { /* fall back to original */ }
 
     setStep('dithering')
 
     const img = await blobToImageElement(sourceBlob)
 
-    // Composite onto the darkest GBC colour so transparent areas match the app bg
+    // Auto-crop: find the square bounding box of the subject
+    const { sx, sy, size } = findSubjectCrop(img)
+
     const off = document.createElement('canvas')
-    off.width = PIXEL_SIZE
+    off.width  = PIXEL_SIZE
     off.height = PIXEL_SIZE
     const offCtx = off.getContext('2d')!
+
+    // Fill darkest GBC colour so transparent areas disappear into the bg
     offCtx.fillStyle = '#050a04'
     offCtx.fillRect(0, 0, PIXEL_SIZE, PIXEL_SIZE)
-    offCtx.drawImage(img, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
+
+    // Boost contrast + saturation before downsampling — richer pixel art
+    offCtx.filter = 'contrast(1.5) saturate(1.8) brightness(1.05)'
+    offCtx.drawImage(img, sx, sy, size, size, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
+    offCtx.filter = 'none'
 
     const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
 
-    // Apply Floyd-Steinberg dithering into GBC palette
+    // Floyd-Steinberg dithering into 8-color GBC palette
     const dithered = floydSteinberg(data, PIXEL_SIZE, PIXEL_SIZE)
     offCtx.putImageData(new ImageData(Uint8ClampedArray.from(dithered), PIXEL_SIZE, PIXEL_SIZE), 0, 0)
 
-    // Scale up with pixelated rendering
+    // Scale up with nearest-neighbour (pixelated) rendering
     const display = canvasRef.current!
-    display.width = PIXEL_SIZE * SCALE
+    display.width  = PIXEL_SIZE * SCALE
     display.height = PIXEL_SIZE * SCALE
     const dCtx = display.getContext('2d')!
     dCtx.imageSmoothingEnabled = false
@@ -150,7 +210,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
     setPreview(display.toDataURL('image/png'))
     setStep('idle')
-    setRevealPhase('silhouette')   // ← start the reveal
+    setRevealPhase('silhouette')
   }, [])
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,21 +221,14 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
   const busy = step !== 'idle'
 
-  const statusLabel =
-    step === 'removing' ? '► REMOVING BG...' :
-    step === 'dithering' ? '► PROCESSING...' :
-    '► UPLOAD PHOTO'
+  const busyLabel =
+    step === 'removing'  ? '► REMOVING BG...' :
+    step === 'dithering' ? '► PROCESSING...'  : ''
 
-  // Canvas filter per phase
-  const canvasFilter =
-    revealPhase === 'silhouette' ? 'brightness(0)' :
-    revealPhase === 'revealed'   ? 'brightness(1)' :
-    undefined  // 'flash' phase — handled by CSS class
-
+  const canvasFilter     = revealPhase === 'silhouette' ? 'brightness(0)' : revealPhase === 'revealed' ? 'brightness(1)' : undefined
   const canvasTransition = revealPhase === 'revealed' ? 'filter 0.3s ease-out' : 'none'
-
-  const showOverlay = preview && (revealPhase === 'silhouette' || revealPhase === 'flash')
-  const showCapture = preview && revealPhase === 'revealed'
+  const showOverlay      = preview && (revealPhase === 'silhouette' || revealPhase === 'flash')
+  const showCapture      = preview && revealPhase === 'revealed'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -183,96 +236,67 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         BIT-BUD FILTER
       </span>
       <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
-        Upload a bud photo — background removed automatically, then converted to GBC style.
+        Upload a bud photo — background removed and converted to GBC pixel art.
       </p>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFile}
-        style={{ display: 'none' }}
-      />
+      {/* Hidden file inputs — camera vs gallery */}
+      <input ref={cameraInputRef}  type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
+      <input ref={galleryInputRef} type="file" accept="image/*"                        onChange={handleFile} style={{ display: 'none' }} />
 
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        disabled={busy}
-        style={{
-          fontFamily: FONT,
-          fontSize: 10,
-          padding: '11px 14px',
-          cursor: busy ? 'default' : 'pointer',
-          border: '3px solid #84cc16',
-          color: '#84cc16',
-          background: 'rgba(132,204,22,0.08)',
-          width: '100%',
-          boxSizing: 'border-box',
-          letterSpacing: 0.5,
-        }}
-      >
-        {statusLabel}
-      </button>
+      {busy ? (
+        <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN, padding: '11px 14px', border: '3px solid #84cc16', background: 'rgba(132,204,22,0.08)', textAlign: 'center' }}>
+          {busyLabel}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            style={{ fontFamily: FONT, fontSize: 9, padding: '12px 8px', cursor: 'pointer', border: '3px solid #84cc16', color: GBC_GREEN, background: 'rgba(132,204,22,0.08)', letterSpacing: 0.5 }}
+          >
+            ► CAMERA
+          </button>
+          <button
+            onClick={() => galleryInputRef.current?.click()}
+            style={{ fontFamily: FONT, fontSize: 9, padding: '12px 8px', cursor: 'pointer', border: '3px solid #84cc16', color: GBC_GREEN, background: 'rgba(132,204,22,0.08)', letterSpacing: 0.5 }}
+          >
+            ► GALLERY
+          </button>
+        </div>
+      )}
 
-      {/* ── Canvas + reveal overlay ─────────────────────────────────────── */}
+      {/* Canvas + reveal overlay */}
       <div style={{ position: 'relative' }}>
         <canvas
           ref={canvasRef}
           className={revealPhase === 'flash' ? 'gbc-whodat-flash' : ''}
           style={{
-            display:         preview ? 'block' : 'none',
-            imageRendering:  'pixelated',
-            width:           '100%',
-            border:          '3px solid #84cc16',
-            boxSizing:       'border-box',
-            filter:          canvasFilter,
-            transition:      canvasTransition,
+            display:        preview ? 'block' : 'none',
+            imageRendering: 'pixelated',
+            width:          '100%',
+            border:         '3px solid #84cc16',
+            boxSizing:      'border-box',
+            filter:         canvasFilter,
+            transition:     canvasTransition,
           }}
         />
 
-        {/* "WHO'S THAT SMOKÉMON?" text — shown during silhouette + flash */}
         {showOverlay && (
           <div style={{
-            position:       'absolute',
-            bottom:         3,
-            left:           3,
-            right:          3,
-            background:     `${GBC_BG}cc`,
-            padding:        '6px 8px',
-            display:        'flex',
-            justifyContent: 'center',
-            pointerEvents:  'none',
+            position: 'absolute', bottom: 3, left: 3, right: 3,
+            background: `${GBC_BG}cc`, padding: '6px 8px',
+            display: 'flex', justifyContent: 'center', pointerEvents: 'none',
           }}>
-            <span style={{
-              fontFamily:  FONT,
-              fontSize:    7,
-              color:       GBC_GREEN,
-              textAlign:   'center',
-              lineHeight:  1.7,
-              letterSpacing: 0.5,
-            }}>
+            <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_GREEN, textAlign: 'center', lineHeight: 1.7, letterSpacing: 0.5 }}>
               WHO'S THAT{'\n'}SMOKÉPMON?
             </span>
           </div>
         )}
       </div>
 
-      {/* Save button — only revealed after the full animation */}
       {showCapture && (
         <button
           onClick={() => onCapture(preview)}
-          style={{
-            fontFamily:    FONT,
-            fontSize:      10,
-            padding:       '11px 14px',
-            cursor:        'pointer',
-            border:        '3px solid #84cc16',
-            color:         '#84cc16',
-            background:    'rgba(132,204,22,0.15)',
-            width:         '100%',
-            boxSizing:     'border-box',
-            letterSpacing: 0.5,
-          }}
+          style={{ fontFamily: FONT, fontSize: 10, padding: '11px 14px', cursor: 'pointer', border: '3px solid #84cc16', color: GBC_GREEN, background: 'rgba(132,204,22,0.15)', width: '100%', boxSizing: 'border-box', letterSpacing: 0.5 }}
         >
           ► SAVE AS BUD PHOTO
         </button>
@@ -280,7 +304,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
 
       {showCapture && (
         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, textAlign: 'center' }}>
-          BG REMOVED · 5-COLOR GBC · DITHERED
+          BG REMOVED · 8-COLOR GBC · DITHERED · AUTO-CROPPED
         </span>
       )}
     </div>

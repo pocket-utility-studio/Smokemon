@@ -1,9 +1,8 @@
-import { useState, useMemo, useRef } from 'react'
-import { removeBackground } from '@imgly/background-removal'
-import { compressImage } from '../utils/compressImage'
+import { useState, useMemo } from 'react'
 import Fuse from 'fuse.js'
 import { useStrainDb, displayName } from '../hooks/useStrainDb'
 import { lookupStrainData } from '../services/gemini'
+import BitBudCanvas from '../components/BitBudCanvas'
 
 const FONT     = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_BG   = '#050a04'
@@ -109,8 +108,7 @@ export default function WantedList() {
   const [pending, setPending] = useState<Partial<WantedEntry> | null>(null)
   const [pendingNotes, setPendingNotes] = useState('')
   const [pendingBudArt, setPendingBudArt] = useState<string>(randomBudArt)
-  const [photoRemoving, setPhotoRemoving] = useState(false)
-  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [showPhotoEditor, setShowPhotoEditor] = useState(false)
 
   const fuse = useMemo(() => new Fuse(db, {
     keys: [{ name: 'Strain', weight: 3 }, { name: 'Effects', weight: 1 }],
@@ -154,23 +152,6 @@ export default function WantedList() {
       setLookupError(msg === 'NO_KEY' ? 'SET API KEY IN SMOKÉ CENTER' : 'LOOKUP FAILED')
     } finally {
       setLookupLoading(false)
-    }
-  }
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-    setPhotoRemoving(true)
-    try {
-      let blob: Blob = file
-      try { blob = await removeBackground(file, { debug: false }) } catch { /* fall back to original */ }
-      const url = URL.createObjectURL(blob)
-      const compressed = await compressImage(url, 300, 0.7)
-      URL.revokeObjectURL(url)
-      setPendingBudArt(`custom:${compressed}`)
-    } finally {
-      setPhotoRemoving(false)
     }
   }
 
@@ -320,16 +301,26 @@ export default function WantedList() {
             >
               ?RNG
             </button>
-            <input ref={photoInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             <button
-              onPointerDown={() => !photoRemoving && photoInputRef.current?.click()}
-              disabled={photoRemoving}
-              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${pendingBudArt.startsWith('custom:') ? RED : RED_DIM}`, color: pendingBudArt.startsWith('custom:') ? RED : GBC_MUTED, padding: '8px 10px', cursor: photoRemoving ? 'not-allowed' : 'pointer', minHeight: 44 }}
+              onPointerDown={() => setShowPhotoEditor((v) => !v)}
+              style={{ fontFamily: FONT, fontSize: 7, background: 'transparent', border: `2px solid ${showPhotoEditor || pendingBudArt.startsWith('custom:') ? RED : RED_DIM}`, color: showPhotoEditor || pendingBudArt.startsWith('custom:') ? RED : GBC_MUTED, padding: '8px 10px', cursor: 'pointer', minHeight: 44 }}
             >
-              {photoRemoving ? 'REMOVING BG...' : pendingBudArt.startsWith('custom:') ? 'PHOTO ✓' : 'PHOTO'}
+              {pendingBudArt.startsWith('custom:') ? 'PHOTO [✓]' : 'PHOTO'}
             </button>
           </div>
         </div>
+
+        {/* Photo editor — expands when PHOTO button toggled */}
+        {showPhotoEditor && (
+          <div style={{ border: `2px solid ${RED_DIM}`, background: '#060202', padding: 12 }}>
+            <BitBudCanvas
+              onCapture={(url) => {
+                setPendingBudArt(`custom:${url}`)
+                setShowPhotoEditor(false)
+              }}
+            />
+          </div>
+        )}
 
         {/* Notes */}
         <textarea
