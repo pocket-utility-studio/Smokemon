@@ -372,7 +372,7 @@ function StashList({
               </span>
               {confirmDeleteId === s.id ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>RELEASE?</span>
+                  <span style={{ fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 8, color: GBC_AMBER }}>MOVE TO PC?</span>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button onClick={() => { onDelete(s.id); setConfirmDeleteId(null) }}
                       style={{ background: 'transparent', border: `1px solid ${GBC_AMBER}`, color: GBC_AMBER, fontFamily: "'PokemonGb', 'Press Start 2P', monospace", fontSize: 9, padding: '6px 10px', cursor: 'pointer', minHeight: 44 }}>YES</button>
@@ -1547,7 +1547,7 @@ export default function Smokedex() {
         <PartyView
           party={party}
           db={db}
-          onDelete={deleteStrain}
+          onDelete={(id) => updateStrain(id, { inStock: false })}
           onUpdate={updateStrain}
         />
       )}
