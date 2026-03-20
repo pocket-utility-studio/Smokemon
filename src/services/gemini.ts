@@ -80,6 +80,7 @@ export async function askNurseJoy(
   party: EnrichedStrain[],
   feedbackHistory?: ConsultationFeedback[],
   patientNotes?: string,
+  onChunk?: (chunk: string) => void,
 ): Promise<string> {
   if (party.length === 0) throw new Error('Party is empty')
 
@@ -117,6 +118,16 @@ export async function askNurseJoy(
     : ''
 
   const prompt = `My party:\n${partyList}${notesBlock}${memoryBlock}\n\nWhat I want: ${desiredEffect}`
+
+  if (onChunk) {
+    const stream = await model.generateContentStream(prompt)
+    let full = ''
+    for await (const chunk of stream.stream) {
+      const text = chunk.text()
+      if (text) { full += text; onChunk(full) }
+    }
+    return full.trim()
+  }
 
   const result = await model.generateContent(prompt)
   return result.response.text().trim()

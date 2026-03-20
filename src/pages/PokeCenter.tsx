@@ -56,9 +56,15 @@ const pokeBox = {
   background: GBC_BOX,
 }
 
-const EFFECT_TAGS = [
-  'SLEEP', 'FOCUS', 'ENERGY', 'SOCIAL',
-  'CREATIVE', 'RELAXATION', 'PAIN RELIEF', 'ANXIETY',
+const EFFECT_TAGS: { label: string; icon: string }[] = [
+  { label: 'SLEEP',       icon: ')))' },
+  { label: 'FOCUS',       icon: '(*)' },
+  { label: 'ENERGY',      icon: '/\\/' },
+  { label: 'SOCIAL',      icon: '<3>' },
+  { label: 'CREATIVE',    icon: '***' },
+  { label: 'RELAXATION',  icon: '~~~' },
+  { label: 'PAIN RELIEF', icon: '[+]' },
+  { label: 'ANXIETY',     icon: '...' },
 ]
 
 // ── GIF canvas player ─────────────────────────────────────────────────────────
@@ -714,7 +720,9 @@ export default function PokeCenter() {
           notes: s.notes,
         }
       })
-      const result = await askNurseJoy(fullQuery, enriched, feedbackHistory)
+      const result = await askNurseJoy(fullQuery, enriched, feedbackHistory, undefined, (chunk) => {
+        setResponse(chunk)
+      })
       // Best-effort: find the first party strain name mentioned in the response
       const mentioned = party.find((s) => result.toLowerCase().includes(s.name.toLowerCase()))
       if (mentioned) setLastRecommended(mentioned.name)
@@ -829,21 +837,24 @@ export default function PokeCenter() {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
           />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {EFFECT_TAGS.map((tag) => {
-              const active = selectedTags.includes(tag)
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 10 }}>
+            {EFFECT_TAGS.map(({ label, icon }) => {
+              const active = selectedTags.includes(label)
               return (
                 <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
+                  key={label}
+                  onClick={() => toggleTag(label)}
                   style={{
-                    fontFamily: FONT, fontSize: 9, padding: '7px 12px', minHeight: 36,
+                    fontFamily: FONT, cursor: 'pointer',
                     border: `2px solid ${active ? GBC_AMBER : GBC_DARKEST}`,
                     background: active ? 'rgba(245,158,11,0.15)' : 'transparent',
-                    color: active ? GBC_AMBER : GBC_MUTED, cursor: 'pointer',
+                    color: active ? GBC_AMBER : GBC_MUTED,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    justifyContent: 'center', gap: 6, padding: '10px 4px', minHeight: 64,
                   }}
                 >
-                  {tag}
+                  <span style={{ fontFamily: 'monospace', fontSize: 14, color: active ? GBC_AMBER : GBC_MUTED }}>{icon}</span>
+                  <span style={{ fontSize: 7, lineHeight: 1.4, textAlign: 'center' }}>{label}</span>
                 </button>
               )
             })}
@@ -1105,8 +1116,8 @@ export default function PokeCenter() {
           </div>
         )}
 
-        {/* Loading */}
-        {loading && (
+        {/* Loading — only show spinner before first chunk arrives */}
+        {loading && !response && (
           <div style={{
             ...pokeBox, padding: '24px 12px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
