@@ -5,6 +5,7 @@ import type { StrainRecord } from '../hooks/useStrainDb'
 import { useStash } from '../context/StashContext'
 import type { StrainEntry } from '../context/StashContext'
 import { useTransitionNav } from '../context/NavigationContext'
+import { askCannabisQuestion } from '../services/gemini'
 
 const FONT = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_BG = '#050a04'
@@ -51,6 +52,32 @@ export default function UniversalSearch() {
   const { db: strains } = useStrainDb()
   const { strains: stash } = useStash()
   const { transitionTo } = useTransitionNav()
+
+  const hasKey = !!localStorage.getItem('gemini_api_key')
+  const [qaInput, setQaInput]   = useState('')
+  const [qaAnswer, setQaAnswer] = useState('')
+  const [qaLoading, setQaLoading] = useState(false)
+  const [qaError, setQaError]   = useState('')
+
+  const handleAsk = async () => {
+    const q = qaInput.trim()
+    if (!q || qaLoading) return
+    setQaLoading(true)
+    setQaAnswer('')
+    setQaError('')
+    try {
+      const answer = await askCannabisQuestion(q)
+      if (answer === 'OFF_TOPIC') {
+        setQaError('CANNABIS QUESTIONS ONLY')
+      } else {
+        setQaAnswer(answer)
+      }
+    } catch (e) {
+      setQaError(e instanceof Error && e.message === 'NO_KEY' ? 'NO API KEY — SET ONE IN RX' : 'SOMETHING WENT WRONG')
+    } finally {
+      setQaLoading(false)
+    }
+  }
 
   const sessions = useMemo<SessionRecord[]>(() => {
     try {
@@ -420,6 +447,64 @@ export default function UniversalSearch() {
           NO RESULTS FOR '{query.toUpperCase()}'
         </div>
       )}
+
+      {/* Cannabis Q&A */}
+      <div style={{
+        border: `3px solid ${GBC_GREEN}`,
+        boxShadow: 'inset 0 0 0 2px #0e1a0b, inset 0 0 0 4px #3a6010',
+        background: GBC_BOX, padding: '12px',
+      }}>
+        <div style={{ fontFamily: FONT, fontSize: 9, color: GBC_GREEN, marginBottom: 10 }}>
+          ASK A CANNABIS QUESTION
+        </div>
+        {!hasKey && (
+          <div style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_MUTED, marginBottom: 10, lineHeight: 1.6 }}>
+            Requires a Gemini API key — set one in the RX page.
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 0, marginBottom: qaAnswer || qaError ? 10 : 0 }}>
+          <textarea
+            rows={2}
+            value={qaInput}
+            onChange={(e) => { setQaInput(e.target.value); setQaAnswer(''); setQaError('') }}
+            placeholder="e.g. What terpene helps with sleep?"
+            disabled={!hasKey}
+            style={{
+              flex: 1, background: '#060e05',
+              border: `2px solid ${GBC_DARKEST}`, borderRight: 'none',
+              color: GBC_TEXT, fontFamily: 'monospace', fontSize: 13,
+              padding: '10px', resize: 'none', outline: 'none', boxSizing: 'border-box',
+              lineHeight: 1.6, opacity: hasKey ? 1 : 0.5,
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAsk() } }}
+          />
+          <button
+            onClick={handleAsk}
+            disabled={!qaInput.trim() || !hasKey || qaLoading}
+            style={{
+              fontFamily: FONT, fontSize: 8, padding: '0 10px', minWidth: 52,
+              border: `2px solid ${qaInput.trim() && hasKey ? GBC_GREEN : GBC_DARKEST}`,
+              background: qaInput.trim() && hasKey ? 'rgba(132,204,22,0.1)' : 'transparent',
+              color: qaInput.trim() && hasKey ? GBC_GREEN : GBC_MUTED,
+              cursor: qaInput.trim() && hasKey && !qaLoading ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {qaLoading ? '...' : 'ASK'}
+          </button>
+        </div>
+        {qaError && (
+          <div style={{ fontFamily: FONT, fontSize: 8, color: GBC_RED, lineHeight: 1.8 }}>{qaError}</div>
+        )}
+        {qaAnswer && (
+          <div style={{
+            borderTop: `1px solid ${GBC_DARKEST}`, paddingTop: 10, marginTop: 2,
+            fontFamily: 'monospace', fontSize: 13, color: GBC_TEXT, lineHeight: 1.8,
+            whiteSpace: 'pre-wrap',
+          }}>
+            {qaAnswer}
+          </div>
+        )}
+      </div>
 
       {/* Empty state */}
       {!hasQuery && (

@@ -480,3 +480,26 @@ export async function lookupStrainData(name: string): Promise<StrainLookupResult
   if (typeof data.history  === 'string' && data.history)  out.history  = data.history
   return out
 }
+
+// ── Cannabis Q&A ───────────────────────────────────────────────────────────────
+
+const CANNABIS_QA_SYSTEM = `You are a knowledgeable cannabis encyclopedia. Answer questions about cannabis — strains, terpenes, cannabinoids, effects, consumption methods, botany, history, and harm reduction.
+
+Rules:
+- Only answer questions directly related to cannabis. If the question is not about cannabis, respond with exactly: OFF_TOPIC
+- Be factual, concise, and non-judgmental
+- Always mention harm reduction where relevant
+- Keep answers to 3-5 sentences unless more detail is genuinely needed
+- Never recommend illegal activity
+- Use plain language, no excessive jargon`
+
+export async function askCannabisQuestion(question: string): Promise<string> {
+  const client = getClient()
+  const model = client.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: CANNABIS_QA_SYSTEM,
+    generationConfig: { temperature: 0.4 },
+  })
+  const result = await model.generateContent(question)
+  return result.response.text().trim()
+}
