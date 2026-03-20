@@ -742,9 +742,12 @@ export default function PokeCenter() {
           ...pokeBox, padding: '8px 12px', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
         }}>
-          <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>
-            SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span> CENTER
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <NurseJoySprite size={48} />
+            <span style={{ fontFamily: FONT, fontSize: 13, color: GBC_GREEN }}>
+              SMOK<span style={{ fontFamily: "'Press Start 2P', monospace" }}>É</span> CENTER
+            </span>
+          </div>
           <button
             onClick={() => setShowKeyInput((v) => !v)}
             style={{

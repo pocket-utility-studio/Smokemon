@@ -45,16 +45,19 @@ type Group = {
 type TopItem = Leaf | Group
 
 const MENU: TopItem[] = [
-  { kind: 'leaf', to: '/smokedex',    label: 'SMOKÉDEX',     description: 'YOUR PERSONAL STRAIN JOURNAL',       tag: '[DEX]',  tagColor: '#84cc16' },
-  { kind: 'leaf', to: '/poke-center', label: 'SMOKÉ CENTER', description: 'AI POWERED STRAIN FINDER',           tag: '[RX]',   tagColor: '#a78bfa' },
+  // ── Pinned top 3 ─────────────────────────────────────────────────────────────
+  { kind: 'leaf', to: '/smokedex',    label: 'SMOKÉDEX',     description: 'YOUR PERSONAL STRAIN JOURNAL', tag: '[DEX]',  tagColor: '#84cc16' },
+  { kind: 'leaf', to: '/poke-center', label: 'SMOKÉ CENTER', description: 'AI POWERED STRAIN FINDER',     tag: '[RX]',   tagColor: '#a78bfa' },
+  { kind: 'leaf', to: '/search',      label: 'SEARCH ALL',   description: 'SEARCH EVERY STRAIN & LOG',   tag: '[FIND]', tagColor: '#84cc16' },
+  // ── Groups ───────────────────────────────────────────────────────────────────
   {
     kind: 'group', id: 'vape',
     label: "PROF T-OAK'S LAB", description: 'TEMP GUIDES, AVB RESEARCH & EXPERIMENTS',
     tag: '[VAPE]', tagColor: '#f0e040',
     children: [
-      { kind: 'leaf', to: '/castform',  label: 'HEAT LAB', description: 'VAPE TEMPERATURE RESEARCH',        tag: '[VAPE]',   tagColor: '#f0e040' },
-      { kind: 'leaf', to: '/avb',       label: 'AVB ANALYSIS',  description: 'ALREADY VAPED BUD + TIMERS',       tag: '[DATA]',   tagColor: '#f59e0b' },
-      { kind: 'leaf', to: '/abv-guide', label: 'FOSSIL REVIVE', description: '6 METHODS TO USE YOUR LEFTOVERS',  tag: '[COOK]',   tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/castform',  label: 'HEAT LAB',     description: 'VAPE TEMPERATURE RESEARCH',       tag: '[VAPE]', tagColor: '#f0e040' },
+      { kind: 'leaf', to: '/avb',       label: 'AVB ANALYSIS', description: 'ALREADY VAPED BUD + TIMERS',      tag: '[DATA]', tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/abv-guide', label: 'FOSSIL REVIVE',description: '6 METHODS TO USE YOUR LEFTOVERS', tag: '[COOK]', tagColor: '#f59e0b' },
     ],
   },
   {
@@ -62,25 +65,38 @@ const MENU: TopItem[] = [
     label: 'TRAINER SCHOOL', description: 'TERPENES, HISTORY & LAW REFERENCE',
     tag: '[LEARN]', tagColor: '#a78bfa',
     children: [
-      { kind: 'leaf', to: '/legendary',  label: 'HALL OF FAME', description: '24 LEGENDARY STRAINS & THEIR LORE', tag: '[LORE]',  tagColor: '#f59e0b' },
-      { kind: 'leaf', to: '/edibles',    label: 'AVB EDIBLES',  description: '20 RECIPES FOR YOUR LEFTOVERS',    tag: '[COOK]',  tagColor: '#84cc16' },
-      { kind: 'leaf', to: '/terpenes',      label: 'TERPENE DICT',    description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',  tag: '[LEARN]', tagColor: '#a78bfa' },
-      { kind: 'leaf', to: '/cannabinoids', label: 'CANNABINOID GUIDE', description: '8 CANNABINOIDS EXPLAINED',    tag: '[CANNA]', tagColor: '#c8e890' },
-      { kind: 'leaf', to: '/facts',        label: 'FACT CART',       description: 'DAILY CANNABIS HISTORY',        tag: '[DAILY]', tagColor: '#84cc16' },
-      { kind: 'leaf', to: '/cannabis-history', label: 'CANNABIS HISTORY', description: 'FROM 10,000 BC TO TODAY',    tag: '[HIST]',  tagColor: '#f59e0b' },
-      { kind: 'leaf', to: '/law',        label: 'LAW GUIDE',    description: 'UK + ES CANNABIS LAW',             tag: '[LAW]',   tagColor: '#e84040' },
-      { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT',   description: 'VERIFY STRAIN DATA QUALITY',      tag: '[AUDIT]', tagColor: '#4a9a20' },
+      { kind: 'leaf', to: '/legendary',       label: 'HALL OF FAME',     description: '24 LEGENDARY STRAINS & THEIR LORE', tag: '[LORE]',  tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/edibles',         label: 'AVB EDIBLES',      description: '20 RECIPES FOR YOUR LEFTOVERS',    tag: '[COOK]',  tagColor: '#84cc16' },
+      { kind: 'leaf', to: '/terpenes',        label: 'TERPENE DICT',     description: 'EXPLORE & QUIZ YOUR KNOWLEDGE',   tag: '[LEARN]', tagColor: '#a78bfa' },
+      { kind: 'leaf', to: '/cannabinoids',    label: 'CANNABINOID GUIDE',description: '8 CANNABINOIDS EXPLAINED',         tag: '[CANNA]', tagColor: '#c8e890' },
+      { kind: 'leaf', to: '/facts',           label: 'FACT CART',        description: 'DAILY CANNABIS HISTORY',          tag: '[DAILY]', tagColor: '#84cc16' },
+      { kind: 'leaf', to: '/cannabis-history',label: 'CANNABIS HISTORY', description: 'FROM 10,000 BC TO TODAY',         tag: '[HIST]',  tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/law',             label: 'LAW GUIDE',        description: 'UK + ES CANNABIS LAW',            tag: '[LAW]',   tagColor: '#e84040' },
     ],
   },
-  { kind: 'leaf', to: '/search',      label: 'SEARCH ALL',    description: 'SEARCH EVERY STRAIN & LOG',   tag: '[FIND]', tagColor: '#84cc16' },
-  { kind: 'leaf', to: '/wanted',     label: 'WANTED LIST',   description: 'STRAINS YOU ARE HUNTING',     tag: '[HUNT]', tagColor: '#e84040' },
-  { kind: 'leaf', to: '/sessions',        label: 'SESSION LOG',    description: 'LOG & TRACK YOUR SESSIONS',    tag: '[LOG]',  tagColor: '#a78bfa' },
-  { kind: 'leaf', to: '/trainer-record',  label: 'TRAINER RECORD', description: 'YOUR ELITE FOUR & STATS',      tag: '[STATS]', tagColor: '#f59e0b' },
-  { kind: 'leaf', to: '/dose-timer', label: 'DOSE TIMER',    description: 'TRACK ONSET & PEAK PHASES',   tag: '[DOSE]', tagColor: '#f59e0b' },
-  { kind: 'leaf', to: '/quiz',       label: 'STRAIN QUIZ',   description: 'TEST YOUR STRAIN KNOWLEDGE',  tag: '[QUIZ]', tagColor: '#84cc16' },
-  { kind: 'leaf', to: '/escape', label: 'ESCAPE ROPE', description: 'PANIC & GROUNDING GUIDE',    tag: '[SOS]',  tagColor: '#e84040' },
-  { kind: 'leaf', to: '/save',   label: 'SAVE GAME',   description: 'EXPORT / IMPORT YOUR DATA',  tag: '[DATA]', tagColor: '#4a9a20' },
-  { kind: 'leaf', to: '/settings', label: 'SETTINGS',  description: 'DISPLAY, FACT & SHELL OPTIONS', tag: '[SET]', tagColor: '#84cc16' },
+  {
+    kind: 'group', id: 'trainer',
+    label: 'TRAINER HQ', description: 'YOUR SESSIONS, STATS, QUIZ & TIMERS',
+    tag: '[YOU]', tagColor: '#a78bfa',
+    children: [
+      { kind: 'leaf', to: '/sessions',       label: 'SESSION LOG',    description: 'LOG & TRACK YOUR SESSIONS',  tag: '[LOG]',   tagColor: '#a78bfa' },
+      { kind: 'leaf', to: '/trainer-record', label: 'TRAINER RECORD', description: 'YOUR ELITE FOUR & STATS',    tag: '[STATS]', tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/dose-timer',     label: 'DOSE TIMER',     description: 'TRACK ONSET & PEAK PHASES',  tag: '[DOSE]',  tagColor: '#f59e0b' },
+      { kind: 'leaf', to: '/quiz',           label: 'STRAIN QUIZ',    description: 'TEST YOUR STRAIN KNOWLEDGE', tag: '[QUIZ]',  tagColor: '#84cc16' },
+    ],
+  },
+  { kind: 'leaf', to: '/wanted', label: 'WANTED LIST', description: 'STRAINS YOU ARE HUNTING',  tag: '[HUNT]', tagColor: '#e84040' },
+  { kind: 'leaf', to: '/escape', label: 'ESCAPE ROPE', description: 'PANIC & GROUNDING GUIDE', tag: '[SOS]',  tagColor: '#e84040' },
+  {
+    kind: 'group', id: 'settings',
+    label: 'SETTINGS', description: 'DISPLAY, DATA & SHELL OPTIONS',
+    tag: '[SET]', tagColor: '#84cc16',
+    children: [
+      { kind: 'leaf', to: '/settings',   label: 'DISPLAY OPTIONS', description: 'THEME, FACT & SHELL SETTINGS',  tag: '[SET]',   tagColor: '#84cc16' },
+      { kind: 'leaf', to: '/save',       label: 'SAVE GAME',       description: 'EXPORT / IMPORT YOUR DATA',     tag: '[DATA]',  tagColor: '#4a9a20' },
+      { kind: 'leaf', to: '/data-audit', label: 'DATA AUDIT',      description: 'VERIFY STRAIN DATA QUALITY',   tag: '[AUDIT]', tagColor: '#4a9a20' },
+    ],
+  },
 ]
 
 // ── Sprite ────────────────────────────────────────────────────────────────────
