@@ -575,12 +575,12 @@ function PartyView({
               <span style={{
                 fontFamily: PVSF, fontSize: 8,
                 color: isSel ? GBC_GREEN : col,
-                overflow: 'hidden', textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap', width: '100%', maxWidth: 94,
+                width: '100%', lineHeight: 1.5,
+                wordBreak: 'break-word',
               }}>
-                {s.name.slice(0, 13).toUpperCase()}
+                {s.name.toUpperCase()}
               </span>
-              <div style={{ width: '100%', height: 5, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: 3, background: '#0a1e04', border: '1px solid #1a3a08', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${fill * 100}%`, background: barCol }} />
               </div>
               <span style={{ fontFamily: PVSF, fontSize: 7, color: GBC_MUTED }}>
