@@ -350,10 +350,10 @@ function PartyCard({ name, type, thc, inStock, dbMatch, onToggle, onStrengthChan
       {/* Name + sprite row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-          <TypeSprite type={type} size={20} />
-          <BudSprite name={name} type={type} size={40} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
+          <TypeSprite type={type} size={28} />
+          <BudSprite name={name} type={type} size={64} context={dbMatch ? { description: dbMatch.Description, effects: dbMatch.Effects, terpenes: dbMatch.terpenes, flavor: dbMatch.Flavor } : undefined} />
         </div>
-        <div style={{ fontFamily: FONT, fontSize: 9, color: col, wordBreak: 'break-word', lineHeight: 1.6, flex: 1 }}>
+        <div style={{ fontFamily: FONT, fontSize: 11, color: col, wordBreak: 'break-word', lineHeight: 1.5, flex: 1 }}>
           {name.toUpperCase()}
         </div>
         <button
