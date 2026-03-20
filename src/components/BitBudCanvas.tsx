@@ -1,139 +1,109 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { removeBackground } from '@imgly/background-removal'
 
-// GBC 8-color kiwi palette — expanded from 5 for better gradation
-const GBC_PALETTE: [number, number, number][] = [
-  [5,   10,  4],   // #050a04 — darkest bg
-  [14,  26,  11],  // #0e1a0b — charcoal
-  [28,  50,  6],   // #1c3206 — dark shadow
-  [42,  74,  8],   // #2a4a08 — muted
-  [74,  120, 14],  // #4a780e — mid
-  [100, 160, 18],  // #64a012 — mid-bright
-  [132, 204, 22],  // #84cc16 — accent
-  [200, 232, 144], // #c8e890 — bright
-]
-
-function nearestColor(r: number, g: number, b: number): [number, number, number] {
-  let best = GBC_PALETTE[0]
-  let bestDist = Infinity
-  for (const [pr, pg, pb] of GBC_PALETTE) {
-    const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
-    if (dist < bestDist) { bestDist = dist; best = [pr, pg, pb] }
-  }
-  return best
-}
-
-// Floyd-Steinberg dithering — spreads quantisation error to neighbours
-function floydSteinberg(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
-  const buf = new Float32Array(w * h * 3)
-  for (let i = 0; i < w * h; i++) {
-    buf[i * 3]     = data[i * 4]
-    buf[i * 3 + 1] = data[i * 4 + 1]
-    buf[i * 3 + 2] = data[i * 4 + 2]
-  }
-
-  const out = new Uint8ClampedArray(w * h * 4)
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const idx = (y * w + x) * 3
-      const r = Math.max(0, Math.min(255, buf[idx]))
-      const g = Math.max(0, Math.min(255, buf[idx + 1]))
-      const b = Math.max(0, Math.min(255, buf[idx + 2]))
-
-      const [nr, ng, nb] = nearestColor(r, g, b)
-      const oi = (y * w + x) * 4
-      out[oi] = nr; out[oi + 1] = ng; out[oi + 2] = nb; out[oi + 3] = 255
-
-      const er = r - nr, eg = g - ng, eb = b - nb
-
-      const spread = (dx: number, dy: number, factor: number) => {
-        const nx = x + dx, ny = y + dy
-        if (nx < 0 || nx >= w || ny >= h) return
-        const ni = (ny * w + nx) * 3
-        buf[ni]     += er * factor
-        buf[ni + 1] += eg * factor
-        buf[ni + 2] += eb * factor
-      }
-
-      spread( 1,  0, 7 / 16)
-      spread(-1,  1, 3 / 16)
-      spread( 0,  1, 5 / 16)
-      spread( 1,  1, 1 / 16)
-    }
-  }
-
-  return out
-}
+const BG: [number, number, number] = [5, 10, 4] // #050a04 — background + outline colour
 
 function blobToImageElement(blob: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob)
     const img = new Image()
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onload  = () => { URL.revokeObjectURL(url); resolve(img) }
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load failed')) }
     img.src = url
   })
 }
 
-// Find a square crop centred on the non-transparent subject pixels
+// Find a square crop centred on non-transparent subject pixels
 function findSubjectCrop(img: HTMLImageElement): { sx: number; sy: number; size: number } {
-  const W = img.naturalWidth
-  const H = img.naturalHeight
-
-  // Scan at reduced resolution for speed
-  const scanScale = Math.min(1, 512 / Math.max(W, H))
-  const sw = Math.round(W * scanScale)
-  const sh = Math.round(H * scanScale)
-
+  const W = img.naturalWidth, H = img.naturalHeight
+  const sc = Math.min(1, 512 / Math.max(W, H))
+  const sw = Math.round(W * sc), sh = Math.round(H * sc)
   const c = document.createElement('canvas')
   c.width = sw; c.height = sh
   const ctx = c.getContext('2d')!
   ctx.drawImage(img, 0, 0, sw, sh)
   const { data } = ctx.getImageData(0, 0, sw, sh)
-
-  let minX = sw, minY = sh, maxX = 0, maxY = 0, hasContent = false
+  let minX = sw, minY = sh, maxX = 0, maxY = 0, any = false
   for (let y = 0; y < sh; y++) {
     for (let x = 0; x < sw; x++) {
       if (data[(y * sw + x) * 4 + 3] > 20) {
-        if (x < minX) minX = x
-        if (x > maxX) maxX = x
-        if (y < minY) minY = y
-        if (y > maxY) maxY = y
-        hasContent = true
+        if (x < minX) minX = x; if (x > maxX) maxX = x
+        if (y < minY) minY = y; if (y > maxY) maxY = y
+        any = true
       }
     }
   }
-
-  if (!hasContent) return { sx: 0, sy: 0, size: Math.min(W, H) }
-
-  // 8% padding, then make it square, convert back to original coords
-  const pad = Math.round(Math.max(maxX - minX, maxY - minY) * 0.08)
-  const x1 = Math.max(0, (minX - pad) / scanScale)
-  const y1 = Math.max(0, (minY - pad) / scanScale)
-  const x2 = Math.min(W, (maxX + pad) / scanScale)
-  const y2 = Math.min(H, (maxY + pad) / scanScale)
-
-  const halfW = (x2 - x1) / 2
-  const halfH = (y2 - y1) / 2
-  const half  = Math.max(halfW, halfH)
-  const cx = x1 + halfW
-  const cy = y1 + halfH
-
-  return {
-    sx:   Math.max(0, cx - half),
-    sy:   Math.max(0, cy - half),
-    size: Math.min(half * 2, W, H),
-  }
+  if (!any) return { sx: 0, sy: 0, size: Math.min(W, H) }
+  const pad  = Math.round(Math.max(maxX - minX, maxY - minY) * 0.10)
+  const x1   = Math.max(0, (minX - pad) / sc), y1 = Math.max(0, (minY - pad) / sc)
+  const x2   = Math.min(W, (maxX + pad) / sc), y2 = Math.min(H, (maxY + pad) / sc)
+  const half = Math.max((x2 - x1) / 2, (y2 - y1) / 2)
+  const cx   = x1 + (x2 - x1) / 2, cy = y1 + (y2 - y1) / 2
+  return { sx: Math.max(0, cx - half), sy: Math.max(0, cy - half), size: Math.min(half * 2, W, H) }
 }
+
+// Separate subject from background using alpha channel.
+// Transparent pixels get alpha=0 so the outline pass can detect the edge.
+function separateAlpha(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(data)
+  for (let i = 0; i < w * h; i++) {
+    const idx = i * 4
+    if (data[idx + 3] < 20) {
+      out[idx] = BG[0]; out[idx+1] = BG[1]; out[idx+2] = BG[2]; out[idx+3] = 0
+    } else {
+      out[idx+3] = 255
+    }
+  }
+  return out
+}
+
+// Paint a 1-pixel dark outline on any opaque pixel that touches a transparent one (8-connected).
+// This gives the hand-drawn sprite look.
+function addOutline(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(data)
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4
+      if (data[i + 3] === 0) continue   // already background
+      outer: for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue
+          const nx = x + dx, ny = y + dy
+          const isEdge = nx < 0 || nx >= w || ny < 0 || ny >= h
+          if (isEdge || data[(ny * w + nx) * 4 + 3] === 0) {
+            out[i] = BG[0]; out[i+1] = BG[1]; out[i+2] = BG[2]
+            break outer
+          }
+        }
+      }
+    }
+  }
+  return out
+}
+
+// Flatten alpha: composite subject onto solid dark background
+function flatten(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(w * h * 4)
+  for (let i = 0; i < w * h; i++) {
+    const idx = i * 4
+    if (data[idx + 3] === 0) {
+      out[idx] = BG[0]; out[idx+1] = BG[1]; out[idx+2] = BG[2]; out[idx+3] = 255
+    } else {
+      out[idx] = data[idx]; out[idx+1] = data[idx+1]; out[idx+2] = data[idx+2]; out[idx+3] = 255
+    }
+  }
+  return out
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const FONT      = "'PokemonGb', 'Press Start 2P', monospace"
 const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
 const GBC_BG    = '#050a04'
 
-const PIXEL_SIZE = 72   // up from 48 — more detail
-const SCALE      = 4    // stored as 288×288
+const PIXEL_SIZE = 64   // native pixel grid
+const SCALE      = 4    // stored as 256×256
 
 type Step        = 'idle' | 'removing' | 'dithering'
 type RevealPhase = 'idle' | 'silhouette' | 'flash' | 'revealed'
@@ -150,7 +120,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
   const [step,        setStep]        = useState<Step>('idle')
   const [revealPhase, setRevealPhase] = useState<RevealPhase>('idle')
 
-  // silhouette (2 s) → flash (360 ms CSS anim) → revealed
+  // silhouette (2 s) → flash → revealed
   useEffect(() => {
     if (revealPhase === 'silhouette') {
       const t = setTimeout(() => setRevealPhase('flash'), 2000)
@@ -167,43 +137,43 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     setStep('removing')
     setPreview(null)
 
-    // Background removal — fall back to original if offline / error
+    // Background removal — fall back to original on error
     let sourceBlob: Blob = file
     try {
       sourceBlob = await removeBackground(file, { debug: false })
-    } catch { /* fall back to original */ }
+    } catch { /* keep original */ }
 
     setStep('dithering')
 
     const img = await blobToImageElement(sourceBlob)
 
-    // Auto-crop: find the square bounding box of the subject
+    // Tight square crop centred on the subject
     const { sx, sy, size } = findSubjectCrop(img)
 
+    // Draw to pixel canvas, preserving alpha (NO background fill)
+    // Boost contrast + saturation so colour regions are more distinct
     const off = document.createElement('canvas')
-    off.width  = PIXEL_SIZE
-    off.height = PIXEL_SIZE
+    off.width = PIXEL_SIZE; off.height = PIXEL_SIZE
     const offCtx = off.getContext('2d')!
-
-    // Fill darkest GBC colour so transparent areas disappear into the bg
-    offCtx.fillStyle = '#050a04'
-    offCtx.fillRect(0, 0, PIXEL_SIZE, PIXEL_SIZE)
-
-    // Boost contrast + saturation before downsampling — richer pixel art
-    offCtx.filter = 'contrast(1.5) saturate(1.8) brightness(1.05)'
+    offCtx.clearRect(0, 0, PIXEL_SIZE, PIXEL_SIZE)
+    offCtx.filter = 'contrast(1.6) saturate(2.0) brightness(1.05)'
     offCtx.drawImage(img, sx, sy, size, size, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
     offCtx.filter = 'none'
 
     const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
 
-    // Floyd-Steinberg dithering into 8-color GBC palette
-    const dithered = floydSteinberg(data, PIXEL_SIZE, PIXEL_SIZE)
-    offCtx.putImageData(new ImageData(Uint8ClampedArray.from(dithered), PIXEL_SIZE, PIXEL_SIZE), 0, 0)
+    // 1. Mark transparent pixels so outline pass can detect the subject edge
+    const separated = separateAlpha(data, PIXEL_SIZE, PIXEL_SIZE)
+    // 2. Dark 1px outline around the subject boundary
+    const outlined  = addOutline(separated, PIXEL_SIZE, PIXEL_SIZE)
+    // 3. Flatten onto dark background
+    const final     = flatten(outlined, PIXEL_SIZE, PIXEL_SIZE)
 
-    // Scale up with nearest-neighbour (pixelated) rendering
+    offCtx.putImageData(new ImageData(final, PIXEL_SIZE, PIXEL_SIZE), 0, 0)
+
+    // Scale up with nearest-neighbour — keeps pixels crisp
     const display = canvasRef.current!
-    display.width  = PIXEL_SIZE * SCALE
-    display.height = PIXEL_SIZE * SCALE
+    display.width = PIXEL_SIZE * SCALE; display.height = PIXEL_SIZE * SCALE
     const dCtx = display.getContext('2d')!
     dCtx.imageSmoothingEnabled = false
     dCtx.drawImage(off, 0, 0, PIXEL_SIZE * SCALE, PIXEL_SIZE * SCALE)
@@ -220,10 +190,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
   }
 
   const busy = step !== 'idle'
-
-  const busyLabel =
-    step === 'removing'  ? '► REMOVING BG...' :
-    step === 'dithering' ? '► PROCESSING...'  : ''
+  const busyLabel = step === 'removing' ? '► REMOVING BG...' : step === 'dithering' ? '► PROCESSING...' : ''
 
   const canvasFilter     = revealPhase === 'silhouette' ? 'brightness(0)' : revealPhase === 'revealed' ? 'brightness(1)' : undefined
   const canvasTransition = revealPhase === 'revealed' ? 'filter 0.3s ease-out' : 'none'
@@ -236,10 +203,9 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
         BIT-BUD FILTER
       </span>
       <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#c8e890', lineHeight: 1.7, margin: 0 }}>
-        Upload a bud photo — background removed and converted to GBC pixel art.
+        Upload a bud photo — background removed and converted to GBC sprite style.
       </p>
 
-      {/* Hidden file inputs — camera vs gallery */}
       <input ref={cameraInputRef}  type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
       <input ref={galleryInputRef} type="file" accept="image/*"                        onChange={handleFile} style={{ display: 'none' }} />
 
@@ -270,22 +236,17 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
           ref={canvasRef}
           className={revealPhase === 'flash' ? 'gbc-whodat-flash' : ''}
           style={{
-            display:        preview ? 'block' : 'none',
+            display: preview ? 'block' : 'none',
             imageRendering: 'pixelated',
-            width:          '100%',
-            border:         '3px solid #84cc16',
-            boxSizing:      'border-box',
-            filter:         canvasFilter,
-            transition:     canvasTransition,
+            width: '100%',
+            border: '3px solid #84cc16',
+            boxSizing: 'border-box',
+            filter: canvasFilter,
+            transition: canvasTransition,
           }}
         />
-
         {showOverlay && (
-          <div style={{
-            position: 'absolute', bottom: 3, left: 3, right: 3,
-            background: `${GBC_BG}cc`, padding: '6px 8px',
-            display: 'flex', justifyContent: 'center', pointerEvents: 'none',
-          }}>
+          <div style={{ position: 'absolute', bottom: 3, left: 3, right: 3, background: `${GBC_BG}cc`, padding: '6px 8px', display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
             <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_GREEN, textAlign: 'center', lineHeight: 1.7, letterSpacing: 0.5 }}>
               WHO'S THAT{'\n'}SMOKÉPMON?
             </span>
@@ -301,10 +262,9 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
           ► SAVE AS BUD PHOTO
         </button>
       )}
-
       {showCapture && (
         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_MUTED, textAlign: 'center' }}>
-          BG REMOVED · 8-COLOR GBC · DITHERED · AUTO-CROPPED
+          BG REMOVED · FULL COLOR · OUTLINED · PIXEL ART
         </span>
       )}
     </div>
