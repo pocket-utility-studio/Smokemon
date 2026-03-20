@@ -102,8 +102,8 @@ const GBC_GREEN = '#84cc16'
 const GBC_MUTED = '#4a7a10'
 const GBC_BG    = '#050a04'
 
-const PIXEL_SIZE = 64   // native pixel grid
-const SCALE      = 4    // stored as 256×256
+const PIXEL_SIZE = 96   // native pixel grid
+const SCALE      = 3    // stored as 288×288
 
 type Step        = 'idle' | 'removing' | 'dithering'
 type RevealPhase = 'idle' | 'silhouette' | 'flash' | 'revealed'
@@ -156,18 +156,15 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     off.width = PIXEL_SIZE; off.height = PIXEL_SIZE
     const offCtx = off.getContext('2d')!
     offCtx.clearRect(0, 0, PIXEL_SIZE, PIXEL_SIZE)
-    offCtx.filter = 'contrast(1.6) saturate(2.0) brightness(1.05)'
+    offCtx.filter = 'contrast(1.15) saturate(1.3) brightness(1.02)'
     offCtx.drawImage(img, sx, sy, size, size, 0, 0, PIXEL_SIZE, PIXEL_SIZE)
     offCtx.filter = 'none'
 
     const { data } = offCtx.getImageData(0, 0, PIXEL_SIZE, PIXEL_SIZE)
 
-    // 1. Mark transparent pixels so outline pass can detect the subject edge
+    // 1. Mark transparent pixels, 2. flatten onto dark background — no outline
     const separated = separateAlpha(data, PIXEL_SIZE, PIXEL_SIZE)
-    // 2. Dark 1px outline around the subject boundary
-    const outlined  = addOutline(separated, PIXEL_SIZE, PIXEL_SIZE)
-    // 3. Flatten onto dark background
-    const final     = flatten(outlined, PIXEL_SIZE, PIXEL_SIZE)
+    const final     = flatten(separated, PIXEL_SIZE, PIXEL_SIZE)
 
     offCtx.putImageData(new ImageData(final, PIXEL_SIZE, PIXEL_SIZE), 0, 0)
 
@@ -175,7 +172,8 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
     const display = canvasRef.current!
     display.width = PIXEL_SIZE * SCALE; display.height = PIXEL_SIZE * SCALE
     const dCtx = display.getContext('2d')!
-    dCtx.imageSmoothingEnabled = false
+    dCtx.imageSmoothingEnabled = true
+    dCtx.imageSmoothingQuality = 'medium'
     dCtx.drawImage(off, 0, 0, PIXEL_SIZE * SCALE, PIXEL_SIZE * SCALE)
 
     setPreview(display.toDataURL('image/png'))
@@ -237,7 +235,7 @@ export default function BitBudCanvas({ onCapture }: BitBudCanvasProps) {
           className={revealPhase === 'flash' ? 'gbc-whodat-flash' : ''}
           style={{
             display: preview ? 'block' : 'none',
-            imageRendering: 'pixelated',
+            imageRendering: 'auto',
             width: '100%',
             border: '3px solid #84cc16',
             boxSizing: 'border-box',
