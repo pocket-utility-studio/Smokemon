@@ -53,10 +53,10 @@ TEMPERATURE GUIDE
 The optimal vaporisation temperature in Celsius ONLY (never Fahrenheit). Explain what activates at that temperature and why — which terpenes boil off, which cannabinoids decarboxylate, and what the user will experience as a result.
 
 STRAIN HISTORY
-The origin story: genetics and lineage, who bred it and where, how it got its name, and what makes it distinctive. 2-4 sentences.
+2 sentences only: where it came from, who bred it, and one standout fact about its lineage or name.
 
 WHAT TO EXPECT
-Vaping onset (typically 1-3 min), how effects develop, peak duration, and any cautions. What makes this strain's experience unique.
+1-2 sentences: vaping onset, peak duration, and any key caution. Keep it brief.
 
 Keep Nurse Joy's tone warm and caring throughout. Be genuinely informative — this is a patient asking for healthcare guidance.`
 
@@ -216,7 +216,7 @@ export async function generateMixSuggestions(
   const client = getClient()
   const model = client.getGenerativeModel({
     model: 'gemini-2.5-flash',
-    generationConfig: { temperature: 0.4 },
+    generationConfig: { temperature: 0.4, responseMimeType: 'application/json' },
   })
 
   const partyList = party
@@ -240,7 +240,7 @@ From the party below, suggest ${count} DIFFERENT pairings that best match this g
 
 Base your pairings on actual terpene science — consider how the dominant terpenes in each strain interact with each other and with the cannabinoid profiles to produce the desired effect.
 
-Respond with ONLY a valid JSON array, no markdown, no code fences:
+Respond with ONLY a valid JSON array:
 [
   {
     "strainA": "<exact name from the list>",
@@ -254,10 +254,7 @@ Party:
 ${partyList}`
 
   const result = await model.generateContent(prompt)
-  const text = result.response.text().trim()
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) throw new Error('Unexpected response from AI')
-  const data: Array<Record<string, string>> = JSON.parse(jsonMatch[0])
+  const data: Array<Record<string, string>> = JSON.parse(result.response.text())
   return data
     .filter((d) => d.strainA && d.strainB)
     .map((d) => ({
@@ -297,7 +294,7 @@ export async function generateFourBlends(party: EnrichedStrain[]): Promise<FourB
   const client = getClient()
   const model = client.getGenerativeModel({
     model: 'gemini-2.5-flash',
-    generationConfig: { temperature: 0.6 },
+    generationConfig: { temperature: 0.6, responseMimeType: 'application/json' },
   })
 
   const partyList = party
@@ -326,7 +323,7 @@ Goals:
 
 For each pairing, write 2-3 sentences explaining WHY this combination works — reference actual terpenes, cannabinoid ratios, or strain characteristics.
 
-Respond ONLY with valid JSON, no markdown, no code fences:
+Respond with valid JSON:
 {
   "taste":    { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" },
   "euphoric": { "strainA": "<name>", "strainB": "<name>", "reason": "<2-3 sentences>" },
@@ -335,10 +332,7 @@ Respond ONLY with valid JSON, no markdown, no code fences:
 }`
 
   const result = await model.generateContent(prompt)
-  const text = result.response.text().trim()
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error('Unexpected response from AI')
-  const data = JSON.parse(jsonMatch[0]) as Record<string, Record<string, string>>
+  const data = JSON.parse(result.response.text()) as Record<string, Record<string, string>>
 
   const parse = (key: string, label: string): BlendCard => ({
     label,
@@ -367,7 +361,7 @@ export async function generateDualBlend(
   const client = getClient()
   const model = client.getGenerativeModel({
     model: 'gemini-2.5-flash',
-    generationConfig: { temperature: 0.4 },
+    generationConfig: { temperature: 0.4, responseMimeType: 'application/json' },
   })
 
   const partyList = party
@@ -392,7 +386,7 @@ From the party below, give exactly TWO blend suggestions:
 
 Each pairing must use two DIFFERENT strains from the list.
 
-Respond with ONLY valid JSON, no markdown, no code fences:
+Respond with valid JSON:
 {
   "taste": {
     "strainA": "<exact name>",
@@ -412,10 +406,7 @@ Party:
 ${partyList}`
 
   const result = await model.generateContent(prompt)
-  const text = result.response.text().trim()
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error('Unexpected response from AI')
-  const data = JSON.parse(jsonMatch[0]) as Record<string, Record<string, string>>
+  const data = JSON.parse(result.response.text()) as Record<string, Record<string, string>>
   const parse = (d: Record<string, string>): MixSuggestion => ({
     strainA:       d.strainA       ?? '',
     strainB:       d.strainB       ?? '',
@@ -475,13 +466,10 @@ export async function lookupStrainData(name: string): Promise<StrainLookupResult
   const model = client.getGenerativeModel({
     model: 'gemini-2.5-flash',
     systemInstruction: STRAIN_LOOKUP_SYSTEM,
-    generationConfig: { temperature: 0.1 },
+    generationConfig: { temperature: 0.1, responseMimeType: 'application/json' },
   })
   const result = await model.generateContent(STRAIN_LOOKUP_PROMPT(name))
-  const text = result.response.text().trim()
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new Error('Unexpected response from AI')
-  const data = JSON.parse(jsonMatch[0])
+  const data = JSON.parse(result.response.text())
   const out: StrainLookupResult = {}
   out.thc = typeof data.thc === 'number' ? data.thc : 15
   if (typeof data.cbd === 'number')   out.cbd = data.cbd

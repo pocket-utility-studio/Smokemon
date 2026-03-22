@@ -23,19 +23,19 @@ const T = '0.6s cubic-bezier(0.25, 1, 0.5, 1)'
 // Aspect ratio 300:240 ≈ 1.25:1 matches the controls area proportions.
 function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
   // Key centres (x, y) in viewBox coordinates
-  const dp  = { x: 75,  y: 118 }  // D-pad
-  const bB  = { x: 197, y: 133 }  // B button
-  const aB  = { x: 240, y: 112 }  // A button
+  const dp  = { x: 75,  y: 125 }  // D-pad
+  const bB  = { x: 198, y: 128 }  // B button
+  const aB  = { x: 238, y: 106 }  // A button
   const bdg = { x: 150, y: 26  }  // Nintendo badge
-  const sel = { x: 107, y: 197 }  // SELECT
-  const sta = { x: 156, y: 192 }  // START
-  const spk = { x: 216, y: 180 }  // Speaker grid top-left
+  const sel = { x: 108, y: 205 }  // SELECT
+  const sta = { x: 154, y: 205 }  // START
+  const spk = { x: 206, y: 170 }  // Speaker grid top-left
 
-  // Speaker: 7 cols × 6 rows, 8px spacing, r=2.8
+  // Speaker: 6 cols × 5 rows, 7px spacing, r=2.8
   const dots: { cx: number; cy: number }[] = []
-  for (let r = 0; r < 6; r++)
-    for (let c = 0; c < 7; c++)
-      dots.push({ cx: spk.x + c * 8, cy: spk.y + r * 8 })
+  for (let r = 0; r < 5; r++)
+    for (let c = 0; c < 6; c++)
+      dots.push({ cx: spk.x + c * 7, cy: spk.y + r * 7 })
 
   return (
     <svg
@@ -118,10 +118,10 @@ function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
 
       {/* ── B button ───────────────────────────────────────── */}
       {/* Outer groove shadow ring */}
-      <circle cx={bB.x} cy={bB.y} r={22} fill="rgba(0,0,0,0.38)" />
+      <circle cx={bB.x} cy={bB.y} r={24} fill="rgba(0,0,0,0.38)" />
       {/* Dome */}
       <circle
-        cx={bB.x} cy={bB.y} r={18}
+        cx={bB.x} cy={bB.y} r={19}
         fill="url(#g-dome)" stroke="#040404" strokeWidth={1.5}
         filter="url(#f-btn)"
       />
@@ -132,7 +132,7 @@ function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
       >B</text>
       {/* Transparent hit area — goBack() */}
       <circle
-        cx={bB.x} cy={bB.y} r={22}
+        cx={bB.x} cy={bB.y} r={24}
         fill="transparent"
         style={{ cursor: 'pointer' }}
         onClick={onBPress}
@@ -140,7 +140,7 @@ function GBCControlsSVG({ onBPress }: { onBPress?: () => void }) {
 
       {/* ── A button ───────────────────────────────────────── */}
       {/* Outer groove shadow ring */}
-      <circle cx={aB.x} cy={aB.y} r={28} fill="rgba(0,0,0,0.38)" />
+      <circle cx={aB.x} cy={aB.y} r={27} fill="rgba(0,0,0,0.38)" />
       {/* Dome */}
       <circle
         cx={aB.x} cy={aB.y} r={23}
@@ -283,7 +283,7 @@ export default function AppLayout() {
         <div style={{
           flex: 1,
           minHeight: 0,
-          margin: emu ? '0 4%' : '0 2%',
+          margin: emu ? '0 3%' : '0 2%',
           transition: `margin ${T}`,
           background: BEZEL,
           borderRadius: '12px 12px 6px 6px',
@@ -434,7 +434,7 @@ export default function AppLayout() {
         {/* ── Green controls area — collapses to nav bar height in fullscreen ── */}
         <div style={{
           flexShrink: 0,
-          height: emu ? '42%' : '6px',
+          height: emu ? '50%' : '6px',
           transition: `height ${T}`,
           overflow: 'hidden',
           position: 'relative',
