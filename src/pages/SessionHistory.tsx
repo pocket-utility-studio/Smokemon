@@ -282,7 +282,7 @@ export default function SessionHistory() {
                     onPointerDown={() => selectStrain(item)}
                     style={{ padding: '8px 10px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
                   >
-                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT }}>{item.name}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, color: GBC_TEXT, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                     <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
                       {(item as { fromStash?: boolean }).fromStash && (
                         <span style={{ fontFamily: FONT, fontSize: 7, color: GBC_GREEN }}>STASH</span>

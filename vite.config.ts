@@ -16,7 +16,9 @@ const versionJsonPlugin = {
 }
 
 export default defineConfig({
-  base: '/Smokemon/',
+  // Vercel serves dist/ at the domain root, so assets must be root-relative.
+  // A subpath here (e.g. '/Smokemon/') 404s every asset and blanks the page.
+  base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
@@ -41,15 +43,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Smokémon',
-        short_name: 'Smokémon',
+        name: 'Daily Grind',
+        short_name: 'Daily Grind',
         description: 'A Pokémon-themed medical cannabis journal',
         theme_color: '#84cc16',
         background_color: '#0e1a0b',
         display: 'standalone',
         orientation: 'portrait-primary',
-        start_url: '/Smokemon/',
-        scope: '/Smokemon/',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'icon-192.png',
@@ -79,14 +81,14 @@ export default defineConfig({
             name: 'Smokédex',
             short_name: 'Dex',
             description: 'Open strain journal',
-            url: '/Smokemon/smokedex',
+            url: '/smokedex',
             icons: [{ src: 'icon-192.png', sizes: '192x192' }],
           },
           {
             name: 'PokeCenter',
             short_name: 'Center',
             description: 'Symptom recommender',
-            url: '/Smokemon/poke-center',
+            url: '/poke-center',
             icons: [{ src: 'icon-192.png', sizes: '192x192' }],
           },
         ],

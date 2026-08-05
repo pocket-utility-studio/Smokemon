@@ -44,7 +44,7 @@ export default function App() {
     <TimeOfDayProvider>
       <StashProvider>
         <VibeProvider>
-          <BrowserRouter basename="/Smokemon">
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
             <NavigationProvider>
             <GifModeProvider>
             <LayoutModeProvider>

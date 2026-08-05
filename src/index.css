@@ -97,6 +97,19 @@ body {
   scrollbar-color: #2a4a08 #0a1408;
 }
 
+/* Prevent ► ✓ and similar unicode characters rendering as colour emoji on iOS */
+.gbc-screen-content * {
+  font-variant-emoji: text;
+}
+
+/* Buttons/inputs with width:100% or flex:1 must not overflow their border */
+.gbc-screen-content button,
+.gbc-screen-content input,
+.gbc-screen-content textarea,
+.gbc-screen-content select {
+  box-sizing: border-box;
+}
+
 /* Screen shake — triggered by adding .gbc-shake class */
 @keyframes gbc-shake {
   0%, 100% { transform: translateX(0); }

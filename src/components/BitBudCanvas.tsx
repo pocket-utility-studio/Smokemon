@@ -44,7 +44,7 @@ function findSubjectCrop(img: HTMLImageElement): { sx: number; sy: number; size:
 
 // Separate subject from background using alpha channel.
 // Transparent pixels get alpha=0 so the outline pass can detect the edge.
-function separateAlpha(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+function separateAlpha(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(data)
   for (let i = 0; i < w * h; i++) {
     const idx = i * 4
@@ -59,7 +59,7 @@ function separateAlpha(data: Uint8ClampedArray, w: number, h: number): Uint8Clam
 
 // Paint a 1-pixel dark outline on any opaque pixel that touches a transparent one (8-connected).
 // This gives the hand-drawn sprite look.
-function addOutline(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+export function addOutline(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(data)
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -82,7 +82,7 @@ function addOutline(data: Uint8ClampedArray, w: number, h: number): Uint8Clamped
 }
 
 // Flatten alpha: composite subject onto solid dark background
-function flatten(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+function flatten(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(w * h * 4)
   for (let i = 0; i < w * h; i++) {
     const idx = i * 4
